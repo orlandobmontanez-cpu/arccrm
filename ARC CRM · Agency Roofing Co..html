@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<!-- saved from url=(0064)file:///Users/agencyroofingco./Downloads/arc_crm_v4_index_2.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ARC CRM · Agency Roofing Co.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./ARC CRM · Agency Roofing Co._files/css2" rel="stylesheet">
+<style>
+  :root {
+    --stone: #EAE4DA;
+    --stone-dark: #D8D0C4;
+    --stone-light: #F2EDE6;
+    --copper: #974930;
+    --copper-mid: #C97E78;
+    --copper-light: #F0C8C2;
+    --ink: #1C1A18;
+    --ink-soft: #3A3734;
+    --ink-muted: #6B6560;
+    --white: #FDFCFA;
+    --danger: #8B2020;
+    --success: #2A5C3A;
+    --sidebar-w: 300px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--stone);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── LAYOUT ── */
+  #app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 10;
+    transition: transform 0.3s ease;
+  }
+
+  #sidebar-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(234,228,218,0.08);
+    flex-shrink: 0;
+  }
+
+  .brand-lockup { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+
+  .shield-mark {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 6px rgba(201,126,120,0.35));
+  }
+
+  .brand-text { line-height: 1; }
+  .brand-agency { font-family: 'Anton', sans-serif; font-size: 18px; color: var(--stone); letter-spacing: 0.02em; display: block; }
+  .brand-roofing { font-family: 'Bebas Neue', sans-serif; font-size: 10px; color: var(--copper); letter-spacing: 0.18em; display: block; margin-top: 1px; }
+
+  #sidebar-actions {
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-new {
+    flex: 1;
+    background: var(--copper);
+    color: var(--stone-light);
+    border: none;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: background 0.15s;
+    min-height: 44px;
+  }
+  .btn-new:hover { background: #7a3a24; }
+  .btn-new:active { background: #622e1c; }
+
+  .btn-icon {
+    background: rgba(234,228,218,0.07);
+    border: 1px solid rgba(234,228,218,0.1);
+    border-radius: 6px;
+    padding: 10px;
+    cursor: pointer;
+    color: var(--stone);
+    font-size: 16px;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .btn-icon:hover { background: rgba(234,228,218,0.12); }
+
+  #search-wrap {
+    padding: 0 16px 10px;
+    flex-shrink: 0;
+  }
+
+  #search {
+    width: 100%;
+    background: rgba(234,228,218,0.07);
+    border: 1px solid rgba(234,228,218,0.1);
+    border-radius: 6px;
+    color: var(--stone);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    min-height: 44px;
+    transition: border-color 0.15s;
+  }
+  #search::placeholder { color: var(--ink-muted); }
+  #search:focus { border-color: rgba(201,126,120,0.4); }
+
+  #stage-filter {
+    padding: 0 16px 10px;
+    flex-shrink: 0;
+  }
+
+  #stage-select {
+    width: 100%;
+    background: rgba(234,228,218,0.07);
+    border: 1px solid rgba(234,228,218,0.1);
+    border-radius: 6px;
+    color: var(--stone);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    padding: 8px 12px;
+    outline: none;
+    cursor: pointer;
+    min-height: 40px;
+    appearance: none;
+  }
+  #stage-select option { background: var(--ink); color: var(--stone); }
+
+  #customer-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+  #customer-list::-webkit-scrollbar { width: 4px; }
+  #customer-list::-webkit-scrollbar-track { background: transparent; }
+  #customer-list::-webkit-scrollbar-thumb { background: rgba(234,228,218,0.15); border-radius: 2px; }
+
+  .customer-card {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(234,228,218,0.05);
+    transition: background 0.12s;
+    position: relative;
+  }
+  .customer-card:hover { background: rgba(234,228,218,0.05); }
+  .customer-card.active { background: rgba(151,73,48,0.15); border-left: 2px solid var(--copper); }
+
+  .card-name { font-size: 13px; font-weight: 600; color: var(--stone); line-height: 1.2; }
+  .card-address { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+  .card-meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+
+  .stage-pill {
+    font-size: 9px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.1em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(234,228,218,0.1);
+    color: var(--stone);
+  }
+  .stage-pill.declined { background: rgba(139,32,32,0.25); color: #f0a0a0; }
+  .stage-pill.closed { background: rgba(42,92,58,0.3); color: #8fd4a4; }
+  .stage-pill.signed { background: rgba(151,73,48,0.3); color: var(--copper-light); }
+
+  .in-progress-tag {
+    font-size: 9px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.1em;
+    color: var(--copper-light);
+    padding: 2px 5px;
+    border: 1px solid rgba(201,126,120,0.3);
+    border-radius: 3px;
+  }
+
+  .arc-num { font-size: 10px; color: var(--ink-muted); margin-left: auto; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; }
+
+  .no-customers {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  #sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(234,228,218,0.08);
+    flex-shrink: 0;
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-footer {
+    flex: 1;
+    background: rgba(234,228,218,0.06);
+    border: 1px solid rgba(234,228,218,0.1);
+    color: var(--ink-muted);
+    border-radius: 5px;
+    padding: 8px 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 44px;
+    letter-spacing: 0.02em;
+  }
+  .btn-footer:hover { background: rgba(234,228,218,0.1); color: var(--stone); }
+
+  /* ── MAIN PANEL ── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--stone-light);
+  }
+
+  /* ── EMPTY STATE ── */
+  #empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+    color: var(--ink-muted);
+  }
+
+  .empty-shield { width: 60px; height: 60px; opacity: 0.3; margin-bottom: 20px; }
+  .empty-title { font-family: 'Anton', sans-serif; font-size: 20px; color: var(--ink-soft); letter-spacing: 0.05em; margin-bottom: 8px; }
+  .empty-sub { font-size: 13px; line-height: 1.6; max-width: 280px; }
+
+  /* ── DETAIL VIEW ── */
+  #detail { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  #detail-header {
+    padding: 16px 24px;
+    background: var(--white);
+    border-bottom: 1px solid var(--stone-dark);
+    flex-shrink: 0;
+  }
+
+  .detail-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .detail-name { font-family: 'Anton', sans-serif; font-size: 22px; color: var(--ink); letter-spacing: 0.02em; line-height: 1.1; }
+  .detail-arc { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: var(--copper); letter-spacing: 0.12em; margin-top: 2px; }
+  .detail-addr { font-size: 12px; color: var(--ink-muted); margin-top: 4px; }
+
+  /* ── PIPELINE BAR ── */
+  #pipeline {
+    padding: 14px 24px 10px;
+    background: var(--white);
+    border-bottom: 1px solid var(--stone-dark);
+    flex-shrink: 0;
+  }
+
+  .pipeline-stages {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 8px;
+  }
+  .pipeline-stages::-webkit-scrollbar { display: none; }
+
+  .pip-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    flex-shrink: 0;
+    cursor: default;
+  }
+
+  .pip-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--stone-dark);
+    transition: all 0.2s;
+    position: relative;
+    z-index: 1;
+  }
+  .pip-dot.done { background: var(--copper-mid); }
+  .pip-dot.current {
+    background: var(--copper);
+    width: 14px;
+    height: 14px;
+    box-shadow: 0 0 0 3px rgba(151,73,48,0.2), 0 0 12px rgba(151,73,48,0.4);
+  }
+  .pip-dot.declined-dot { background: var(--danger); }
+
+  .pip-line {
+    height: 2px;
+    width: 22px;
+    background: var(--stone-dark);
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .pip-line.done { background: var(--copper-mid); }
+
+  .pip-label {
+    font-size: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    text-align: center;
+    width: 42px;
+    line-height: 1.2;
+    position: absolute;
+    top: 18px;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    left: 50%;
+  }
+  .pip-label.current { color: var(--copper); }
+
+  .pip-stage-wrap { display: flex; align-items: center; }
+
+  #pipeline-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .pip-btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 40px;
+  }
+
+  .pip-btn-back { background: rgba(28,26,24,0.08); color: var(--ink-soft); }
+  .pip-btn-back:hover { background: rgba(28,26,24,0.14); }
+  .pip-btn-next { background: var(--copper); color: var(--white); }
+  .pip-btn-next:hover { background: #7a3a24; }
+  .pip-btn-next:disabled { background: var(--stone-dark); color: var(--ink-muted); cursor: not-allowed; }
+  .pip-btn-save { background: var(--ink); color: var(--stone); margin-left: auto; }
+  .pip-btn-save:hover { background: var(--ink-soft); }
+  .pip-btn-decline { background: rgba(139,32,32,0.1); color: var(--danger); border: 1px solid rgba(139,32,32,0.2); }
+  .pip-btn-decline:hover { background: rgba(139,32,32,0.18); }
+
+  /* ── FORM AREA ── */
+  #form-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+  #form-area::-webkit-scrollbar { width: 6px; }
+  #form-area::-webkit-scrollbar-track { background: transparent; }
+  #form-area::-webkit-scrollbar-thumb { background: var(--stone-dark); border-radius: 3px; }
+
+  .form-section { margin-bottom: 24px; }
+  .form-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--copper);
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--stone-dark);
+    padding-bottom: 6px;
+  }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.cols-1 { grid-template-columns: 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group.span-2 { grid-column: span 2; }
+  .form-group.span-3 { grid-column: span 3; }
+
+  label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="date"],
+  select,
+  textarea {
+    background: var(--white);
+    border: 1px solid var(--stone-dark);
+    border-radius: 5px;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 9px 11px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+    min-height: 40px;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--copper-mid);
+    box-shadow: 0 0 0 2px rgba(201,126,120,0.12);
+  }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* Price rows */
+  .price-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .price-row input { flex: 1; }
+  .price-label { font-size: 12px; color: var(--ink-muted); width: 80px; flex-shrink: 0; }
+  .price-amount { font-size: 13px; font-weight: 600; color: var(--ink); width: 80px; text-align: right; flex-shrink: 0; }
+  .price-row-total { border-top: 1px solid var(--stone-dark); padding-top: 8px; margin-top: 4px; }
+
+  /* Activity log */
+  #activity-log { max-height: 160px; overflow-y: auto; background: var(--stone); border-radius: 6px; padding: 10px 12px; }
+  #activity-log::-webkit-scrollbar { width: 3px; }
+  #activity-log::-webkit-scrollbar-thumb { background: var(--stone-dark); }
+
+  .activity-entry { font-size: 11px; color: var(--ink-muted); padding: 3px 0; border-bottom: 1px solid rgba(28,26,24,0.06); line-height: 1.4; }
+  .activity-entry:last-child { border-bottom: none; }
+  .activity-ts { color: var(--copper-mid); font-weight: 600; margin-right: 6px; }
+
+  /* ── PROPOSAL SECTION ── */
+  .proposal-section {
+    background: var(--stone);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 8px;
+  }
+
+  .proposal-step-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+
+  .proposal-btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    padding: 11px 18px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .proposal-btn-primary { background: var(--copper); color: var(--white); }
+  .proposal-btn-primary:hover { background: #7a3a24; }
+  .proposal-btn-primary:disabled { background: var(--stone-dark); color: var(--ink-muted); cursor: not-allowed; }
+  .proposal-btn-secondary { background: var(--ink); color: var(--stone); }
+  .proposal-btn-secondary:hover { background: var(--ink-soft); }
+  .proposal-btn-secondary:disabled { background: var(--stone-dark); color: var(--ink-muted); cursor: not-allowed; }
+
+  /* ── MODAL OVERLAY ── */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28,26,24,0.65);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #modal-overlay.active { display: flex; }
+
+  #modal-box {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 28px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .modal-title {
+    font-family: 'Anton', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.03em;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+
+  .modal-body { font-size: 13px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 20px; }
+
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+  .modal-btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    min-height: 44px;
+    transition: all 0.15s;
+  }
+
+  .modal-btn-confirm { background: var(--copper); color: var(--white); }
+  .modal-btn-confirm:hover { background: #7a3a24; }
+  .modal-btn-cancel { background: var(--stone); color: var(--ink); }
+  .modal-btn-cancel:hover { background: var(--stone-dark); }
+  .modal-btn-danger { background: var(--danger); color: var(--white); }
+
+  /* ── PROPOSAL PRINT STYLES ── */
+  .proposal-wrap { font-family: 'Inter', sans-serif; }
+
+  /* ── MOBILE ── */
+  #mobile-back {
+    display: none;
+    padding: 10px 16px;
+    background: var(--white);
+    border-bottom: 1px solid var(--stone-dark);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    color: var(--copper);
+    cursor: pointer;
+    min-height: 44px;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 700px) {
+    :root { --sidebar-w: 100%; }
+
+    body { overflow: auto; }
+    #app { flex-direction: column; height: 100vh; overflow: hidden; }
+
+    #sidebar {
+      width: 100%;
+      height: 100vh;
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 20;
+      transition: transform 0.3s ease;
+    }
+
+    #sidebar.hidden { transform: translateX(-100%); }
+
+    #main {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 15;
+      display: none;
+    }
+    #main.visible { display: flex; }
+
+    #mobile-back { display: flex; }
+
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    .form-group.span-2, .form-group.span-3 { grid-column: span 1; }
+
+    .detail-name { font-size: 18px; }
+    #pipeline { padding: 12px 16px 8px; }
+    #form-area { padding: 16px; }
+  }
+
+  /* Print styles */
+  @media print {
+    @page { margin: 0; size: letter; }
+    body { overflow: visible !important; }
+    #app { display: none !important; }
+    #proposal-print-target { display: block !important; }
+  }
+
+  #proposal-print-target { display: none; }
+
+  /* Saved toast */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--ink);
+    color: var(--stone);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    z-index: 2000;
+    transition: transform 0.25s ease;
+    pointer-events: none;
+    border-left: 3px solid var(--copper);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <div class="brand-lockup" onclick="window.location.reload()">
+        <!-- Shield SVG inline -->
+        <svg class="shield-mark" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="aLift" x="-18%" y="-18%" width="136%" height="136%">
+              <fegaussianblur in="SourceAlpha" stdDeviation="0.7"></fegaussianblur>
+              <feoffset dx="0.7" dy="1.3"></feoffset>
+              <fecomponenttransfer><fefunca type="linear" slope="0.4"></fefunca></fecomponenttransfer>
+              <femerge><femergenode></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+            </filter>
+          </defs>
+          <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="1.8" opacity="0.85"></path>
+          <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.2"></path>
+          <line x1="50" y1="7.5" x2="50" y2="12.5" stroke="#C97E78" stroke-width="1.2" opacity="0.8"></line>
+          <line x1="79" y1="50" x2="74" y2="50" stroke="#1C1A18" stroke-width="0.8" opacity="0.18"></line>
+          <line x1="21" y1="50" x2="26" y2="50" stroke="#1C1A18" stroke-width="0.8" opacity="0.18"></line>
+          <line x1="50" y1="83" x2="50" y2="78" stroke="#1C1A18" stroke-width="0.8" opacity="0.13"></line>
+          <g filter="url(#aLift)">
+            <path d="M 34 70 C 33 56, 37 40, 43 28 C 46 21, 50 16, 50 16" fill="none" stroke="#C97E78" stroke-width="5" stroke-linecap="round"></path>
+            <path d="M 32.5 69 C 31.5 55, 35.2 38.5, 41.5 26.5 C 44.5 19.5, 48.7 15, 48.7 15" fill="none" stroke="#F0C8C2" stroke-width="1.6" stroke-linecap="round"></path>
+            <path d="M 36 70.5 C 35.2 57, 39 41, 45 29 C 47.5 22.5, 51 17, 51 17" fill="none" stroke="#974930" stroke-width="0.9" stroke-linecap="round" opacity="0.8"></path>
+            <path d="M 50 16 C 50 16, 54 21, 57 28 C 63 40, 67 56, 66 70" fill="none" stroke="#974930" stroke-width="5" stroke-linecap="round"></path>
+            <path d="M 50.8 17.5 C 50.8 17.5, 53.8 22.5, 56.5 29.5 C 62 41.5, 65.5 57, 64.5 70" fill="none" stroke="#C97E78" stroke-width="1.5" stroke-linecap="round"></path>
+            <path d="M 51.5 19 C 51.5 19, 54 23.5, 56.5 30.5 C 61.5 42.5, 65 57.5, 64 70" fill="none" stroke="#F0C8C2" stroke-width="0.5" stroke-linecap="round" opacity="0.5"></path>
+            <line x1="36.5" y1="49" x2="63.5" y2="49" stroke="#C97E78" stroke-width="3.2" stroke-linecap="round"></line>
+            <line x1="37" y1="47.7" x2="63" y2="47.7" stroke="#F0C8C2" stroke-width="1" stroke-linecap="round"></line>
+            <line x1="37" y1="50.5" x2="63" y2="50.5" stroke="#974930" stroke-width="0.75" stroke-linecap="round"></line>
+          </g>
+          <circle cx="50" cy="16" r="4" fill="#974930"></circle>
+          <circle cx="50" cy="16" r="2.8" fill="#C97E78"></circle>
+          <circle cx="48.5" cy="14.6" r="1.4" fill="#F0C8C2"></circle>
+          <circle cx="48.1" cy="14.2" r="0.55" fill="#FDE8E4"></circle>
+          <line x1="31" y1="76" x2="69" y2="76" stroke="#1C1A18" stroke-width="0.9" opacity="0.28"></line>
+          <line x1="31" y1="74.5" x2="31" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"></line>
+          <line x1="69" y1="74.5" x2="69" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"></line>
+        </svg>
+        <div class="brand-text">
+          <span class="brand-agency">AGENCY</span>
+          <span class="brand-roofing">ROOFING CO.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="sidebar-actions">
+      <button class="btn-new" onclick="newCustomer()">+ NEW CUSTOMER</button>
+      <button class="btn-icon" title="Export backup" onclick="exportData()">⬇</button>
+      <label class="btn-icon" title="Import backup" style="cursor:pointer;">⬆<input type="file" accept=".json" id="import-file" style="display:none" onchange="importData(this)"></label>
+    </div>
+
+    <div id="search-wrap">
+      <input type="text" id="search" placeholder="Search customers..." oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+
+    <div id="stage-filter">
+      <select id="stage-select" onchange="renderList()">
+        <option value="">All Stages</option>
+        <option>Lead</option>
+        <option>Inspection</option>
+        <option>Proposal</option>
+        <option>Pending</option>
+        <option>Signed</option>
+        <option>Scheduling</option>
+        <option>Scheduled</option>
+        <option>In Production</option>
+        <option>Final Inspection</option>
+        <option>Closed</option>
+        <option>Declined</option>
+      </select>
+    </div>
+
+    <div id="customer-list"><div class="no-customers">No customers found.</div></div>
+
+    <div id="sidebar-footer">
+      <button class="btn-footer" onclick="exportData()">EXPORT BACKUP</button>
+      <label class="btn-footer" style="cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center;">
+        IMPORT<input type="file" accept=".json" style="display:none" onchange="importData(this)">
+      </label>
+    </div>
+  </div>
+
+  <!-- MAIN PANEL -->
+  <div id="main">
+    <div id="mobile-back" onclick="mobileBack()">← BACK</div>
+
+    <!-- Empty state -->
+    <div id="empty-state">
+      <svg class="empty-shield" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="2.5"></path>
+        <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#974930" stroke-width="1.5"></path>
+      </svg>
+      <div class="empty-title">SELECT A CUSTOMER</div>
+      <div class="empty-sub">Choose from the list or create a new customer to get started.</div>
+    </div>
+
+    <!-- Detail view (hidden initially) -->
+    <div id="detail" style="display:none;">
+      <div id="detail-header">
+        <div class="detail-top">
+          <div>
+            <div class="detail-name" id="dh-name">—</div>
+            <div class="detail-arc" id="dh-arc">—</div>
+            <div class="detail-addr" id="dh-addr">—</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start;flex-shrink:0;">
+            <button class="pip-btn pip-btn-save" onclick="saveCustomer()" style="padding:8px 14px;font-size:12px;">SAVE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pipeline bar -->
+      <div id="pipeline">
+        <div class="pipeline-stages" id="pipeline-bar"></div>
+        <div id="pipeline-controls">
+          <button class="pip-btn pip-btn-back" onclick="stageBack()">← BACK</button>
+          <button class="pip-btn pip-btn-next" id="btn-next" onclick="stageNext()">NEXT →</button>
+          <button class="pip-btn pip-btn-save" onclick="saveCustomer()">SAVE</button>
+          <button class="pip-btn pip-btn-decline" onclick="confirmDecline()">DECLINE</button>
+        </div>
+      </div>
+
+      <!-- Form area -->
+      <div id="form-area">
+        <!-- CONTACT INFO -->
+        <div class="form-section">
+          <div class="form-section-title">Contact Information</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" id="f-first" placeholder="First" oninput="syncHeader()">
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" id="f-last" placeholder="Last" oninput="syncHeader()">
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" id="f-phone" placeholder="(505) 000-0000">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="f-email" placeholder="email@example.com">
+            </div>
+          </div>
+        </div>
+
+        <!-- PROPERTY -->
+        <div class="form-section">
+          <div class="form-section-title">Property</div>
+          <div class="form-grid">
+            <div class="form-group span-2">
+              <label>Street Address</label>
+              <input type="text" id="f-address" placeholder="123 Main St" oninput="syncHeader()">
+            </div>
+            <div class="form-group">
+              <label>City</label>
+              <input type="text" id="f-city" placeholder="Albuquerque" value="Albuquerque">
+            </div>
+            <div class="form-group">
+              <label>State / ZIP</label>
+              <input type="text" id="f-zip" placeholder="NM 87120">
+            </div>
+            <div class="form-group">
+              <label>Roof Type</label>
+              <select id="f-rooftype">
+                <option value="">Select...</option>
+                <option>TPO</option>
+                <option>Modified Bitumen</option>
+                <option>EPDM</option>
+                <option>SPF (Spray Foam)</option>
+                <option>PVC</option>
+                <option>Built-Up</option>
+                <option>Silicone Coating</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Roof Size (sq ft)</label>
+              <input type="number" id="f-roofsize" placeholder="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- SCOPE OF WORK -->
+        <div class="form-section">
+          <div class="form-section-title">Scope of Work</div>
+          <div class="form-grid cols-1">
+            <div class="form-group">
+              <label>Scope Description</label>
+              <textarea id="f-scope" rows="4" placeholder="Describe the work to be performed..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Customer Requests / Notes</label>
+              <textarea id="f-requests" rows="3" placeholder="Any specific customer requests or concerns..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRICING -->
+        <div class="form-section">
+          <div class="form-section-title">Pricing — Your Cost Breakdown</div>
+          <div style="max-width:500px;">
+            <div style="font-size:10px;color:var(--ink-muted);margin-bottom:10px;letter-spacing:0.04em;">Enter your actual costs. Customer only sees the Total Investment — not the breakdown.</div>
+            <div class="price-row">
+              <span class="price-label">Materials</span>
+              <input type="number" id="f-materials" placeholder="0.00" step="0.01" min="0" oninput="calcTotals()">
+            </div>
+            <div class="price-row">
+              <span class="price-label">Labor</span>
+              <input type="number" id="f-labor" placeholder="0.00" step="0.01" min="0" oninput="calcTotals()">
+            </div>
+            <div class="price-row">
+              <span class="price-label">Other</span>
+              <input type="number" id="f-other" placeholder="0.00" step="0.01" min="0" oninput="calcTotals()">
+            </div>
+            <div class="price-row price-row-total" style="background:transparent;border:none;">
+              <span class="price-label" style="font-weight:600;color:var(--ink);">Cost Total</span>
+              <span class="price-amount" id="calc-cost" style="margin-left:auto;">$0.00</span>
+            </div>
+            <div class="price-row" style="background:transparent;border:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--stone-dark);">
+              <span class="price-label" style="color:var(--copper);font-weight:600;">Margin %</span>
+              <input type="number" id="f-margin" placeholder="0" step="1" min="0" max="999" oninput="calcTotals()" style="width:80px;text-align:right;">
+            </div>
+            <div class="price-row" style="background:transparent;border:none;">
+              <span class="price-label" style="color:var(--ink-muted);font-size:11px;">Markup Amount</span>
+              <span class="price-amount" id="calc-markup" style="margin-left:auto;font-size:12px;color:var(--ink-muted);">$0.00</span>
+            </div>
+            <div class="price-row" style="background:transparent;border:none;border-top:1px solid var(--stone-dark);padding-top:8px;margin-top:4px;">
+              <span class="price-label" style="font-weight:600;color:var(--ink);">Customer Price</span>
+              <span class="price-amount" id="calc-subtotal" style="margin-left:auto;font-weight:700;">$0.00</span>
+            </div>
+            <div class="price-row" style="background:transparent;border:none;">
+              <span class="price-label" style="color:var(--ink-muted);font-size:11px;">Tax (7.3125%)</span>
+              <span class="price-amount" id="calc-tax" style="margin-left:auto;font-weight:400;font-size:12px;color:var(--ink-muted);">$0.00</span>
+            </div>
+            <div class="price-row" style="background:transparent;border:none;border-top:2px solid var(--ink);padding-top:8px;margin-top:4px;">
+              <span class="price-label" style="font-family:&#39;Anton&#39;,sans-serif;font-size:15px;color:var(--ink);">TOTAL INVESTMENT</span>
+              <span class="price-amount" id="calc-total" style="margin-left:auto;font-family:&#39;Anton&#39;,sans-serif;font-size:16px;color:var(--copper);">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCHEDULED DATE (appears when stage = Scheduled) -->
+        <div class="form-section" id="section-scheduled" style="display:none;">
+          <div class="form-section-title">Install Date</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Scheduled Date</label>
+              <input type="date" id="f-scheddate">
+            </div>
+          </div>
+        </div>
+
+        <!-- PROPOSAL & EMAIL -->
+        <div class="form-section">
+          <div class="form-section-title">Proposal</div>
+          <div class="proposal-section">
+            <div class="proposal-step-title">STEP 1 — GENERATE PROPOSAL PDF</div>
+            <button class="proposal-btn proposal-btn-primary" id="btn-generate" onclick="generateProposal()">
+              📄 OPEN PROPOSAL PREVIEW
+            </button>
+            <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens a new tab. Uncheck <em>Headers and Footers</em> in the print dialog, then save as PDF.</p>
+          </div>
+          <div class="proposal-section">
+            <div class="proposal-step-title">STEP 2 — SEND EMAIL</div>
+            <button class="proposal-btn proposal-btn-secondary" id="btn-email" onclick="sendEmail()" disabled="">
+              ✉ OPEN EMAIL
+            </button>
+            <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens Mail app pre-filled. Attach the PDF you just saved.</p>
+          </div>
+        </div>
+
+        <!-- ACTIVITY LOG -->
+        <div class="form-section">
+          <div class="form-section-title">Activity Log</div>
+          <div id="activity-log"><div class="activity-entry" style="color:var(--ink-muted);font-style:italic;">No activity yet.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div class="modal-title" id="modal-title">Confirm</div>
+    <div class="modal-body" id="modal-body">Are you sure?</div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">SAVED</div>
+
+<!-- PROPOSAL PRINT TARGET -->
+<div id="proposal-print-target"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  ARC CRM v4 — Agency Roofing Co.
+//  Single-file, localStorage-based, no dependencies
+// ═══════════════════════════════════════════════════════
+
+const STORAGE_KEY = 'arc_v3';
+const STAGES = ['Lead','Inspection','Proposal','Pending','Signed','Scheduling','Scheduled','In Production','Final Inspection','Closed','Declined'];
+const TAX_RATE = 0.073125;
+const ARC_EMAIL = 'agencyroofingco@gmail.com';
+const ARC_PHONE = '(505) 900-1711';
+
+let customers = [];
+let currentId = null;
+let proposalDone = false;
+
+// ── DATA ──────────────────────────────────────────────
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    customers = raw ? JSON.parse(raw) : [];
+    customers = customers.map(normalize);
+  } catch(e) { customers = []; }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
+}
+
+function normalize(c) {
+  return {
+    id: c.id || genId(),
+    arcNum: c.arcNum || genArcNum(),
+    createdAt: c.createdAt || Date.now(),
+    updatedAt: c.updatedAt || Date.now(),
+    stage: c.stage || 'Lead',
+    first: c.first || '',
+    last: c.last || '',
+    phone: c.phone || '',
+    email: c.email || '',
+    address: c.address || '',
+    city: c.city || 'Albuquerque',
+    zip: c.zip || '',
+    rooftype: c.rooftype || '',
+    roofsize: c.roofsize || '',
+    scope: c.scope || '',
+    requests: c.requests || '',
+    materials: c.materials || '',
+    labor: c.labor || '',
+    other: c.other || '',
+    margin: c.margin || '30',
+    scheddate: c.scheddate || '',
+    activityLog: c.activityLog || [],
+    proposalSent: c.proposalSent || false,
+  };
+}
+
+function genId() {
+  return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+}
+
+function genArcNum() {
+  const nums = customers.map(c => {
+    const m = (c.arcNum||'').match(/ARC-(\d+)/);
+    return m ? parseInt(m[1]) : 0;
+  });
+  const next = (Math.max(0, ...nums) + 1);
+  return 'ARC-' + String(next).padStart(5,'0');
+}
+
+function getCurrent() {
+  return customers.find(c => c.id === currentId) || null;
+}
+
+// ── RENDER LIST ────────────────────────────────────────
+
+function renderList() {
+  const q = (document.getElementById('search').value || '').toLowerCase();
+  const stageF = document.getElementById('stage-select').value;
+
+  let list = customers.slice().sort((a,b) => b.updatedAt - a.updatedAt);
+
+  if (q) {
+    list = list.filter(c => {
+      const hay = [c.first, c.last, c.address, c.arcNum, c.phone, c.email].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  if (stageF) {
+    list = list.filter(c => c.stage === stageF);
+  }
+
+  const el = document.getElementById('customer-list');
+  if (list.length === 0) {
+    el.innerHTML = '<div class="no-customers">No customers found.</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(c => {
+    const name = [c.first, c.last].filter(Boolean).join(' ') || 'Unnamed';
+    const inProg = (Date.now() - c.updatedAt) < 86400000;
+    const stageClass = c.stage === 'Declined' ? 'declined' : c.stage === 'Closed' ? 'closed' : c.stage === 'Signed' ? 'signed' : '';
+    return `<div class="customer-card${c.id === currentId ? ' active' : ''}" onclick="selectCustomer('${c.id}')">
+      <div class="card-name">${esc(name)}</div>
+      ${c.address ? `<div class="card-address">${esc(c.address)}</div>` : ''}
+      <div class="card-meta">
+        <span class="stage-pill ${stageClass}">${esc(c.stage)}</span>
+        ${inProg && c.id === currentId ? '<span class="in-progress-tag">IN PROGRESS</span>' : ''}
+        <span class="arc-num">${esc(c.arcNum)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── SELECT / NEW CUSTOMER ──────────────────────────────
+
+function selectCustomer(id) {
+  currentId = id;
+  proposalDone = false;
+  renderList();
+  loadDetail();
+  showDetail();
+}
+
+function newCustomer() {
+  const c = normalize({ arcNum: genArcNum(), createdAt: Date.now(), updatedAt: Date.now() });
+  customers.unshift(c);
+  save();
+  selectCustomer(c.id);
+  logActivity('Customer record created');
+}
+
+function showDetail() {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('detail').style.display = 'flex';
+  document.getElementById('detail').style.flexDirection = 'column';
+  // Mobile
+  document.getElementById('main').classList.add('visible');
+  document.getElementById('sidebar').classList.add('hidden');
+}
+
+function mobileBack() {
+  document.getElementById('main').classList.remove('visible');
+  document.getElementById('sidebar').classList.remove('hidden');
+}
+
+// ── LOAD DETAIL ────────────────────────────────────────
+
+function loadDetail() {
+  const c = getCurrent();
+  if (!c) return;
+
+  document.getElementById('f-first').value = c.first;
+  document.getElementById('f-last').value = c.last;
+  document.getElementById('f-phone').value = c.phone;
+  document.getElementById('f-email').value = c.email;
+  document.getElementById('f-address').value = c.address;
+  document.getElementById('f-city').value = c.city || 'Albuquerque';
+  document.getElementById('f-zip').value = c.zip;
+  document.getElementById('f-rooftype').value = c.rooftype;
+  document.getElementById('f-roofsize').value = c.roofsize;
+  document.getElementById('f-scope').value = c.scope;
+  document.getElementById('f-requests').value = c.requests;
+  document.getElementById('f-materials').value = c.materials;
+  document.getElementById('f-labor').value = c.labor;
+  document.getElementById('f-other').value = c.other;
+  document.getElementById('f-margin').value = c.margin || '30';
+  document.getElementById('f-scheddate').value = c.scheddate;
+
+  syncHeader();
+  calcTotals();
+  renderPipeline();
+  renderActivityLog();
+  updateScheduledSection();
+  updateEmailBtn();
+}
+
+function syncHeader() {
+  const c = getCurrent();
+  if (!c) return;
+  const first = document.getElementById('f-first').value;
+  const last = document.getElementById('f-last').value;
+  const addr = document.getElementById('f-address').value;
+  const name = [first, last].filter(Boolean).join(' ') || 'New Customer';
+  document.getElementById('dh-name').textContent = name;
+  document.getElementById('dh-arc').textContent = c.arcNum;
+  document.getElementById('dh-addr').textContent = addr || 'No address entered';
+}
+
+// ── PIPELINE ───────────────────────────────────────────
+
+function renderPipeline() {
+  const c = getCurrent();
+  if (!c) return;
+  const si = STAGES.indexOf(c.stage);
+  const bar = document.getElementById('pipeline-bar');
+
+  let html = '';
+  STAGES.forEach((s, i) => {
+    const isDone = i < si;
+    const isCurrent = i === si;
+    const dotClass = s === 'Declined' && isCurrent ? 'declined-dot' : isCurrent ? 'current' : isDone ? 'done' : '';
+    const labelClass = isCurrent ? 'current' : '';
+
+    html += `<div class="pip-stage-wrap">
+      <div class="pip-stage">
+        <div class="pip-dot ${dotClass}"></div>
+        <div class="pip-label ${labelClass}">${s}</div>
+      </div>
+      ${i < STAGES.length - 1 ? `<div class="pip-line ${isDone || isCurrent ? 'done' : ''}"></div>` : ''}
+    </div>`;
+  });
+
+  bar.innerHTML = html;
+
+  // Scroll current dot into view
+  setTimeout(() => {
+    const dots = bar.querySelectorAll('.pip-dot');
+    if (dots[si]) dots[si].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, 50);
+
+  const btnNext = document.getElementById('btn-next');
+  btnNext.disabled = c.stage === 'Closed' || c.stage === 'Declined';
+
+  updateScheduledSection();
+}
+
+function stageNext() {
+  const c = getCurrent();
+  if (!c) return;
+  const si = STAGES.indexOf(c.stage);
+  if (si < STAGES.length - 2) {
+    const next = STAGES[si + 1];
+    logActivity('Stage moved to ' + next);
+    c.stage = next;
+    saveCustomer(false);
+    renderPipeline();
+    renderList();
+  }
+}
+
+function stageBack() {
+  const c = getCurrent();
+  if (!c) return;
+  const si = STAGES.indexOf(c.stage);
+  if (si > 0) {
+    const prev = STAGES[si - 1];
+    logActivity('Stage moved back to ' + prev);
+    c.stage = prev;
+    saveCustomer(false);
+    renderPipeline();
+    renderList();
+  }
+}
+
+function confirmDecline() {
+  showModal(
+    'DECLINE THIS CUSTOMER?',
+    'This will move the record to Declined. You can move it back at any time.',
+    [
+      { label: 'CANCEL', cls: 'modal-btn modal-btn-cancel', fn: closeModal },
+      { label: 'DECLINE', cls: 'modal-btn modal-btn-danger', fn: () => { closeModal(); declineCustomer(); } }
+    ]
+  );
+}
+
+function declineCustomer() {
+  const c = getCurrent();
+  if (!c) return;
+  logActivity('Customer marked Declined');
+  c.stage = 'Declined';
+  saveCustomer(false);
+  renderPipeline();
+  renderList();
+}
+
+function updateScheduledSection() {
+  const c = getCurrent();
+  const show = c && (c.stage === 'Scheduled' || c.stage === 'In Production' || c.stage === 'Final Inspection');
+  document.getElementById('section-scheduled').style.display = show ? 'block' : 'none';
+}
+
+// ── SAVE ───────────────────────────────────────────────
+
+function saveCustomer(toast = true) {
+  const c = getCurrent();
+  if (!c) return;
+
+  c.first = document.getElementById('f-first').value.trim();
+  c.last = document.getElementById('f-last').value.trim();
+  c.phone = document.getElementById('f-phone').value.trim();
+  c.email = document.getElementById('f-email').value.trim();
+  c.address = document.getElementById('f-address').value.trim();
+  c.city = document.getElementById('f-city').value.trim();
+  c.zip = document.getElementById('f-zip').value.trim();
+  c.rooftype = document.getElementById('f-rooftype').value;
+  c.roofsize = document.getElementById('f-roofsize').value;
+  c.scope = document.getElementById('f-scope').value.trim();
+  c.requests = document.getElementById('f-requests').value.trim();
+  c.materials = document.getElementById('f-materials').value;
+  c.labor = document.getElementById('f-labor').value;
+  c.other = document.getElementById('f-other').value;
+  c.margin = document.getElementById('f-margin').value;
+  c.scheddate = document.getElementById('f-scheddate').value;
+  c.updatedAt = Date.now();
+
+  save();
+  renderList();
+  syncHeader();
+  if (toast) { showToast('SAVED'); logActivity('Record saved'); renderActivityLog(); }
+}
+
+// ── TOTALS ─────────────────────────────────────────────
+
+function calcTotals() {
+  const mat = parseFloat(document.getElementById('f-materials').value) || 0;
+  const lab = parseFloat(document.getElementById('f-labor').value) || 0;
+  const oth = parseFloat(document.getElementById('f-other').value) || 0;
+  const cost = mat + lab + oth;
+  const margin = parseFloat(document.getElementById('f-margin').value) || 0;
+  const markup = cost * (margin / 100);
+  const sub = cost + markup;
+  const tax = sub * TAX_RATE;
+  const total = sub + tax;
+
+  document.getElementById('calc-cost').textContent = fmt(cost);
+  document.getElementById('calc-markup').textContent = fmt(markup);
+  document.getElementById('calc-subtotal').textContent = fmt(sub);
+  document.getElementById('calc-tax').textContent = fmt(tax);
+  document.getElementById('calc-total').textContent = fmt(total);
+}
+
+function fmt(n) {
+  return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+// ── ACTIVITY LOG ───────────────────────────────────────
+
+function logActivity(msg) {
+  const c = getCurrent();
+  if (!c) return;
+  const ts = new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
+  c.activityLog = c.activityLog || [];
+  c.activityLog.unshift({ ts, msg });
+  if (c.activityLog.length > 50) c.activityLog = c.activityLog.slice(0, 50);
+}
+
+function renderActivityLog() {
+  const c = getCurrent();
+  const el = document.getElementById('activity-log');
+  if (!c || !c.activityLog || c.activityLog.length === 0) {
+    el.innerHTML = '<div class="activity-entry" style="color:var(--ink-muted);font-style:italic;">No activity yet.</div>';
+    return;
+  }
+  el.innerHTML = c.activityLog.map(e =>
+    `<div class="activity-entry"><span class="activity-ts">${esc(e.ts)}</span>${esc(e.msg)}</div>`
+  ).join('');
+}
+
+// ── PROPOSAL ───────────────────────────────────────────
+
+function generateProposal() {
+  const c = getCurrent();
+  if (!c) return;
+  saveCustomer(false);
+
+  // Internal cost breakdown
+  const mat = parseFloat(c.materials) || 0;
+  const lab = parseFloat(c.labor) || 0;
+  const oth = parseFloat(c.other) || 0;
+  const cost = mat + lab + oth;
+  const margin = parseFloat(c.margin) || 0;
+  const markup = cost * (margin / 100);
+  // Customer-facing price — single number, no breakdown
+  const customerPrice = cost + markup;
+  const tax = customerPrice * TAX_RATE;
+  const total = customerPrice + tax;
+
+  const fullName = [c.first, c.last].filter(Boolean).join(' ') || 'Valued Customer';
+  const firstName = c.first || fullName;
+  const lastName = c.last || '';
+  const fullAddr = [c.address, c.city, c.zip].filter(Boolean).join(', ') || 'Address on file';
+  const today = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+  function scopeToBullets(text) {
+    if (!text) return '';
+    return text.split('\n').filter(l => l.trim()).map(l =>
+      `<li>${esc(l.trim())}</li>`
+    ).join('');
+  }
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Proposal ${c.arcNum} \u2014 ${fullName}</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  @page { margin: 0; size: letter; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #EAE4DA; color: #1C1A18; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .page { width: 8.5in; min-height: 11in; background: #EAE4DA; padding: 0.5in 0.65in; page-break-after: always; break-after: page; }
+  .page-2 { page-break-after: auto; break-after: auto; }
+
+  /* ── HEADER — big mark, generous spacing like original ── */
+  .p-header { display: flex; align-items: flex-end; gap: 20px; padding-bottom: 18px; border-bottom: 1px solid rgba(28,26,24,0.18); margin-bottom: 28px; }
+  .p-brand { display: flex; align-items: center; gap: 16px; }
+  .p-wordmark { line-height: 1; }
+  .p-agency { font-family: 'Anton', sans-serif; font-size: 42px; color: #1C1A18; letter-spacing: 0.01em; display: block; line-height: 0.95; }
+  .p-roofing { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #974930; letter-spacing: 0.22em; display: block; margin-top: 3px; }
+  .p-right { margin-left: auto; text-align: right; }
+  .p-specialty { font-family: 'Bebas Neue', sans-serif; font-size: 10px; color: #6B6560; letter-spacing: 0.2em; display: block; margin-bottom: 6px; }
+  .p-rule { width: 48px; height: 1px; background: #974930; margin-left: auto; }
+
+  /* ── HERO TITLE ── */
+  .prop-hero { margin-bottom: 22px; break-inside: avoid; }
+  .prop-hero-title { font-size: 44px; font-weight: 700; color: #1C1A18; line-height: 1.02; }
+  .prop-hero-title span { color: #974930; }
+
+  /* ── META BAR ── */
+  .meta-bar { display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: 24px; break-inside: avoid; }
+  .meta-cell { padding: 10px 14px; border-right: 1px solid rgba(28,26,24,0.14); }
+  .meta-cell:first-child { padding-left: 0; }
+  .meta-cell:last-child { border-right: none; }
+  .meta-cell label { font-size: 7.5px; font-weight: 700; letter-spacing: 0.16em; color: #974930; text-transform: uppercase; display: block; margin-bottom: 5px; }
+  .meta-cell span { font-size: 11.5px; color: #1C1A18; font-weight: 500; line-height: 1.4; display: block; }
+
+  hr.div { border: none; border-top: 1px solid rgba(28,26,24,0.14); margin: 16px 0; }
+
+  /* ── TWO-COLUMN BODY ── */
+  .body-cols { display: grid; grid-template-columns: 1fr 210px; gap: 24px; break-inside: avoid; }
+
+  /* Scope */
+  .sh { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.2em; color: #974930; margin-bottom: 5px; }
+  .sh-rule { width: 26px; height: 2px; background: #974930; margin-bottom: 10px; }
+
+  .scope-list { list-style: none; padding: 0; margin: 0; }
+  .scope-list li { font-size: 11.5px; line-height: 1.7; color: #1C1A18; padding: 5px 0 5px 16px; border-bottom: 1px solid rgba(28,26,24,0.07); position: relative; break-inside: avoid; }
+  .scope-list li:last-child { border-bottom: none; }
+  .scope-list li::before { content: '\\2022'; color: #974930; position: absolute; left: 0; font-size: 15px; line-height: 1.35; }
+
+  .req-list { list-style: none; padding: 0; margin: 0; }
+  .req-list li { font-size: 11px; line-height: 1.65; color: #3A3734; padding: 4px 0 4px 14px; position: relative; break-inside: avoid; }
+  .req-list li::before { content: '\\2014'; color: #C97E78; position: absolute; left: 0; }
+
+  .terms-list { list-style: none; padding: 0; margin: 0; }
+  .terms-list li { font-size: 10.5px; line-height: 1.65; color: #6B6560; padding: 3px 0 3px 12px; position: relative; break-inside: avoid; }
+  .terms-list li::before { content: '\\2022'; color: #C97E78; position: absolute; left: 0; }
+
+  .section-block { break-inside: avoid; margin-bottom: 14px; }
+
+  /* Price box — bordered, same as original */
+  .price-box { border: 1.5px solid rgba(151,73,48,0.28); border-radius: 5px; padding: 16px; background: rgba(255,255,255,0.25); break-inside: avoid; }
+  .price-row-p { display: flex; justify-content: space-between; padding: 5px 0; font-size: 11.5px; color: #3A3734; border-bottom: 1px solid rgba(28,26,24,0.08); }
+  .price-row-p:last-of-type { border-bottom: none; }
+  .price-tax { font-size: 10px; color: #6B6560; }
+  .price-total-row { border-top: 2px solid #1C1A18 !important; padding-top: 8px !important; margin-top: 4px; }
+  .price-total-label { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.1em; color: #1C1A18; }
+  .price-total-amount { font-family: 'Anton', sans-serif; font-size: 17px; color: #974930; }
+
+  /* ── PAGE 1 FOOTER ── */
+  .p1-footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(28,26,24,0.12); display: flex; justify-content: space-between; align-items: center; break-inside: avoid; }
+  .p1-footer span { font-size: 8.5px; color: #6B6560; }
+  .p1-footer-arc { font-family: 'Bebas Neue', sans-serif; font-size: 10px; color: #974930; letter-spacing: 0.1em; }
+
+  /* ── PAGE 2 ── */
+  .p2-header { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(28,26,24,0.14); margin-bottom: 20px; break-inside: avoid; }
+  .promise-text { font-family: 'Lora', serif; font-size: 13px; line-height: 1.9; color: #1C1A18; }
+
+  .next-steps { margin-top: 4px; }
+  .next-step { display: flex; gap: 16px; margin-bottom: 12px; align-items: flex-start; break-inside: avoid; }
+  .next-step-num { font-family: 'Anton', sans-serif; font-size: 24px; color: #974930; line-height: 1; flex-shrink: 0; width: 26px; }
+  .next-step-text { font-size: 12px; line-height: 1.65; color: #1C1A18; padding-top: 4px; }
+
+  .sig-section { margin-top: 0.3in; break-inside: avoid; }
+  .sig-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 28px; margin-top: 18px; }
+  .sig-block label { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; color: #974930; text-transform: uppercase; display: block; margin-bottom: 32px; }
+  .sig-line { border-top: 1px solid #1C1A18; padding-top: 6px; font-size: 10px; color: #6B6560; }
+
+  .p2-footer { margin-top: 0.3in; border-top: 2px solid rgba(28,26,24,0.12); padding-top: 10px; display: flex; justify-content: space-between; align-items: center; break-inside: avoid; }
+  .p2-footer-tagline { font-family: 'Bebas Neue', sans-serif; font-size: 9px; letter-spacing: 0.16em; color: #1C1A18; }
+  .p2-footer-right { font-family: 'Bebas Neue', sans-serif; font-size: 9px; letter-spacing: 0.14em; color: #6B6560; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ PAGE 1 ═══════════ -->
+<div class="page">
+
+  <!-- Big header — original scale -->
+  <div class="p-header">
+    <div class="p-brand">
+      <svg width="72" height="72" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg" style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="1.8" opacity="0.85"/>
+        <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.2"/>
+        <line x1="50" y1="7.5" x2="50" y2="12.5" stroke="#C97E78" stroke-width="1.2" opacity="0.8"/>
+        <g>
+          <path d="M 34 70 C 33 56, 37 40, 43 28 C 46 21, 50 16, 50 16" fill="none" stroke="#C97E78" stroke-width="5" stroke-linecap="round"/>
+          <path d="M 32.5 69 C 31.5 55, 35.2 38.5, 41.5 26.5 C 44.5 19.5, 48.7 15, 48.7 15" fill="none" stroke="#F0C8C2" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M 36 70.5 C 35.2 57, 39 41, 45 29 C 47.5 22.5, 51 17, 51 17" fill="none" stroke="#974930" stroke-width="0.9" stroke-linecap="round" opacity="0.8"/>
+          <path d="M 50 16 C 50 16, 54 21, 57 28 C 63 40, 67 56, 66 70" fill="none" stroke="#974930" stroke-width="5" stroke-linecap="round"/>
+          <path d="M 50.8 17.5 C 50.8 17.5, 53.8 22.5, 56.5 29.5 C 62 41.5, 65.5 57, 64.5 70" fill="none" stroke="#C97E78" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M 51.5 19 C 51.5 19, 54 23.5, 56.5 30.5 C 61.5 42.5, 65 57.5, 64 70" fill="none" stroke="#F0C8C2" stroke-width="0.5" stroke-linecap="round" opacity="0.5"/>
+          <line x1="36.5" y1="49" x2="63.5" y2="49" stroke="#C97E78" stroke-width="3.2" stroke-linecap="round"/>
+          <line x1="37" y1="47.7" x2="63" y2="47.7" stroke="#F0C8C2" stroke-width="1" stroke-linecap="round"/>
+          <line x1="37" y1="50.5" x2="63" y2="50.5" stroke="#974930" stroke-width="0.75" stroke-linecap="round"/>
+        </g>
+        <circle cx="50" cy="16" r="4" fill="#974930"/>
+        <circle cx="50" cy="16" r="2.8" fill="#C97E78"/>
+        <circle cx="48.5" cy="14.6" r="1.4" fill="#F0C8C2"/>
+        <circle cx="48.1" cy="14.2" r="0.55" fill="#FDE8E4"/>
+        <line x1="31" y1="76" x2="69" y2="76" stroke="#1C1A18" stroke-width="0.9" opacity="0.28"/>
+        <line x1="31" y1="74.5" x2="31" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"/>
+        <line x1="69" y1="74.5" x2="69" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"/>
+      </svg>
+      <div class="p-wordmark">
+        <span class="p-agency">AGENCY</span>
+        <span class="p-roofing">ROOFING CO.</span>
+      </div>
+    </div>
+    <div class="p-right">
+      <span class="p-specialty">FLAT ROOF SPECIALISTS</span>
+      <div class="p-rule"></div>
+    </div>
+  </div>
+
+  <!-- Hero title -->
+  <div class="prop-hero">
+    <div class="prop-hero-title">Proposal for <span>${esc(firstName)}</span><br>${esc(lastName)}</div>
+  </div>
+
+  <!-- Meta bar -->
+  <div class="meta-bar">
+    <div class="meta-cell"><label>Proposal No.</label><span>${esc(c.arcNum)}</span></div>
+    <div class="meta-cell"><label>Date</label><span>${today}</span></div>
+    <div class="meta-cell"><label>Project Address</label><span>${esc(c.address || 'TBD')}</span></div>
+    <div class="meta-cell"><label>Prepared By</label><span>Agency Roofing Co.</span></div>
+  </div>
+
+  <hr class="div">
+
+  <!-- Two-column body -->
+  <div class="body-cols">
+    <div>
+      ${c.scope ? `<div class="section-block"><div class="sh">Scope of Work</div><div class="sh-rule"></div><ul class="scope-list">${scopeToBullets(c.scope)}</ul></div>` : ''}
+      ${c.requests ? `<div class="section-block"><div class="sh">Customer Requests</div><div class="sh-rule"></div><ul class="req-list">${scopeToBullets(c.requests)}</ul></div>` : ''}
+      <div class="section-block">
+        <div class="sh">Terms &amp; Conditions</div>
+        <div class="sh-rule"></div>
+        <ul class="terms-list">
+          <li>Proposal valid for 30 days from date above.</li>
+          <li>50% deposit due upon acceptance; remaining balance due upon completion.</li>
+          <li>Includes standard manufacturer warranty; details provided upon request.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Pricing box — customer sees one number -->
+    <div>
+      <div class="price-box">
+        <div class="sh">Pricing Summary</div>
+        <div class="sh-rule"></div>
+        <div class="price-row-p"><span>Total Investment</span><span>${fmt(customerPrice)}</span></div>
+        <div class="price-row-p" style="border-bottom:none;"><span style="font-size:9.5px;color:#6B6560;">Gross Receipts Tax (7.3125%)</span><span style="font-size:10px;color:#6B6560;">${fmt(tax)}</span></div>
+        <div class="price-row-p price-total-row" style="border-bottom:none;">
+          <span class="price-total-label">Final Investment</span>
+          <span class="price-total-amount">${fmt(total)}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p1-footer">
+    <span>Agency Roofing Co. LLC &middot; Albuquerque, NM &middot; ${ARC_PHONE} &middot; ${ARC_EMAIL}</span>
+    <span class="p1-footer-arc">${esc(c.arcNum)}</span>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE 2 ═══════════ -->
+<div class="page page-2">
+
+  <div class="p2-header">
+    <svg width="34" height="34" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg" style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+      <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="1.8" opacity="0.85"/>
+      <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.2"/>
+      <path d="M 34 70 C 33 56, 37 40, 43 28 C 46 21, 50 16, 50 16" fill="none" stroke="#C97E78" stroke-width="5" stroke-linecap="round"/>
+      <path d="M 32.5 69 C 31.5 55, 35.2 38.5, 41.5 26.5 C 44.5 19.5, 48.7 15, 48.7 15" fill="none" stroke="#F0C8C2" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M 50 16 C 50 16, 54 21, 57 28 C 63 40, 67 56, 66 70" fill="none" stroke="#974930" stroke-width="5" stroke-linecap="round"/>
+      <line x1="36.5" y1="49" x2="63.5" y2="49" stroke="#C97E78" stroke-width="3.2" stroke-linecap="round"/>
+      <circle cx="50" cy="16" r="4" fill="#974930"/>
+      <circle cx="50" cy="16" r="2.8" fill="#C97E78"/>
+      <circle cx="48.5" cy="14.6" r="1.4" fill="#F0C8C2"/>
+      <line x1="31" y1="76" x2="69" y2="76" stroke="#1C1A18" stroke-width="0.9" opacity="0.28"/>
+    </svg>
+    <div>
+      <span style="font-family:'Anton',sans-serif;font-size:22px;color:#1C1A18;letter-spacing:0.01em;display:block;line-height:0.95;">AGENCY</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:10px;color:#974930;letter-spacing:0.22em;display:block;margin-top:2px;">ROOFING CO.</span>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="sh">Agency Promise</div>
+    <div class="sh-rule"></div>
+    <div class="promise-text">When you call Agency Roofing Co., someone capable, knowledgeable, and obligated to serve will answer. We promise to listen before we climb, to protect what matters most, and to show up &mdash; not because it&rsquo;s convenient, but because it&rsquo;s our responsibility. Every roof we touch is someone&rsquo;s safety, peace of mind, and home. We treat it that way. Every time.</div>
+  </div>
+
+  <hr class="div">
+
+  <div class="section-block">
+    <div class="sh">What Happens Next</div>
+    <div class="sh-rule"></div>
+    <div class="next-steps">
+      <div class="next-step"><div class="next-step-num">1</div><div class="next-step-text"><strong>Review this proposal.</strong> Take your time. Questions about scope, materials, or pricing? Call Orlando directly at ${ARC_PHONE}. No pressure, no runaround.</div></div>
+      <div class="next-step"><div class="next-step-num">2</div><div class="next-step-text"><strong>Sign and deposit to secure your date.</strong> Return the signed proposal with a 50% deposit. That locks your spot on the schedule.</div></div>
+      <div class="next-step"><div class="next-step-num">3</div><div class="next-step-text"><strong>We show up and do the work.</strong> On installation day, we arrive on time, keep your property clean, and don&rsquo;t leave until the job is done right.</div></div>
+      <div class="next-step"><div class="next-step-num">4</div><div class="next-step-text"><strong>Final inspection and close.</strong> We walk the roof with you, answer any questions, and collect the remaining balance. Warranty documentation included.</div></div>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <div class="sig-section">
+    <div class="sh">Authorization</div>
+    <div class="sh-rule"></div>
+    <div class="sig-row">
+      <div class="sig-block"><label>Customer Signature</label><div class="sig-line">&nbsp;</div></div>
+      <div class="sig-block"><label>Printed Name</label><div class="sig-line">${esc(fullName)}</div></div>
+      <div class="sig-block"><label>Date</label><div class="sig-line">&nbsp;</div></div>
+    </div>
+  </div>
+
+  <div class="p2-footer">
+    <div class="p2-footer-tagline">Built with agency. &nbsp; Driven by obligation.</div>
+    <div class="p2-footer-right">Flat Roof Specialists &middot; Albuquerque, New Mexico</div>
+  </div>
+</div>
+
+<script>
+  window.onload = function() {
+    if (window.opener && window.opener.arcPDFReady) window.opener.arcPDFReady();
+    window.print();
+  };
+<\/script>
+</body>
+</html>`;
+
+
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+    proposalDone = true;
+    logActivity('Proposal opened for ' + c.arcNum);
+    saveCustomer(false);
+    renderActivityLog();
+    updateEmailBtn();
+  } else {
+    // Popup blocked — try inline fallback
+    showModal(
+      'POPUP BLOCKED',
+      'Your browser blocked the proposal preview. Please allow popups for this site and try again.',
+      [{ label: 'OK', cls: 'modal-btn modal-btn-confirm', fn: closeModal }]
+    );
+  }
+}
+
+// Mark PDF done from child window callback
+window.arcPDFReady = function() {
+  proposalDone = true;
+  updateEmailBtn();
+};
+
+function updateEmailBtn() {
+  document.getElementById('btn-email').disabled = !proposalDone;
+}
+
+function sendEmail() {
+  const c = getCurrent();
+  if (!c) return;
+  const name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer';
+  const addr = c.address || 'Address on file';
+  const subject = encodeURIComponent(`${name}, your Agency Roofing Co. proposal for ${addr} \u00B7 ${c.arcNum}`);
+  const body = encodeURIComponent(
+`Hi ${c.first || name},
+
+Thank you for the opportunity to put together a proposal for your property at ${addr}.
+
+I've attached your proposal (${c.arcNum}) for your review. Please take your time — if you have any questions about the scope, materials, or pricing, don't hesitate to call me directly.
+
+When you're ready to move forward, let me know and we'll get you on the schedule.
+
+Built with agency. Driven by obligation.
+
+Orlando
+Agency Roofing Co.
+${ARC_PHONE}`
+  );
+
+  const to = c.email || '';
+  const link = document.createElement('a');
+  link.href = `mailto:${to}?subject=${subject}&body=${body}`;
+  document.body.appendChild(link);
+  setTimeout(() => {
+    link.click();
+    document.body.removeChild(link);
+    logActivity('Email opened for ' + c.arcNum + (to ? ' to ' + to : ''));
+    saveCustomer(false);
+    renderActivityLog();
+  }, 200);
+}
+
+// ── EXPORT / IMPORT ────────────────────────────────────
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(customers, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `arc-crm-backup-${ts}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('BACKUP EXPORTED');
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('Invalid format');
+      showModal(
+        'IMPORT BACKUP?',
+        `This will merge ${data.length} customer records. Existing records with the same ID will be updated. Continue?`,
+        [
+          { label: 'CANCEL', cls: 'modal-btn modal-btn-cancel', fn: closeModal },
+          { label: 'IMPORT', cls: 'modal-btn modal-btn-confirm', fn: () => {
+            closeModal();
+            const existingIds = new Set(customers.map(c => c.id));
+            data.forEach(d => {
+              const nd = normalize(d);
+              if (existingIds.has(nd.id)) {
+                const idx = customers.findIndex(c => c.id === nd.id);
+                customers[idx] = nd;
+              } else {
+                customers.push(nd);
+              }
+            });
+            save();
+            renderList();
+            showToast('IMPORT COMPLETE');
+          }}
+        ]
+      );
+    } catch(e) {
+      showModal('IMPORT ERROR', 'Could not read the backup file. Make sure it is a valid ARC CRM JSON export.', [
+        { label: 'OK', cls: 'modal-btn modal-btn-confirm', fn: closeModal }
+      ]);
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+// ── MODAL ──────────────────────────────────────────────
+
+function showModal(title, body, buttons) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = body;
+  document.getElementById('modal-actions').innerHTML = '';
+  buttons.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = b.cls;
+    btn.textContent = b.label;
+    btn.onclick = b.fn;
+    document.getElementById('modal-actions').appendChild(btn);
+  });
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+}
+
+// Close modal on overlay click
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── TOAST ──────────────────────────────────────────────
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── HELPERS ────────────────────────────────────────────
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── INIT ───────────────────────────────────────────────
+
+load();
+renderList();
+</script>
+
+
+</body></html>

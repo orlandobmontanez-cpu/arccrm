@@ -1338,87 +1338,85 @@ function generateProposal() {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Inter', sans-serif; background: #EAE4DA; color: #1C1A18; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-  .page { width: 8.5in; min-height: 11in; background: #EAE4DA; padding: 0.5in 0.65in; page-break-after: always; break-after: page; }
+  .page { width: 8.5in; min-height: 11in; background: #EAE4DA; padding: 0.42in 0.58in; page-break-after: always; break-after: page; }
   .page-2 { page-break-after: auto; break-after: auto; }
 
-  /* ── HEADER — big mark, generous spacing like original ── */
-  .p-header { display: flex; align-items: flex-end; gap: 20px; padding-bottom: 18px; border-bottom: 1px solid rgba(28,26,24,0.18); margin-bottom: 28px; }
-  .p-brand { display: flex; align-items: center; gap: 16px; }
-  .p-wordmark { line-height: 1; }
-  .p-agency { font-family: 'Anton', sans-serif; font-size: 42px; color: #1C1A18; letter-spacing: 0.01em; display: block; line-height: 0.95; }
-  .p-roofing { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #974930; letter-spacing: 0.22em; display: block; margin-top: 3px; }
+  /* HEADER */
+  .p-header { display: flex; align-items: flex-end; gap: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(28,26,24,0.18); margin-bottom: 18px; }
+  .p-brand { display: flex; align-items: center; gap: 14px; }
+  .p-agency { font-family: 'Anton', sans-serif; font-size: 46px; color: #1C1A18; letter-spacing: 0.01em; display: block; line-height: 0.92; }
+  .p-roofing { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #974930; letter-spacing: 0.22em; display: block; margin-top: 4px; }
   .p-right { margin-left: auto; text-align: right; }
-  .p-specialty { font-family: 'Bebas Neue', sans-serif; font-size: 10px; color: #6B6560; letter-spacing: 0.2em; display: block; margin-bottom: 6px; }
-  .p-rule { width: 48px; height: 1px; background: #974930; margin-left: auto; }
+  .p-specialty { font-family: 'Bebas Neue', sans-serif; font-size: 9.5px; color: #6B6560; letter-spacing: 0.2em; display: block; margin-bottom: 5px; }
+  .p-rule { width: 44px; height: 1px; background: #974930; margin-left: auto; }
 
-  /* ── HERO TITLE ── */
-  .prop-hero { margin-bottom: 22px; break-inside: avoid; }
-  .prop-hero-title { font-size: 44px; font-weight: 700; color: #1C1A18; line-height: 1.02; }
+  /* HERO */
+  .prop-hero { margin-bottom: 14px; }
+  .prop-hero-title { font-size: 40px; font-weight: 700; color: #1C1A18; line-height: 1.02; white-space: nowrap; }
   .prop-hero-title span { color: #974930; }
 
-  /* ── META BAR ── */
-  .meta-bar { display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: 24px; break-inside: avoid; }
-  .meta-cell { padding: 10px 14px; border-right: 1px solid rgba(28,26,24,0.14); }
+  /* META BAR */
+  .meta-bar { display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: 14px; border-top: 1px solid rgba(28,26,24,0.12); border-bottom: 1px solid rgba(28,26,24,0.12); }
+  .meta-cell { padding: 8px 12px; border-right: 1px solid rgba(28,26,24,0.12); }
   .meta-cell:first-child { padding-left: 0; }
   .meta-cell:last-child { border-right: none; }
-  .meta-cell label { font-size: 7.5px; font-weight: 700; letter-spacing: 0.16em; color: #974930; text-transform: uppercase; display: block; margin-bottom: 5px; }
-  .meta-cell span { font-size: 11.5px; color: #1C1A18; font-weight: 500; line-height: 1.4; display: block; }
+  .meta-cell label { font-size: 7px; font-weight: 700; letter-spacing: 0.16em; color: #974930; text-transform: uppercase; display: block; margin-bottom: 3px; }
+  .meta-cell span { font-size: 11px; color: #1C1A18; font-weight: 500; line-height: 1.35; display: block; }
 
-  hr.div { border: none; border-top: 1px solid rgba(28,26,24,0.14); margin: 16px 0; }
+  hr.div { border: none; border-top: 1px solid rgba(28,26,24,0.12); margin: 10px 0; }
 
-  /* ── TWO-COLUMN BODY ── */
-  .body-cols { display: grid; grid-template-columns: 1fr 210px; gap: 24px; break-inside: avoid; }
+  /* SECTION HEADERS */
+  .sh { font-family: 'Bebas Neue', sans-serif; font-size: 10.5px; letter-spacing: 0.2em; color: #974930; margin-bottom: 4px; }
+  .sh-rule { width: 22px; height: 2px; background: #974930; margin-bottom: 8px; }
+  .section-block { break-inside: avoid; margin-bottom: 10px; }
 
-  /* Scope */
-  .sh { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.2em; color: #974930; margin-bottom: 5px; }
-  .sh-rule { width: 26px; height: 2px; background: #974930; margin-bottom: 10px; }
-
-  .scope-list { list-style: none; padding: 0; margin: 0; }
-  .scope-list li { font-size: 11.5px; line-height: 1.7; color: #1C1A18; padding: 5px 0 5px 16px; border-bottom: 1px solid rgba(28,26,24,0.07); position: relative; break-inside: avoid; }
+  /* SCOPE / REQUEST LISTS */
+  .scope-list, .req-list, .terms-list { list-style: none; padding: 0; margin: 0; }
+  .scope-list li { font-size: 11px; line-height: 1.6; color: #1C1A18; padding: 3px 0 3px 14px; border-bottom: 1px solid rgba(28,26,24,0.06); position: relative; break-inside: avoid; }
   .scope-list li:last-child { border-bottom: none; }
-  .scope-list li::before { content: '\\2022'; color: #974930; position: absolute; left: 0; font-size: 15px; line-height: 1.35; }
-
-  .req-list { list-style: none; padding: 0; margin: 0; }
-  .req-list li { font-size: 11px; line-height: 1.65; color: #3A3734; padding: 4px 0 4px 14px; position: relative; break-inside: avoid; }
-  .req-list li::before { content: '\\2014'; color: #C97E78; position: absolute; left: 0; }
-
-  .terms-list { list-style: none; padding: 0; margin: 0; }
-  .terms-list li { font-size: 10.5px; line-height: 1.65; color: #6B6560; padding: 3px 0 3px 12px; position: relative; break-inside: avoid; }
+  .scope-list li::before { content: '\\2022'; color: #974930; position: absolute; left: 0; font-size: 13px; line-height: 1.35; }
+  .req-list li { font-size: 10.5px; line-height: 1.6; color: #3A3734; padding: 2px 0 2px 13px; position: relative; break-inside: avoid; }
+  .req-list li::before { content: '\\2022'; color: #C97E78; position: absolute; left: 0; font-size: 13px; line-height: 1.35; }
+  .terms-list li { font-size: 10px; line-height: 1.6; color: #6B6560; padding: 2px 0 2px 12px; position: relative; break-inside: avoid; }
   .terms-list li::before { content: '\\2022'; color: #C97E78; position: absolute; left: 0; }
 
-  .section-block { break-inside: avoid; margin-bottom: 14px; }
+  /* TWO-COLUMN TOP BODY */
+  .body-top { display: grid; grid-template-columns: 1fr 200px; gap: 20px; margin-bottom: 10px; }
 
-  /* Price box — bordered, same as original */
-  .price-box { border: 1.5px solid rgba(151,73,48,0.28); border-radius: 5px; padding: 16px; background: rgba(255,255,255,0.25); break-inside: avoid; }
-  .price-row-p { display: flex; justify-content: space-between; padding: 5px 0; font-size: 11.5px; color: #3A3734; border-bottom: 1px solid rgba(28,26,24,0.08); }
-  .price-row-p:last-of-type { border-bottom: none; }
-  .price-tax { font-size: 10px; color: #6B6560; }
-  .price-total-row { border-top: 2px solid #1C1A18 !important; padding-top: 8px !important; margin-top: 4px; }
-  .price-total-label { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.1em; color: #1C1A18; }
-  .price-total-amount { font-family: 'Anton', sans-serif; font-size: 17px; color: #974930; }
+  /* PRICE BOX */
+  .price-box { border: 1.5px solid rgba(151,73,48,0.28); border-radius: 4px; padding: 14px; background: rgba(255,255,255,0.2); break-inside: avoid; }
+  .pr { display: flex; justify-content: space-between; padding: 4px 0; font-size: 11px; color: #3A3734; border-bottom: 1px solid rgba(28,26,24,0.07); }
+  .pr:last-of-type { border-bottom: none; }
+  .pr.tax { font-size: 9.5px; color: #6B6560; }
+  .pr.total { border-top: 2px solid #1C1A18 !important; border-bottom: none; padding-top: 7px; margin-top: 3px; }
+  .pr.total .lbl { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.1em; color: #1C1A18; }
+  .pr.total .amt { font-family: 'Anton', sans-serif; font-size: 16px; color: #974930; }
 
-  /* ── PAGE 1 FOOTER ── */
-  .p1-footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(28,26,24,0.12); display: flex; justify-content: space-between; align-items: center; break-inside: avoid; }
-  .p1-footer span { font-size: 8.5px; color: #6B6560; }
-  .p1-footer-arc { font-family: 'Bebas Neue', sans-serif; font-size: 10px; color: #974930; letter-spacing: 0.1em; }
+  /* TWO-COLUMN BOTTOM — Promise + Terms */
+  .body-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; break-inside: avoid; }
+  .promise-text { font-size: 10.5px; line-height: 1.7; color: #1C1A18; }
 
-  /* ── PAGE 2 ── */
-  .p2-header { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(28,26,24,0.14); margin-bottom: 20px; break-inside: avoid; }
-  .promise-text { font-family: 'Lora', serif; font-size: 13px; line-height: 1.9; color: #1C1A18; }
+  /* SIGNATURE */
+  .sig-section { margin-top: 12px; break-inside: avoid; }
+  .sig-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 14px; }
+  .sig-block label { font-size: 7.5px; font-weight: 700; letter-spacing: 0.12em; color: #974930; text-transform: uppercase; display: block; margin-bottom: 26px; }
+  .sig-line { border-top: 1px solid #1C1A18; padding-top: 5px; font-size: 9.5px; color: #6B6560; }
 
+  /* FOOTER */
+  .p1-footer { margin-top: 12px; padding-top: 8px; border-top: 1px solid rgba(28,26,24,0.12); display: flex; justify-content: space-between; align-items: center; }
+  .p1-footer-left { font-size: 7.5px; color: #6B6560; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.08em; }
+  .p1-footer-right { font-family: 'Bebas Neue', sans-serif; font-size: 8px; color: #6B6560; letter-spacing: 0.1em; }
+  .footer-sep { width: 32px; height: 1px; background: #C97E78; display: inline-block; margin: 0 8px; vertical-align: middle; }
+
+  /* PAGE 2 */
+  .p2-header { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(28,26,24,0.12); margin-bottom: 18px; }
   .next-steps { margin-top: 4px; }
-  .next-step { display: flex; gap: 16px; margin-bottom: 12px; align-items: flex-start; break-inside: avoid; }
-  .next-step-num { font-family: 'Anton', sans-serif; font-size: 24px; color: #974930; line-height: 1; flex-shrink: 0; width: 26px; }
-  .next-step-text { font-size: 12px; line-height: 1.65; color: #1C1A18; padding-top: 4px; }
-
-  .sig-section { margin-top: 0.3in; break-inside: avoid; }
-  .sig-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 28px; margin-top: 18px; }
-  .sig-block label { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; color: #974930; text-transform: uppercase; display: block; margin-bottom: 32px; }
-  .sig-line { border-top: 1px solid #1C1A18; padding-top: 6px; font-size: 10px; color: #6B6560; }
-
-  .p2-footer { margin-top: 0.3in; border-top: 2px solid rgba(28,26,24,0.12); padding-top: 10px; display: flex; justify-content: space-between; align-items: center; break-inside: avoid; }
-  .p2-footer-tagline { font-family: 'Bebas Neue', sans-serif; font-size: 9px; letter-spacing: 0.16em; color: #1C1A18; }
-  .p2-footer-right { font-family: 'Bebas Neue', sans-serif; font-size: 9px; letter-spacing: 0.14em; color: #6B6560; }
+  .next-step { display: flex; gap: 14px; margin-bottom: 10px; align-items: flex-start; break-inside: avoid; }
+  .next-step-num { font-family: 'Anton', sans-serif; font-size: 22px; color: #974930; line-height: 1; flex-shrink: 0; width: 24px; }
+  .next-step-text { font-size: 11.5px; line-height: 1.6; color: #1C1A18; padding-top: 3px; }
+  .p2-footer { margin-top: 0.25in; border-top: 1px solid rgba(28,26,24,0.12); padding-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .p2-footer-tagline { font-family: 'Bebas Neue', sans-serif; font-size: 8.5px; letter-spacing: 0.16em; color: #1C1A18; }
+  .p2-footer-right { font-family: 'Bebas Neue', sans-serif; font-size: 8.5px; letter-spacing: 0.14em; color: #6B6560; }
 </style>
 </head>
 <body>
@@ -1426,24 +1424,22 @@ function generateProposal() {
 <!-- ═══════════ PAGE 1 ═══════════ -->
 <div class="page">
 
-  <!-- Big header — original scale -->
+  <!-- Header — big mark + wordmark -->
   <div class="p-header">
     <div class="p-brand">
-      <svg width="72" height="72" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg" style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+      <svg width="80" height="80" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg" style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="1.8" opacity="0.85"/>
         <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.2"/>
         <line x1="50" y1="7.5" x2="50" y2="12.5" stroke="#C97E78" stroke-width="1.2" opacity="0.8"/>
-        <g>
-          <path d="M 34 70 C 33 56, 37 40, 43 28 C 46 21, 50 16, 50 16" fill="none" stroke="#C97E78" stroke-width="5" stroke-linecap="round"/>
-          <path d="M 32.5 69 C 31.5 55, 35.2 38.5, 41.5 26.5 C 44.5 19.5, 48.7 15, 48.7 15" fill="none" stroke="#F0C8C2" stroke-width="1.6" stroke-linecap="round"/>
-          <path d="M 36 70.5 C 35.2 57, 39 41, 45 29 C 47.5 22.5, 51 17, 51 17" fill="none" stroke="#974930" stroke-width="0.9" stroke-linecap="round" opacity="0.8"/>
-          <path d="M 50 16 C 50 16, 54 21, 57 28 C 63 40, 67 56, 66 70" fill="none" stroke="#974930" stroke-width="5" stroke-linecap="round"/>
-          <path d="M 50.8 17.5 C 50.8 17.5, 53.8 22.5, 56.5 29.5 C 62 41.5, 65.5 57, 64.5 70" fill="none" stroke="#C97E78" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M 51.5 19 C 51.5 19, 54 23.5, 56.5 30.5 C 61.5 42.5, 65 57.5, 64 70" fill="none" stroke="#F0C8C2" stroke-width="0.5" stroke-linecap="round" opacity="0.5"/>
-          <line x1="36.5" y1="49" x2="63.5" y2="49" stroke="#C97E78" stroke-width="3.2" stroke-linecap="round"/>
-          <line x1="37" y1="47.7" x2="63" y2="47.7" stroke="#F0C8C2" stroke-width="1" stroke-linecap="round"/>
-          <line x1="37" y1="50.5" x2="63" y2="50.5" stroke="#974930" stroke-width="0.75" stroke-linecap="round"/>
-        </g>
+        <path d="M 34 70 C 33 56, 37 40, 43 28 C 46 21, 50 16, 50 16" fill="none" stroke="#C97E78" stroke-width="5" stroke-linecap="round"/>
+        <path d="M 32.5 69 C 31.5 55, 35.2 38.5, 41.5 26.5 C 44.5 19.5, 48.7 15, 48.7 15" fill="none" stroke="#F0C8C2" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M 36 70.5 C 35.2 57, 39 41, 45 29 C 47.5 22.5, 51 17, 51 17" fill="none" stroke="#974930" stroke-width="0.9" stroke-linecap="round" opacity="0.8"/>
+        <path d="M 50 16 C 50 16, 54 21, 57 28 C 63 40, 67 56, 66 70" fill="none" stroke="#974930" stroke-width="5" stroke-linecap="round"/>
+        <path d="M 50.8 17.5 C 50.8 17.5, 53.8 22.5, 56.5 29.5 C 62 41.5, 65.5 57, 64.5 70" fill="none" stroke="#C97E78" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M 51.5 19 C 51.5 19, 54 23.5, 56.5 30.5 C 61.5 42.5, 65 57.5, 64 70" fill="none" stroke="#F0C8C2" stroke-width="0.5" stroke-linecap="round" opacity="0.5"/>
+        <line x1="36.5" y1="49" x2="63.5" y2="49" stroke="#C97E78" stroke-width="3.2" stroke-linecap="round"/>
+        <line x1="37" y1="47.7" x2="63" y2="47.7" stroke="#F0C8C2" stroke-width="1" stroke-linecap="round"/>
+        <line x1="37" y1="50.5" x2="63" y2="50.5" stroke="#974930" stroke-width="0.75" stroke-linecap="round"/>
         <circle cx="50" cy="16" r="4" fill="#974930"/>
         <circle cx="50" cy="16" r="2.8" fill="#C97E78"/>
         <circle cx="48.5" cy="14.6" r="1.4" fill="#F0C8C2"/>
@@ -1452,7 +1448,7 @@ function generateProposal() {
         <line x1="31" y1="74.5" x2="31" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"/>
         <line x1="69" y1="74.5" x2="69" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"/>
       </svg>
-      <div class="p-wordmark">
+      <div>
         <span class="p-agency">AGENCY</span>
         <span class="p-roofing">ROOFING CO.</span>
       </div>
@@ -1463,9 +1459,9 @@ function generateProposal() {
     </div>
   </div>
 
-  <!-- Hero title -->
+  <!-- Hero title — full name on one line -->
   <div class="prop-hero">
-    <div class="prop-hero-title">Proposal for <span>${esc(firstName)}</span><br>${esc(lastName)}</div>
+    <div class="prop-hero-title">Proposal for <span>${esc(fullName)}</span></div>
   </div>
 
   <!-- Meta bar -->
@@ -1478,40 +1474,58 @@ function generateProposal() {
 
   <hr class="div">
 
-  <!-- Two-column body -->
-  <div class="body-cols">
+  <!-- TOP: Scope (left) + Pricing box (right) -->
+  <div class="body-top">
     <div>
       ${c.scope ? `<div class="section-block"><div class="sh">Scope of Work</div><div class="sh-rule"></div><ul class="scope-list">${scopeToBullets(c.scope)}</ul></div>` : ''}
       ${c.requests ? `<div class="section-block"><div class="sh">Customer Requests</div><div class="sh-rule"></div><ul class="req-list">${scopeToBullets(c.requests)}</ul></div>` : ''}
-      <div class="section-block">
-        <div class="sh">Terms &amp; Conditions</div>
-        <div class="sh-rule"></div>
-        <ul class="terms-list">
-          <li>Proposal valid for 30 days from date above.</li>
-          <li>50% deposit due upon acceptance; remaining balance due upon completion.</li>
-          <li>Includes standard manufacturer warranty; details provided upon request.</li>
-        </ul>
-      </div>
     </div>
-
-    <!-- Pricing box — customer sees one number -->
     <div>
       <div class="price-box">
         <div class="sh">Pricing Summary</div>
         <div class="sh-rule"></div>
-        <div class="price-row-p"><span>Total Investment</span><span>${fmt(customerPrice)}</span></div>
-        <div class="price-row-p" style="border-bottom:none;"><span style="font-size:9.5px;color:#6B6560;">Gross Receipts Tax (7.3125%)</span><span style="font-size:10px;color:#6B6560;">${fmt(tax)}</span></div>
-        <div class="price-row-p price-total-row" style="border-bottom:none;">
-          <span class="price-total-label">Final Investment</span>
-          <span class="price-total-amount">${fmt(total)}</span>
-        </div>
+        <div class="pr"><span>Total Investment</span><span>${fmt(customerPrice)}</span></div>
+        <div class="pr tax"><span>Gross Receipts Tax (7.3125%)</span><span>${fmt(tax)}</span></div>
+        <div class="pr total"><span class="lbl">Final Investment</span><span class="amt">${fmt(total)}</span></div>
       </div>
     </div>
   </div>
 
+  <hr class="div">
+
+  <!-- BOTTOM: Agency Promise (left) + Terms & Conditions (right) -->
+  <div class="body-bottom">
+    <div class="section-block">
+      <div class="sh">Agency Promise</div>
+      <div class="sh-rule"></div>
+      <div class="promise-text">When you call Agency Roofing Co., someone capable, knowledgeable, and obligated to serve will answer. We promise to listen before we climb, to protect what matters most, and to show up &mdash; not because it&rsquo;s convenient, but because it&rsquo;s our responsibility. Every roof we touch is someone&rsquo;s safety, peace of mind, and home. We treat it that way. Every time.</div>
+    </div>
+    <div class="section-block">
+      <div class="sh">Terms &amp; Conditions</div>
+      <div class="sh-rule"></div>
+      <ul class="terms-list">
+        <li>Proposal valid for 30 days from date above.</li>
+        <li>50% deposit due upon acceptance; remaining balance due upon completion.</li>
+        <li>Includes standard manufacturer warranty; details provided upon request.</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <!-- Signature -->
+  <div class="sig-section">
+    <div class="sig-row">
+      <div class="sig-block"><label>Customer Signature</label><div class="sig-line">&nbsp;</div></div>
+      <div class="sig-block"><label>Printed Name</label><div class="sig-line">${esc(fullName)}</div></div>
+      <div class="sig-block"><label>Date</label><div class="sig-line">&nbsp;</div></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
   <div class="p1-footer">
-    <span>Agency Roofing Co. LLC &middot; Albuquerque, NM &middot; ${ARC_PHONE} &middot; ${ARC_EMAIL}</span>
-    <span class="p1-footer-arc">${esc(c.arcNum)}</span>
+    <div class="p1-footer-left">Built with agency.<span class="footer-sep"></span>Driven by obligation.</div>
+    <div class="p1-footer-right">Flat Roof Specialists &bull; Albuquerque, New Mexico</div>
   </div>
 </div>
 
@@ -1519,31 +1533,21 @@ function generateProposal() {
 <div class="page page-2">
 
   <div class="p2-header">
-    <svg width="34" height="34" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg" style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+    <svg width="30" height="30" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg" style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="1.8" opacity="0.85"/>
       <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.2"/>
       <path d="M 34 70 C 33 56, 37 40, 43 28 C 46 21, 50 16, 50 16" fill="none" stroke="#C97E78" stroke-width="5" stroke-linecap="round"/>
-      <path d="M 32.5 69 C 31.5 55, 35.2 38.5, 41.5 26.5 C 44.5 19.5, 48.7 15, 48.7 15" fill="none" stroke="#F0C8C2" stroke-width="1.6" stroke-linecap="round"/>
       <path d="M 50 16 C 50 16, 54 21, 57 28 C 63 40, 67 56, 66 70" fill="none" stroke="#974930" stroke-width="5" stroke-linecap="round"/>
       <line x1="36.5" y1="49" x2="63.5" y2="49" stroke="#C97E78" stroke-width="3.2" stroke-linecap="round"/>
       <circle cx="50" cy="16" r="4" fill="#974930"/>
       <circle cx="50" cy="16" r="2.8" fill="#C97E78"/>
-      <circle cx="48.5" cy="14.6" r="1.4" fill="#F0C8C2"/>
       <line x1="31" y1="76" x2="69" y2="76" stroke="#1C1A18" stroke-width="0.9" opacity="0.28"/>
     </svg>
     <div>
-      <span style="font-family:'Anton',sans-serif;font-size:22px;color:#1C1A18;letter-spacing:0.01em;display:block;line-height:0.95;">AGENCY</span>
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:10px;color:#974930;letter-spacing:0.22em;display:block;margin-top:2px;">ROOFING CO.</span>
+      <span style="font-family:'Anton',sans-serif;font-size:20px;color:#1C1A18;display:block;line-height:0.95;">AGENCY</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:9px;color:#974930;letter-spacing:0.22em;display:block;margin-top:2px;">ROOFING CO.</span>
     </div>
   </div>
-
-  <div class="section-block">
-    <div class="sh">Agency Promise</div>
-    <div class="sh-rule"></div>
-    <div class="promise-text">When you call Agency Roofing Co., someone capable, knowledgeable, and obligated to serve will answer. We promise to listen before we climb, to protect what matters most, and to show up &mdash; not because it&rsquo;s convenient, but because it&rsquo;s our responsibility. Every roof we touch is someone&rsquo;s safety, peace of mind, and home. We treat it that way. Every time.</div>
-  </div>
-
-  <hr class="div">
 
   <div class="section-block">
     <div class="sh">What Happens Next</div>
@@ -1553,18 +1557,6 @@ function generateProposal() {
       <div class="next-step"><div class="next-step-num">2</div><div class="next-step-text"><strong>Sign and deposit to secure your date.</strong> Return the signed proposal with a 50% deposit. That locks your spot on the schedule.</div></div>
       <div class="next-step"><div class="next-step-num">3</div><div class="next-step-text"><strong>We show up and do the work.</strong> On installation day, we arrive on time, keep your property clean, and don&rsquo;t leave until the job is done right.</div></div>
       <div class="next-step"><div class="next-step-num">4</div><div class="next-step-text"><strong>Final inspection and close.</strong> We walk the roof with you, answer any questions, and collect the remaining balance. Warranty documentation included.</div></div>
-    </div>
-  </div>
-
-  <hr class="div">
-
-  <div class="sig-section">
-    <div class="sh">Authorization</div>
-    <div class="sh-rule"></div>
-    <div class="sig-row">
-      <div class="sig-block"><label>Customer Signature</label><div class="sig-line">&nbsp;</div></div>
-      <div class="sig-block"><label>Printed Name</label><div class="sig-line">${esc(fullName)}</div></div>
-      <div class="sig-block"><label>Date</label><div class="sig-line">&nbsp;</div></div>
     </div>
   </div>
 

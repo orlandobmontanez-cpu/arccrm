@@ -31,11 +31,12 @@
     background: var(--stone);
     color: var(--ink);
     min-height: 100vh;
+    min-height: 100dvh;
     overflow: hidden;
   }
 
   /* ── LAYOUT ── */
-  #app { display: flex; height: 100vh; overflow: hidden; }
+  #app { display: flex; height: 100vh; height: 100dvh; overflow: hidden; }
 
   /* ── SIDEBAR ── */
   #sidebar {
@@ -285,8 +286,7 @@
     gap: 0;
     overflow-x: auto;
     scrollbar-width: none;
-    padding-top: 28px;
-    padding-bottom: 4px;
+    padding-bottom: 8px;
   }
   .pipeline-stages::-webkit-scrollbar { display: none; }
 
@@ -310,11 +310,7 @@
     position: relative;
     z-index: 1;
   }
-  .pip-dot.done {
-    background: var(--copper-mid);
-    border-color: var(--copper-mid);
-    box-shadow: 0 0 0 3px rgba(240,200,194,0.2), 0 0 8px rgba(240,200,194,0.25);
-  }
+  .pip-dot.done { background: var(--copper-mid); border-color: var(--copper-mid); }
   .pip-dot.current {
     background: var(--copper);
     border-color: var(--copper);
@@ -322,15 +318,11 @@
     height: 16px;
     box-shadow: 0 0 0 4px rgba(240,200,194,0.35), 0 0 16px rgba(240,200,194,0.5);
   }
-  .pip-dot.declined-dot {
-    background: var(--danger);
-    border-color: var(--danger);
-    box-shadow: 0 0 0 3px rgba(139,32,32,0.15);
-  }
+  .pip-dot.declined-dot { background: var(--danger); border-color: var(--danger); }
 
   .pip-line {
     height: 2px;
-    width: 32px;
+    width: 28px;
     background: var(--stone-dark);
     flex-shrink: 0;
     transition: background 0.2s;
@@ -343,16 +335,15 @@
     letter-spacing: 0.1em;
     color: var(--ink-muted);
     text-align: center;
-    width: 80px;
+    width: 70px;
     line-height: 1.2;
     position: absolute;
-    bottom: 20px;
+    top: 22px;
     white-space: nowrap;
     transform: translateX(-50%);
     left: 50%;
   }
   .pip-label.current { color: var(--copper); font-weight: 600; }
-  .pip-label.done { color: var(--copper-mid); }
 
   .pip-stage-wrap { display: flex; align-items: center; }
 
@@ -580,11 +571,12 @@
     :root { --sidebar-w: 100%; }
 
     body { overflow: auto; }
-    #app { flex-direction: column; height: 100vh; overflow: hidden; }
+    #app { flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
 
     #sidebar {
       width: 100%;
       height: 100vh;
+      height: 100dvh;
       position: absolute;
       top: 0; left: 0;
       z-index: 20;
@@ -598,6 +590,7 @@
       top: 0; left: 0;
       width: 100%;
       height: 100vh;
+      height: 100dvh;
       z-index: 15;
       display: none;
     }
@@ -612,6 +605,22 @@
     .detail-name { font-size: 18px; }
     #pipeline { padding: 12px 16px 8px; }
     #form-area { padding: 16px; }
+
+    /* Pipeline controls: 2-col grid on mobile */
+    #pipeline-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 28px;
+    }
+    .pip-btn-save { margin-left: 0 !important; }
+
+    /* Bigger tap targets on mobile */
+    .btn-new, .btn-icon, .pip-btn, .proposal-btn, .modal-btn { min-height: 48px; }
+
+    /* Pricing on narrow screens */
+    .price-label { width: 60px; font-size: 11px; }
+    .price-amount { width: 68px; font-size: 12px; }
   }
 
   /* Print styles */
@@ -695,8 +704,8 @@
     </div>
 
     <div id="sidebar-actions">
-      <button class="btn-new" onclick="newCustomer()">+ NEW CUSTOMER</button>
-      <button class="btn-icon" title="Export backup" onclick="exportData()">⬇</button>
+      <button class="btn-new" id="btn-new-customer">+ NEW CUSTOMER</button>
+      <button class="btn-icon" id="btn-export-icon" title="Export backup">⬇</button>
       <label class="btn-icon" title="Import backup" style="cursor:pointer;">⬆<input type="file" accept=".json" id="import-file" style="display:none" onchange="importData(this)"></label>
     </div>
 
@@ -720,7 +729,7 @@
     <div id="customer-list"></div>
 
     <div id="sidebar-footer">
-      <button class="btn-footer" onclick="exportData()">EXPORT BACKUP</button>
+      <button class="btn-footer" id="btn-export">EXPORT BACKUP</button>
       <label class="btn-footer" style="cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center;">
         IMPORT<input type="file" accept=".json" style="display:none" onchange="importData(this)">
       </label>
@@ -1173,7 +1182,7 @@ function renderPipeline() {
     const isDone = i < si;
     const isCurrent = i === si;
     const dotClass = s === 'Declined' && isCurrent ? 'declined-dot' : isCurrent ? 'current' : isDone ? 'done' : '';
-    const labelClass = isCurrent ? 'current' : isDone ? 'done' : '';
+    const labelClass = isCurrent ? 'current' : '';
 
     html += `<div class="pip-stage-wrap">
       <div class="pip-stage">
@@ -1861,6 +1870,22 @@ function esc(s) {
 
 load();
 renderList();
+
+// ── BUTTON LISTENERS (more reliable on iOS Safari than inline onclick) ──
+document.getElementById('btn-new-customer').addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  newCustomer();
+});
+
+// Also fix touch on iOS for sidebar hidden state
+document.addEventListener('touchstart', function(){}, {passive: true});
+
+// Export buttons
+var exportBtn = document.getElementById('btn-export');
+if (exportBtn) exportBtn.addEventListener('click', exportData);
+var exportIconBtn = document.getElementById('btn-export-icon');
+if (exportIconBtn) exportIconBtn.addEventListener('click', exportData);
 </script>
 </body>
 </html>

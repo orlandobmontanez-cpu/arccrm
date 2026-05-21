@@ -31,7 +31,6 @@
     background: var(--stone);
     color: var(--ink);
     min-height: 100vh;
-    min-height: 100dvh;
     overflow: hidden;
   }
 
@@ -253,7 +252,7 @@
     color: var(--ink-muted);
   }
 
-  .empty-shield { width: 60px; height: 60px; opacity: 0.3; margin-bottom: 20px; }
+  .empty-shield { width: 72px; height: 72px; opacity: 0.85; margin-bottom: 20px; }
   .empty-title { font-family: 'Anton', sans-serif; font-size: 20px; color: var(--ink-soft); letter-spacing: 0.05em; margin-bottom: 8px; }
   .empty-sub { font-size: 13px; line-height: 1.6; max-width: 280px; }
 
@@ -282,11 +281,11 @@
 
   .pipeline-stages {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0;
     overflow-x: auto;
     scrollbar-width: none;
-    padding-bottom: 8px;
+    padding-bottom: 4px;
   }
   .pipeline-stages::-webkit-scrollbar { display: none; }
 
@@ -294,10 +293,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     position: relative;
     flex-shrink: 0;
     cursor: default;
+    min-width: 52px;
   }
 
   .pip-dot {
@@ -322,35 +322,34 @@
 
   .pip-line {
     height: 2px;
-    width: 28px;
+    width: 24px;
     background: var(--stone-dark);
     flex-shrink: 0;
     transition: background 0.2s;
+    margin-top: 7px;
   }
   .pip-line.done { background: var(--copper-mid); }
 
   .pip-label {
-    font-size: 11px;
+    font-size: 10px;
     font-family: 'Bebas Neue', sans-serif;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     color: var(--ink-muted);
     text-align: center;
-    width: 70px;
+    width: 56px;
     line-height: 1.2;
-    position: absolute;
-    top: 22px;
-    white-space: nowrap;
-    transform: translateX(-50%);
-    left: 50%;
+    white-space: normal;
+    word-break: break-word;
+    margin-top: 2px;
   }
-  .pip-label.current { color: var(--copper); font-weight: 600; }
+  .pip-label.current { color: var(--copper); }
 
-  .pip-stage-wrap { display: flex; align-items: center; }
+  .pip-stage-wrap { display: flex; align-items: flex-start; padding-top: 1px; }
 
   #pipeline-controls {
     display: flex;
     gap: 8px;
-    margin-top: 32px;
+    margin-top: 16px;
     flex-wrap: wrap;
   }
 
@@ -606,19 +605,14 @@
     #pipeline { padding: 12px 16px 8px; }
     #form-area { padding: 16px; }
 
-    /* Pipeline controls: 2-col grid on mobile */
     #pipeline-controls {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-top: 28px;
+      margin-top: 12px;
     }
     .pip-btn-save { margin-left: 0 !important; }
-
-    /* Bigger tap targets on mobile */
     .btn-new, .btn-icon, .pip-btn, .proposal-btn, .modal-btn { min-height: 48px; }
-
-    /* Pricing on narrow screens */
     .price-label { width: 60px; font-size: 11px; }
     .price-amount { width: 68px; font-size: 12px; }
   }
@@ -626,6 +620,7 @@
   /* Print styles */
   @media print {
     @page { margin: 0; size: letter; }
+  @page :blank { display: none; }
     body { overflow: visible !important; }
     #app { display: none !important; }
     #proposal-print-target { display: block !important; }
@@ -743,8 +738,38 @@
     <!-- Empty state -->
     <div id="empty-state">
       <svg class="empty-shield" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="2.5"/>
-        <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#974930" stroke-width="1.5"/>
+        <defs>
+          <filter id="esLift" x="-18%" y="-18%" width="136%" height="136%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="0.7"/>
+            <feOffset dx="0.7" dy="1.3"/>
+            <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
+            <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="1.8" opacity="0.85"/>
+        <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.2"/>
+        <line x1="50" y1="7.5" x2="50" y2="12.5" stroke="#C97E78" stroke-width="1.2" opacity="0.8"/>
+        <line x1="79" y1="50" x2="74" y2="50" stroke="#1C1A18" stroke-width="0.8" opacity="0.18"/>
+        <line x1="21" y1="50" x2="26" y2="50" stroke="#1C1A18" stroke-width="0.8" opacity="0.18"/>
+        <line x1="50" y1="83" x2="50" y2="78" stroke="#1C1A18" stroke-width="0.8" opacity="0.13"/>
+        <g filter="url(#esLift)">
+          <path d="M 34 70 C 33 56, 37 40, 43 28 C 46 21, 50 16, 50 16" fill="none" stroke="#C97E78" stroke-width="5" stroke-linecap="round"/>
+          <path d="M 32.5 69 C 31.5 55, 35.2 38.5, 41.5 26.5 C 44.5 19.5, 48.7 15, 48.7 15" fill="none" stroke="#F0C8C2" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M 36 70.5 C 35.2 57, 39 41, 45 29 C 47.5 22.5, 51 17, 51 17" fill="none" stroke="#974930" stroke-width="0.9" stroke-linecap="round" opacity="0.8"/>
+          <path d="M 50 16 C 50 16, 54 21, 57 28 C 63 40, 67 56, 66 70" fill="none" stroke="#974930" stroke-width="5" stroke-linecap="round"/>
+          <path d="M 50.8 17.5 C 50.8 17.5, 53.8 22.5, 56.5 29.5 C 62 41.5, 65.5 57, 64.5 70" fill="none" stroke="#C97E78" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M 51.5 19 C 51.5 19, 54 23.5, 56.5 30.5 C 61.5 42.5, 65 57.5, 64 70" fill="none" stroke="#F0C8C2" stroke-width="0.5" stroke-linecap="round" opacity="0.5"/>
+          <line x1="36.5" y1="49" x2="63.5" y2="49" stroke="#C97E78" stroke-width="3.2" stroke-linecap="round"/>
+          <line x1="37" y1="47.7" x2="63" y2="47.7" stroke="#F0C8C2" stroke-width="1" stroke-linecap="round"/>
+          <line x1="37" y1="50.5" x2="63" y2="50.5" stroke="#974930" stroke-width="0.75" stroke-linecap="round"/>
+        </g>
+        <circle cx="50" cy="16" r="4" fill="#974930"/>
+        <circle cx="50" cy="16" r="2.8" fill="#C97E78"/>
+        <circle cx="48.5" cy="14.6" r="1.4" fill="#F0C8C2"/>
+        <circle cx="48.1" cy="14.2" r="0.55" fill="#FDE8E4"/>
+        <line x1="31" y1="76" x2="69" y2="76" stroke="#1C1A18" stroke-width="0.9" opacity="0.28"/>
+        <line x1="31" y1="74.5" x2="31" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"/>
+        <line x1="69" y1="74.5" x2="69" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"/>
       </svg>
       <div class="empty-title">SELECT A CUSTOMER</div>
       <div class="empty-sub">Choose from the list or create a new customer to get started.</div>
@@ -1393,11 +1418,15 @@ function generateProposal() {
 
   .page {
     width: 8.5in;
-    height: 11in;
+    min-height: 11in;
     background: #EAE4DA;
-    padding: 0.5in 0.55in 0.42in;
+    padding: 0.5in 0.55in 0.9in;
     position: relative;
-    overflow: hidden;
+    page-break-after: avoid;
+  }
+  @media print {
+    html, body { height: auto !important; }
+    .page { min-height: 0; height: auto; padding-bottom: 0.9in; overflow: visible; }
   }
 
   /* ─── HEADER ─── */
@@ -1440,7 +1469,7 @@ function generateProposal() {
   .meta-value { font-size: 11px; color: #1C1A18; line-height: 1.4; display: block; font-weight: 400; }
 
   /* ─── BODY GRID ─── */
-  .body { display: grid; grid-template-columns: 1fr 280px; gap: 28px; margin-bottom: 22px; }
+  .body { display: grid; grid-template-columns: 1fr 260px; gap: 24px; margin-bottom: 18px; align-items: start; }
 
   /* Section headers */
   .sh {
@@ -1507,7 +1536,7 @@ function generateProposal() {
   .pr-final .amt { font-size: 14px; color: #974930; font-weight: 700; }
 
   /* ─── PROMISE + TERMS (bottom row) ─── */
-  .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 20px; }
+  .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px; }
   .promise-text { font-size: 10px; line-height: 1.6; color: #1C1A18; }
 
   /* ─── SIGNATURE ─── */
@@ -1613,8 +1642,8 @@ function generateProposal() {
   <!-- Body: scope left, pricing right -->
   <div class="body">
     <div>
-      ${c.scope ? `<div class="section-block"><div class="sh">Scope of Work</div><div class="sh-rule"></div><ul class="b-list">${toBullets(c.scope)}</ul></div>` : ''}
-      ${c.requests ? `<div class="section-block"><div class="sh">Customer Requests</div><div class="sh-rule"></div><ul class="b-list">${toBullets(c.requests)}</ul></div>` : ''}
+      ${c.scope ? `<div class="section-block"><div class="sh">Scope of Work</div><div class="sh-rule"></div><ul class="b-list">${toBullets(c.scope)}</ul></div>` : '<div class="section-block"><div class="sh">Scope of Work</div><div class="sh-rule"></div><p style="font-size:10.5px;color:#3A3734;line-height:1.6;">Details to be confirmed. Please contact Agency Roofing Co. for a full written scope prior to signing.</p></div>'}
+      ${c.requests ? `<div class="section-block"><div class="sh">Customer Notes</div><div class="sh-rule"></div><ul class="b-list">${toBullets(c.requests)}</ul></div>` : ''}
     </div>
     <div>
       <div class="pbox">
@@ -1871,21 +1900,16 @@ function esc(s) {
 load();
 renderList();
 
-// ── BUTTON LISTENERS (more reliable on iOS Safari than inline onclick) ──
 document.getElementById('btn-new-customer').addEventListener('click', function(e) {
   e.preventDefault();
   e.stopPropagation();
   newCustomer();
 });
-
-// Also fix touch on iOS for sidebar hidden state
 document.addEventListener('touchstart', function(){}, {passive: true});
-
-// Export buttons
-var exportBtn = document.getElementById('btn-export');
-if (exportBtn) exportBtn.addEventListener('click', exportData);
-var exportIconBtn = document.getElementById('btn-export-icon');
-if (exportIconBtn) exportIconBtn.addEventListener('click', exportData);
+var _eb = document.getElementById('btn-export');
+if (_eb) _eb.addEventListener('click', exportData);
+var _eib = document.getElementById('btn-export-icon');
+if (_eib) _eib.addEventListener('click', exportData);
 </script>
 </body>
 </html>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <filter id="aLift" x="-18%" y="-18%" width="136%" height="136%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.7"/>
+      <feOffset dx="0.7" dy="1.3"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="100" height="100" fill="#EAE4DA"/>
+  <g transform="translate(50 50) scale(0.84) translate(-50 -50)">
+    <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="2.4" opacity="0.9"/>
+    <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.6"/>
+    <line x1="50" y1="7.5" x2="50" y2="12.5" stroke="#C97E78" stroke-width="1.4" opacity="0.8"/>
+    <g filter="url(#aLift)">
+      <path d="M 34 70 C 33 56, 37 40, 43 28 C 46 21, 50 16, 50 16" fill="none" stroke="#C97E78" stroke-width="5" stroke-linecap="round"/>
+      <path d="M 32.5 69 C 31.5 55, 35.2 38.5, 41.5 26.5 C 44.5 19.5, 48.7 15, 48.7 15" fill="none" stroke="#F0C8C2" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M 36 70.5 C 35.2 57, 39 41, 45 29 C 47.5 22.5, 51 17, 51 17" fill="none" stroke="#974930" stroke-width="0.9" stroke-linecap="round" opacity="0.8"/>
+      <path d="M 50 16 C 50 16, 54 21, 57 28 C 63 40, 67 56, 66 70" fill="none" stroke="#974930" stroke-width="5" stroke-linecap="round"/>
+      <path d="M 50.8 17.5 C 50.8 17.5, 53.8 22.5, 56.5 29.5 C 62 41.5, 65.5 57, 64.5 70" fill="none" stroke="#C97E78" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M 51.5 19 C 51.5 19, 54 23.5, 56.5 30.5 C 61.5 42.5, 65 57.5, 64 70" fill="none" stroke="#F0C8C2" stroke-width="0.5" stroke-linecap="round" opacity="0.5"/>
+      <line x1="36.5" y1="49" x2="63.5" y2="49" stroke="#C97E78" stroke-width="3.2" stroke-linecap="round"/>
+      <line x1="37" y1="47.7" x2="63" y2="47.7" stroke="#F0C8C2" stroke-width="1" stroke-linecap="round"/>
+      <line x1="37" y1="50.5" x2="63" y2="50.5" stroke="#974930" stroke-width="0.75" stroke-linecap="round"/>
+    </g>
+    <circle cx="50" cy="16" r="4" fill="#974930"/>
+    <circle cx="50" cy="16" r="2.8" fill="#C97E78"/>
+    <circle cx="48.5" cy="14.6" r="1.4" fill="#F0C8C2"/>
+    <circle cx="48.1" cy="14.2" r="0.55" fill="#FDE8E4"/>
+    <rect x="31" y="75" width="38" height="3.2" rx="0.6" fill="#974930"/>
+  </g>
+</svg>

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agency Roofing Receipt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@1,400;1,500&display=swap">
+<style>
+/* ── Agency Roofing Co. locked palette ── */
+:root{
+  --stone:#EAE4DA; --stone-soft:#F4F0E9; --ink:#1C1A18; --ink-2:#4A4541; --ink-3:#8A827A;
+  --copper:#974930; --mid:#C97E78; --hi:#F0C8C2; --paper:#FFFFFF; --rule:#D9D1C5;
+  --anton:"Anton","Impact","Arial Narrow Bold",sans-serif;
+  --bebas:"Bebas Neue","Oswald","Arial Narrow",sans-serif;
+  --lora:"Lora",Georgia,"Times New Roman",serif;
+  --inter:"Inter",-apple-system,"Helvetica Neue",Arial,sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:#2A2724; color:var(--ink); font-family:var(--inter); font-size:14px;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  padding-inline:16px; padding-block:0 48px; min-height:100dvh;
+}
+button,input,textarea,select{font:inherit;color:inherit}
+
+/* ── Toolbar (screen only) ── */
+.bar{
+  position:sticky; top:0; z-index:10; margin-inline:-16px; margin-bottom:24px;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;
+  background:rgba(28,26,24,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid #3A3531;
+}
+.bar-in{max-width:8.5in; margin:0 auto; display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.bar-title{font-family:var(--bebas); letter-spacing:.14em; color:var(--stone); font-size:18px; margin-right:auto}
+.btn{
+  min-height:48px; padding:0 18px; border-radius:6px; border:1px solid #4A4541;
+  background:transparent; color:var(--stone); font-weight:600; font-size:14px; cursor:pointer;
+}
+.btn:hover{border-color:var(--mid)}
+.btn.primary{background:var(--copper); border-color:var(--copper); color:#fff}
+.btn.primary:hover{background:#A85538}
+.btn:focus-visible,.f:focus-visible,select:focus-visible{outline:2px solid var(--mid); outline-offset:2px}
+.toast{max-width:8.5in; margin:-14px auto 12px; color:var(--hi); font-size:13px; min-height:18px}
+
+/* ── The sheet ── */
+.sheet{
+  width:100%; max-width:8.5in; margin:0 auto; background:var(--paper);
+  box-shadow:0 20px 60px rgba(0,0,0,.45);
+  padding:0.55in 0.6in 0.45in; position:relative;
+  display:flex; flex-direction:column; gap:22px;
+}
+.sheet::before{ /* copper edge — top of the page */
+  content:""; position:absolute; left:0; right:0; top:0; height:6px;
+  background:linear-gradient(90deg,var(--copper) 0 62%,var(--mid) 62% 86%,var(--hi) 86%);
+}
+
+/* Header */
+.head{display:grid; grid-template-columns:1fr auto; gap:20px; align-items:start}
+.lockup{display:flex; gap:14px; align-items:center}
+.lockup svg{width:78px; height:78px; flex:none}
+.wm .agency{font-family:var(--anton); font-size:42px; line-height:.95; letter-spacing:.02em; color:var(--ink)}
+.wm .roofing{font-family:var(--bebas); font-size:17px; letter-spacing:.42em; color:var(--copper); margin-top:3px}
+.wm .tag{font-family:var(--lora); font-style:italic; font-size:12.5px; color:var(--ink-3); margin-top:4px}
+.doc{text-align:right}
+.doc h1{font-family:var(--anton); font-weight:400; font-size:44px; line-height:1; margin:0; letter-spacing:.06em; color:var(--ink)}
+.doc .meta{display:grid; grid-template-columns:auto auto; gap:4px 10px; justify-content:end; margin-top:10px; font-size:12px}
+.doc .meta label{color:var(--ink-3); text-transform:uppercase; letter-spacing:.1em; font-size:10px; align-self:center; font-weight:600}
+.doc .meta .f{text-align:right; width:9.5em; font-weight:600}
+.status{
+  display:inline-block; margin-top:10px; padding:4px 10px; border:1.5px solid var(--copper);
+  color:var(--copper); font-family:var(--bebas); letter-spacing:.2em; font-size:15px; border-radius:3px;
+}
+.status.due{border-color:var(--ink); color:var(--ink)}
+
+/* Editable fields — look printed, reveal on hover/focus */
+.f{
+  border:0; border-bottom:1px dashed transparent; background:transparent; padding:2px 0;
+  width:100%; border-radius:0; min-width:0;
+}
+.f:hover{border-bottom-color:var(--rule)}
+.f:focus{border-bottom-color:var(--mid); outline:none; background:#FBF6F3}
+.f::placeholder{color:#B9B0A6}
+div.f[contenteditable]{line-height:1.45; min-height:1.45em; white-space:pre-wrap; word-break:break-word; cursor:text}
+div.f[contenteditable]:empty::before{content:attr(data-ph); color:#B9B0A6}
+@media print{div.f[contenteditable]:empty{display:none}}
+
+/* Party blocks */
+.parties{display:grid; grid-template-columns:1fr 1fr 1fr; gap:22px; padding-top:16px; border-top:1px solid var(--ink)}
+.lbl{font-family:var(--bebas); letter-spacing:.2em; font-size:13px; color:var(--copper); margin-bottom:6px}
+.party{display:flex; flex-direction:column; gap:1px; font-size:13px; line-height:1.45}
+.party .strong{font-weight:600}
+.from{color:var(--ink-2)}
+.from b{color:var(--ink)}
+
+/* Line items */
+.items{width:100%; border-collapse:collapse; font-size:13px}
+.items thead th{
+  font-family:var(--bebas); font-weight:400; letter-spacing:.18em; font-size:13px; color:var(--stone-soft);
+  background:var(--ink); padding:8px 10px; text-align:left;
+}
+.items thead th.num{text-align:right}
+.items td{padding:9px 10px; border-bottom:1px solid var(--rule); vertical-align:top}
+.items tbody tr:nth-child(even) td{background:#FAF8F5}
+.items td.num,.items .num .f{text-align:right; font-variant-numeric:tabular-nums}
+.items .desc .title{font-weight:600}
+.items .desc .note{font-size:12px; color:var(--ink-2); margin-top:2px}
+.col-q{width:12%} .col-p{width:17%} .col-a{width:16%} .col-x{width:28px}
+.amt{font-weight:600; padding-top:11px!important}
+.rm{
+  width:28px; height:28px; border:0; background:transparent; color:var(--ink-3); cursor:pointer;
+  border-radius:50%; font-size:18px; line-height:1;
+}
+.rm:hover{background:var(--stone); color:var(--copper)}
+.addrow{
+  margin-top:8px; min-height:44px; border:1px dashed var(--mid); background:transparent; color:var(--copper);
+  width:100%; border-radius:4px; font-weight:600; cursor:pointer;
+}
+.addrow:hover{background:#FBF6F3}
+
+/* Totals + payment */
+.money{display:grid; grid-template-columns:1fr 280px; gap:26px; align-items:start}
+.terms .agree{font-size:12.5px; line-height:1.55; color:var(--ink-2)}
+.pay{display:grid; grid-template-columns:auto 1fr; gap:6px 12px; margin-top:12px; font-size:12.5px; align-items:center}
+.pay label{color:var(--ink-3); font-size:10px; text-transform:uppercase; letter-spacing:.1em; font-weight:600}
+select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
+.totals{background:var(--stone); padding:14px 16px 12px; display:grid; grid-template-columns:1fr auto; gap:7px 0; font-size:13px; font-variant-numeric:tabular-nums}
+.totals .k{color:var(--ink-2)}
+.totals .v{text-align:right; padding-left:12px}
+.totals .inl{display:flex; align-items:center; gap:4px}
+.totals .inl .f{width:4.2em; text-align:right}
+.totals .v .f{width:6.5em; text-align:right}
+.totals .grand{border-top:1.5px solid var(--ink); padding-top:8px; margin-top:2px; font-family:var(--bebas); font-size:19px; letter-spacing:.1em}
+.totals .grand.v{font-family:var(--anton); font-size:20px; letter-spacing:.02em; letter-spacing:0}
+.totals .paid{color:var(--copper); font-weight:600}
+.totals .bal-k{font-weight:700; color:var(--ink)}
+.totals .bal-v{font-weight:700; font-size:15px}
+
+/* Warranty */
+.warranty{
+  display:grid; grid-template-columns:auto 1fr; gap:20px; align-items:center;
+  border:1.5px solid var(--copper); padding:16px 18px; position:relative;
+}
+.seal{width:118px; height:118px}
+.w-head{font-family:var(--anton); font-size:22px; letter-spacing:.03em; line-height:1.05; color:var(--ink)}
+.w-head span{color:var(--copper)}
+.w-dates{display:flex; flex-wrap:wrap; gap:4px 18px; margin:6px 0 8px; font-size:12px}
+.w-dates b{font-family:var(--bebas); letter-spacing:.14em; font-weight:400; color:var(--copper); font-size:13px; margin-right:4px}
+.w-dates input.f{width:9em; font-weight:600; display:inline-block}
+.w-body{font-size:11.2px; line-height:1.5; color:var(--ink-2)}
+.w-body p{margin:0 0 5px}
+.w-body strong{color:var(--ink)}
+
+/* Signatures */
+.sigs{display:grid; grid-template-columns:1fr 1fr; gap:34px; margin-top:4px}
+.sig .line{border-bottom:1px solid var(--ink); height:34px}
+.sig .who{display:flex; justify-content:space-between; font-size:10.5px; color:var(--ink-3); margin-top:5px; text-transform:uppercase; letter-spacing:.1em}
+
+/* Footer */
+.foot{
+  margin-top:auto; padding-top:12px; border-top:1px solid var(--rule);
+  display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 18px; font-size:10.5px; color:var(--ink-3);
+}
+.foot .tag{font-family:var(--lora); font-style:italic; color:var(--copper); font-size:12px}
+.foot input.f{width:7.5em; display:inline-block; font-size:10.5px}
+
+/* ── Phone-width screen layout ── */
+@media screen and (max-width:560px){
+  .bar-title{display:none}
+  .bar-in{flex-wrap:nowrap; gap:6px}
+  .bar-in .btn{flex:1 1 auto; padding:0 10px; font-size:13px; white-space:nowrap}
+}
+@media screen and (max-width:760px){
+  .sheet{padding:28px 18px 22px; gap:20px}
+  .head{grid-template-columns:1fr}
+  .doc{text-align:left}
+  .doc .meta{justify-content:start}
+  .doc .meta .f{text-align:left}
+  .lockup svg{width:62px;height:62px}
+  .wm .agency{font-size:34px}
+  .parties{grid-template-columns:1fr}
+  .money{grid-template-columns:1fr}
+  .warranty{grid-template-columns:1fr; justify-items:start}
+  .seal{width:96px;height:96px}
+  .sigs{grid-template-columns:1fr; gap:22px}
+  .items{min-width:560px}
+  .tablewrap{overflow-x:auto; -webkit-overflow-scrolling:touch}
+}
+
+/* ── Print: exact US Letter ── */
+@page{size:letter; margin:0}
+@media print{
+  html,body{background:#fff; padding:0; min-height:0}
+  .bar,.toast,.addrow,.rm,.col-x,.noprint{display:none!important}
+  .sheet{box-shadow:none; max-width:none; width:8.5in; min-height:10.95in; margin:0; padding:0.38in 0.5in 0.28in; gap:10px}
+  .lockup svg{width:66px;height:66px}
+  .wm .agency{font-size:38px}
+  .doc h1{font-size:38px}
+  .doc .meta{margin-top:6px; gap:2px 10px}
+  .status{margin-top:6px; padding:2px 9px}
+  .totals{padding:10px 14px 9px; row-gap:5px}
+  .money{gap:22px}
+  .items thead th{padding:6px 10px}
+  .items td{padding:5px 10px!important}
+  .pay{margin-top:8px; gap:3px 12px}
+  .foot{padding-top:8px}
+  .party{line-height:1.3}
+  .party .f{padding:1px 0}
+  .w-body{font-size:10.6px; line-height:1.42}
+  .terms .agree{line-height:1.45}
+  .party .f:placeholder-shown{display:none}
+  input[type=date]::-webkit-calendar-picker-indicator{display:none}
+  .parties{padding-top:12px}
+  .warranty{padding:12px 16px}
+  .seal{width:92px;height:92px}
+  .sig .line{height:28px}
+  .items .desc .title{line-height:1.3}
+  .items .desc .note{font-size:10.5px; line-height:1.35; margin-top:1px}
+  .items tbody tr.many td{padding:4px 10px!important}
+  .terms .agree{font-size:11.5px}
+  .seal{width:84px!important;height:84px!important}
+  .warranty{gap:14px}
+  .w-dates{margin:3px 0 5px}
+  .sheet.crowded{padding-top:0.32in; gap:7px}
+  .sheet.crowded .parties{padding-top:9px}
+  .sheet.crowded .party{font-size:12px; line-height:1.22}
+  .sheet.crowded .doc h1{font-size:34px}
+  .sheet.crowded .lockup svg{width:58px;height:58px}
+  .sheet.crowded .wm .agency{font-size:34px}
+  .sheet.crowded .w-body{font-size:10px; line-height:1.36}
+  .sheet.crowded .sig .line{height:22px}
+  .sheet.crowded .pay{margin-top:4px}
+  .f{border-bottom-color:transparent!important; background:transparent!important}
+  .f::placeholder{color:transparent}
+  .items tr{break-inside:avoid}
+  .warranty,.sigs,.money{break-inside:avoid}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="bar noprint">
+  <div class="bar-in">
+    <a class="btn" id="btnBack" href="./" style="display:inline-flex;align-items:center;text-decoration:none">← CRM</a>
+    <div class="bar-title">Receipt Builder</div>
+    <button class="btn" id="btnNew" type="button">Start over</button>
+    <button class="btn" id="btnSave" type="button">Save draft</button>
+    <button class="btn primary" id="btnPrint" type="button">Print / PDF</button>
+  </div>
+</div>
+<div class="toast noprint" id="toast" role="status" aria-live="polite"></div>
+
+<main class="sheet" id="sheet">
+
+  <!-- HEADER -->
+  <header class="head">
+    <div class="lockup">
+      <!-- Primary mark — production vector, print version (no drop-shadow filter), solid base bar -->
+      <svg viewBox="-2 -2 104 104" role="img" aria-label="Agency Roofing Co. shield">
+        <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="1.8" opacity=".85"/>
+        <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.2"/>
+        <line x1="50" y1="7.5" x2="50" y2="12.5" stroke="#C97E78" stroke-width="1.2" opacity=".8"/>
+        <line x1="79" y1="50" x2="74" y2="50" stroke="#1C1A18" stroke-width=".8" opacity=".18"/>
+        <line x1="21" y1="50" x2="26" y2="50" stroke="#1C1A18" stroke-width=".8" opacity=".18"/>
+        <line x1="50" y1="83" x2="50" y2="78" stroke="#1C1A18" stroke-width=".8" opacity=".13"/>
+        <path d="M34 70 C33 56,37 40,43 28 C46 21,50 16,50 16" fill="none" stroke="#C97E78" stroke-width="5" stroke-linecap="round"/>
+        <path d="M32.5 69 C31.5 55,35.2 38.5,41.5 26.5 C44.5 19.5,48.7 15,48.7 15" fill="none" stroke="#F0C8C2" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M36 70.5 C35.2 57,39 41,45 29 C47.5 22.5,51 17,51 17" fill="none" stroke="#974930" stroke-width=".9" stroke-linecap="round" opacity=".8"/>
+        <path d="M50 16 C50 16,54 21,57 28 C63 40,67 56,66 70" fill="none" stroke="#974930" stroke-width="5" stroke-linecap="round"/>
+        <path d="M50.8 17.5 C50.8 17.5,53.8 22.5,56.5 29.5 C62 41.5,65.5 57,64.5 70" fill="none" stroke="#C97E78" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M51.5 19 C51.5 19,54 23.5,56.5 30.5 C61.5 42.5,65 57.5,64 70" fill="none" stroke="#F0C8C2" stroke-width=".5" stroke-linecap="round" opacity=".5"/>
+        <line x1="36.5" y1="49" x2="63.5" y2="49" stroke="#C97E78" stroke-width="3.2" stroke-linecap="round"/>
+        <line x1="37" y1="47.7" x2="63" y2="47.7" stroke="#F0C8C2" stroke-width="1" stroke-linecap="round"/>
+        <line x1="37" y1="50.5" x2="63" y2="50.5" stroke="#974930" stroke-width=".75" stroke-linecap="round"/>
+        <circle cx="50" cy="16" r="4" fill="#974930"/>
+        <circle cx="50" cy="16" r="2.8" fill="#C97E78"/>
+        <circle cx="48.5" cy="14.6" r="1.4" fill="#F0C8C2"/>
+        <circle cx="48.1" cy="14.2" r=".55" fill="#FDE8E4"/>
+        <line x1="31" y1="76" x2="69" y2="76" stroke="#1C1A18" stroke-width=".9" opacity=".28" stroke-linecap="round"/>
+        <line x1="31" y1="74.5" x2="31" y2="77.5" stroke="#C97E78" stroke-width=".8" opacity=".65"/>
+        <line x1="69" y1="74.5" x2="69" y2="77.5" stroke="#C97E78" stroke-width=".8" opacity=".65"/>
+      </svg>
+      <div class="wm">
+        <div class="agency">AGENCY</div>
+        <div class="roofing">ROOFING CO.</div>
+        <div class="tag">Built with agency. Driven by obligation.</div>
+      </div>
+    </div>
+    <div class="doc">
+      <h1>RECEIPT</h1>
+      <div class="meta">
+        <label for="rNo">Receipt No.</label><input class="f" id="rNo" data-k="rNo" value="ARC-001-R">
+        <label for="rJob">Job / Proposal</label><input class="f" id="rJob" data-k="rJob" value="ARC-001">
+        <label for="rDate">Date</label><input class="f" id="rDate" data-k="rDate" type="date">
+      </div>
+      <div class="status" id="status">PAID IN FULL</div>
+    </div>
+  </header>
+
+  <!-- PARTIES -->
+  <section class="parties">
+    <div class="party">
+      <div class="lbl">Received From</div>
+      <input class="f strong" id="cName" data-k="cName" placeholder="Customer name" value="Maria &amp; Daniel Sandoval">
+      <input class="f" id="cAddr1" data-k="cAddr1" placeholder="Street address" value="4812 Montaño Rd NW">
+      <input class="f" id="cAddr2" data-k="cAddr2" placeholder="City, State ZIP" value="Albuquerque, NM 87120">
+      <input class="f" id="cPhone" data-k="cPhone" placeholder="Phone" value="(505) 555-0148">
+      <input class="f" id="cEmail" data-k="cEmail" placeholder="Email" value="">
+    </div>
+    <div class="party">
+      <div class="lbl">Job Site</div>
+      <input class="f" id="sAddr1" data-k="sAddr1" placeholder="Same as billing" value="Same as billing">
+      <input class="f" id="sAddr2" data-k="sAddr2" placeholder="Site city, ZIP" value="">
+      <input class="f" id="sRoof" data-k="sRoof" placeholder="Roof type / system" value="Flat roof · silicone restoration">
+      <input class="f" id="sSq" data-k="sSq" placeholder="Area" value="2,150 sq ft (21.5 squares)">
+      <input class="f" id="sDone" data-k="sDone" placeholder="Completed" value="">
+    </div>
+    <div class="party from">
+      <div class="lbl">From</div>
+      <b>Agency Roofing Co. LLC</b>
+      <span>Orlando Montanez, Owner</span>
+      <span>Albuquerque, New Mexico</span>
+      <span>(505) 900-1711</span>
+      <span>orlando.montanez@agencyroofingco.com</span>
+    </div>
+  </section>
+
+  <!-- LINE ITEMS -->
+  <section>
+    <div class="tablewrap">
+      <table class="items" id="items">
+        <thead>
+          <tr>
+            <th>Services Performed</th>
+            <th class="num col-q">Qty</th>
+            <th class="num col-p">Rate</th>
+            <th class="num col-a">Amount</th>
+            <th class="col-x noprint" aria-label="Remove"></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <button class="addrow noprint" id="btnAdd" type="button">+ Add service line</button>
+  </section>
+
+  <!-- AGREEMENT + TOTALS -->
+  <section class="money">
+    <div class="terms">
+      <div class="lbl">Price Agreement</div>
+      <div class="f agree" id="agree" data-k="agree" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Price agreement">Work performed per signed proposal ARC-001. Customer and Agency Roofing Co. agreed to a total contract price of $9,850.00 for the scope listed above. This receipt confirms payment received against that agreement.</div>
+      <div class="pay">
+        <label for="pMethod">Paid by</label>
+        <select class="f" id="pMethod" data-k="pMethod">
+          <option>Check</option><option>Cash</option><option>Credit / debit card</option>
+          <option>ACH / bank transfer</option><option>Zelle</option><option>Financing</option>
+        </select>
+        <label for="pRef">Reference</label>
+        <input class="f" id="pRef" data-k="pRef" placeholder="Check # / last 4 / confirmation" value="Check #2217">
+      </div>
+    </div>
+    <div class="totals">
+      <div class="k">Subtotal</div><div class="v" id="tSub">$0.00</div>
+      <div class="k inl">Discount</div>
+      <div class="v"><input class="f" id="tDisc" data-k="tDisc" inputmode="decimal" value="0.00"></div>
+      <div class="k inl">Tax <input class="f" id="tRate" data-k="tRate" inputmode="decimal" value="0.000" aria-label="Tax rate percent">%</div>
+      <div class="v" id="tTax">$0.00</div>
+      <div class="k grand">Total</div><div class="v grand" id="tTotal">$0.00</div>
+      <div class="k paid">Amount Paid</div>
+      <div class="v paid"><input class="f" id="tPaid" data-k="tPaid" inputmode="decimal" value="9,850.00"></div>
+      <div class="k bal-k">Balance Due</div><div class="v bal-v" id="tBal">$0.00</div>
+    </div>
+  </section>
+
+  <!-- WARRANTY -->
+  <section class="warranty">
+    <svg class="seal" viewBox="0 0 120 120" role="img" aria-label="5-year workmanship warranty seal">
+      <path d="M60 4 L108.5 32 L108.5 88 L60 116 L11.5 88 L11.5 32 Z" fill="#EAE4DA"/>
+      <path d="M60 4 L108.5 32 L108.5 88 L60 116 L11.5 88 L11.5 32 Z" fill="none" stroke="#1C1A18" stroke-width="2"/>
+      <path d="M60 12 L101.5 36 L101.5 84 L60 108 L18.5 84 L18.5 36 Z" fill="none" stroke="#C97E78" stroke-width="1.3"/>
+      <text x="60" y="42" textLength="58" lengthAdjust="spacingAndGlyphs" font-family="Bebas Neue, Oswald, sans-serif" font-size="9" fill="#974930" text-anchor="middle">WORKMANSHIP</text>
+      <text x="60" y="78" font-family="Anton, Impact, sans-serif" font-size="40" fill="#1C1A18" text-anchor="middle">5</text>
+      <text x="60" y="86" font-family="Bebas Neue, Oswald, sans-serif" font-size="11" letter-spacing="2.5" fill="#974930" text-anchor="middle">YEAR</text>
+      <line x1="44" y1="92" x2="76" y2="92" stroke="#1C1A18" stroke-width="1" opacity=".35"/>
+    </svg>
+    <div>
+      <div class="w-head">5-Year Workmanship Warranty. <span>Our name is on it.</span></div>
+      <div class="w-dates">
+        <span><b>Coverage starts</b><input class="f" id="wStart" data-k="wStart" type="date" aria-label="Warranty start date"></span>
+        <span><b>Coverage ends</b><span id="wEnd">—</span></span>
+      </div>
+      <div class="w-body">
+        <p>Agency Roofing Co. LLC warrants the workmanship on the services listed above for <strong>five (5) years from the date of completion</strong>. If a leak or failure results from how we installed the work, we will come back and repair it at no charge for the labor and materials that repair requires.</p>
+        <p>Not covered: damage from hail, high wind, fire, lightning or other acts of nature; foot traffic, impact or alterations by others; structural movement or deck failure; conditions outside the contracted scope; and problems not reported within 30 days of discovery. Manufacturer material warranties are separate and pass to the owner on the manufacturer's terms. This warranty takes effect once the contract is paid in full.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIGNATURES -->
+  <section class="sigs">
+    <div class="sig"><div class="line"></div><div class="who"><span>Customer</span><span>Date</span></div></div>
+    <div class="sig"><div class="line"></div><div class="who"><span>Orlando Montanez · Agency Roofing Co.</span><span>Date</span></div></div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="foot">
+    <span class="tag">Thank you for trusting us with your roof.</span>
+    <span>Flat roof specialists · Albuquerque, NM</span>
+    <span>NM Lic. <input class="f" id="lic" data-k="lic" placeholder="License #" value=""></span>
+    <span>agencyroofingco.com</span>
+  </footer>
+</main>
+
+<script>
+(function(){
+  var KEY = 'arc_receipt_draft';
+  var CUST_ID = null;
+  try { CUST_ID = new URLSearchParams(location.search).get('id'); } catch(e){}
+  if (CUST_ID) KEY = 'arc_receipt_' + CUST_ID;
+  var CRM_TAX = '7.3125'; /* matches TAX_RATE in the CRM */
+  var rowsEl = document.getElementById('rows');
+  var $ = function(id){ return document.getElementById(id); };
+
+  var SAMPLE_ROWS = [
+    {t:'Roof surface preparation', n:'Power wash, remove loose debris, treat ponding areas and seams', q:'1', p:'1500.00'},
+    {t:'Seam & flashing repair — Gaco Patch', n:'Reinforce seams, penetrations and parapet flashings', q:'1', p:'1900.00'},
+    {t:'Silicone roof coating — Gaco Roof', n:'Two-coat application to manufacturer spec, 2,150 sq ft', q:'21.5', p:'300.00'}
+  ];
+
+  function money(n){ return '$' + (isFinite(n)?n:0).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function fx(v){ return num(v).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function num(v){ var n = parseFloat(String(v||'').replace(/[^0-9.\-]/g,'')); return isFinite(n)?n:0; }
+  function today(){ var d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+  function fmtDate(iso){
+    if(!iso) return '—';
+    var p = iso.split('-'); var d = new Date(+p[0], +p[1]-1, +p[2]);
+    return d.toLocaleDateString('en-US',{month:'long', day:'numeric', year:'numeric'});
+  }
+
+  function flat(t){ return String(t||'').split('\n').map(function(x){return x.trim();}).filter(Boolean).join(' \u00b7 '); }
+  function addRow(r){
+    r = r || {t:'', n:'', q:'1', p:'0.00'};
+    r.n = flat(r.n);
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="desc"><div class="f title" contenteditable="true" role="textbox" data-ph="Service" aria-label="Service"></div>' +
+      '<div class="f note" contenteditable="true" role="textbox" data-ph="Details (optional)" aria-label="Details"></div></td>' +
+      '<td class="num"><input class="f q" inputmode="decimal" aria-label="Quantity"></td>' +
+      '<td class="num"><input class="f p" inputmode="decimal" aria-label="Rate"></td>' +
+      '<td class="num amt">$0.00</td>' +
+      '<td class="noprint"><button class="rm" type="button" aria-label="Remove line">×</button></td>';
+    tr.querySelector('.title').textContent = r.t;
+    tr.querySelector('.note').textContent = r.n;
+    tr.querySelector('.q').value = r.q;
+    tr.querySelector('.p').value = fx(r.p);
+    rowsEl.appendChild(tr);
+    calc();
+    return tr;
+  }
+
+  function readRows(){
+    return Array.prototype.map.call(rowsEl.children, function(tr){
+      return { t:tr.querySelector('.title').textContent, n:tr.querySelector('.note').textContent,
+               q:tr.querySelector('.q').value, p:tr.querySelector('.p').value };
+    });
+  }
+
+  function calc(){
+    var sub = 0;
+    var many = rowsEl.children.length > 2;
+    Array.prototype.forEach.call(rowsEl.children, function(tr){ tr.classList.toggle('many', many); });
+    document.getElementById('sheet').classList.toggle('crowded', many);
+    Array.prototype.forEach.call(rowsEl.children, function(tr){
+      var a = num(tr.querySelector('.q').value) * num(tr.querySelector('.p').value);
+      tr.querySelector('.amt').textContent = money(a);
+      sub += a;
+    });
+    var disc = num($('tDisc').value);
+    var taxable = Math.max(sub - disc, 0);
+    var tax = Math.round(taxable * num($('tRate').value)) / 100;
+    var total = taxable + tax;
+    var paid = num($('tPaid').value);
+    var bal = Math.round((total - paid)*100)/100;
+    $('tSub').textContent = money(sub);
+    $('tTax').textContent = money(tax);
+    $('tTotal').textContent = money(total);
+    $('tBal').textContent = money(Math.max(bal,0));
+    var st = $('status');
+    if (bal <= 0.004 && total > 0){ st.textContent = 'PAID IN FULL'; st.className = 'status'; }
+    else if (paid > 0){ st.textContent = 'PARTIAL PAYMENT'; st.className = 'status due'; }
+    else { st.textContent = 'PAYMENT RECORD'; st.className = 'status due'; }
+    warrantyEnd();
+  }
+
+  function warrantyEnd(){
+    var s = $('wStart').value;
+    if(!s){ $('wEnd').textContent = '—'; return; }
+    var p = s.split('-');
+    $('wEnd').textContent = fmtDate((+p[0]+5) + '-' + p[1] + '-' + p[2]);
+    if(!$('sDone').value || $('sDone').dataset.auto === '1'){
+      $('sDone').value = 'Completed ' + fmtDate(s); $('sDone').dataset.auto = '1';
+    }
+  }
+
+  function fields(){ return document.querySelectorAll('[data-k]'); }
+
+  function snapshot(){
+    var o = {rows: readRows()};
+    fields().forEach(function(el){ o[el.dataset.k] = el.isContentEditable ? el.innerText : el.value; });
+    return o;
+  }
+  function apply(o){
+    fields().forEach(function(el){ var v=o[el.dataset.k]; if (v == null) return; if (el.isContentEditable) el.innerText = v; else el.value = v; });
+    if (o.rows){ rowsEl.innerHTML=''; o.rows.forEach(addRow); }
+        calc();
+  }
+
+  function toast(msg){ var t=$('toast'); t.textContent = msg; clearTimeout(toast._t); toast._t = setTimeout(function(){ t.textContent=''; }, 3200); }
+
+  /* ── Load order: URL params from the CRM → saved draft → sample ── */
+  function fromParams(){
+    var q; try { q = new URLSearchParams(location.search); } catch(e){ return false; }
+    if (![].slice.call(q.keys()).length) return false;
+    var map = {no:'rNo', job:'rJob', date:'rDate', name:'cName', addr:'cAddr1', city:'cAddr2', phone:'cPhone',
+               email:'cEmail', site:'sAddr1', site2:'sAddr2', roof:'sRoof', area:'sSq', paid:'tPaid',
+               method:'pMethod', ref:'pRef', tax:'tRate', disc:'tDisc', agree:'agree', done:'wStart', lic:'lic'};
+    var o = {};
+    Object.keys(map).forEach(function(k){ if(q.has(k)) o[map[k]] = q.get(k); });
+    if (q.has('items')){ try { o.rows = JSON.parse(q.get('items')).map(function(r){ return {t:r.t||r.title||'', n:r.n||r.note||'', q:String(r.q||r.qty||1), p:String(r.p||r.price||0)}; }); } catch(e){} }
+    else if (q.has('desc') || q.has('amt')){ o.rows = [{t:q.get('desc')||'Roofing services per agreement', n:q.get('note')||'', q:'1', p:q.get('amt')||'0'}]; }
+    if (!o.rNo && o.rJob) o.rNo = o.rJob + '-R';
+    if (!o.rDate) o.rDate = today();
+    if (!o.wStart) o.wStart = o.rDate;
+    if (!o.cEmail) o.cEmail = '';
+    ['sAddr2','sDone','pRef'].forEach(function(k){ if(o[k]==null) o[k]=''; });
+    if (!o.sAddr1) o.sAddr1 = 'Same as billing';
+    apply(o);
+    return true;
+  }
+
+  /* ── Fill from an ARC CRM customer record (same site, localStorage arc_v3) ── */
+  function fromCRM(){
+    if (!CUST_ID) return false;
+    var list; try { list = JSON.parse(localStorage.getItem('arc_v3') || '[]'); } catch(e){ return false; }
+    var c = (list || []).filter(function(x){ return x && x.id === CUST_ID; })[0];
+    if (!c) return false;
+    var rate = num(CRM_TAX) / 100;
+    function priceOf(o){
+      var cost = num(o.materials) + num(o.labor) + num(o.other);
+      return Math.round(cost * (1 + num(o.margin)/100) * 100) / 100;
+    }
+    var price = priceOf(c);
+    var disc = num(c.discountAmount);
+    var rows = [{ t: 'Roofing services per proposal ' + (c.arcNum || ''), n: (c.scope || '').trim(), q: '1', p: price.toFixed(2) }];
+    /* Accepted additional quotes and approved change orders become their own lines */
+    (c.quotes || []).filter(function(q){ return q.status === 'Accepted'; }).forEach(function(q){
+      rows.push({ t: 'Quote ' + q.num + (q.title ? ' \u2014 ' + q.title : ''), n: (q.scope || '').trim(), q: '1', p: priceOf(q).toFixed(2) });
+      disc += num(q.discountAmount);
+    });
+    var cos = (c.changeOrders || []).filter(function(o){ return o.status === 'Approved'; });
+    cos.forEach(function(o){
+      var amt = priceOf(o) * (o.direction === 'deduct' ? -1 : 1);
+      rows.push({ t: 'Change order ' + o.num + (o.title ? ' \u2014 ' + o.title : '') + (amt < 0 ? ' (credit)' : ''), n: (o.description || '').trim(), q: '1', p: amt.toFixed(2) });
+    });
+    var sub = rows.reduce(function(s, r){ return s + num(r.p); }, 0);
+    var taxable = Math.max(sub - disc, 0);
+    var total = Math.round((taxable + Math.round(taxable * rate * 100) / 100) * 100) / 100;
+    var name = [c.first, c.last].filter(Boolean).join(' ');
+    var cityZip = [c.city ? c.city + ', NM' : '', c.zip].filter(Boolean).join(' ');
+    var sq = num(c.roofsize);
+    var done = c.scheddate || today();
+    var extras = [];
+    if (cos.length) extras.push(cos.length + ' approved change order' + (cos.length > 1 ? 's' : ''));
+    apply({
+      rNo: (c.arcNum || 'ARC') + '-R', rJob: c.arcNum || '', rDate: today(),
+      cName: name, cAddr1: c.address || '', cAddr2: cityZip, cPhone: c.phone || '', cEmail: c.email || '',
+      sAddr1: 'Same as billing', sAddr2: '', sRoof: c.rooftype || '',
+      sSq: sq ? sq.toLocaleString('en-US') + ' sq ft (' + (Math.round(sq/10)/10) + ' squares)' : '',
+      sDone: '', wStart: done,
+      tDisc: fx(disc), tRate: CRM_TAX, tPaid: fx(total),
+      pRef: '',
+      agree: 'Work performed per signed proposal ' + (c.arcNum || '') + (extras.length ? ' and ' + extras.join(', ') : '') + '. Customer and Agency Roofing Co. agreed to a total contract price of ' + money(total) + (num(c.discountAmount) > 0 && c.discountLabel ? ' (includes ' + c.discountLabel + ')' : '') + '. This receipt confirms payment received against that agreement.',
+      rows: rows
+    });
+    $('sDone').dataset.auto = '1';
+    warrantyEnd();
+    return true;
+  }
+
+  function init(){
+    $('rDate').value = today();
+    $('wStart').value = today();
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){}
+    if (saved){ apply(saved); return; }
+    if (fromCRM()) return;
+    if (!CUST_ID && fromParams()) return;
+    SAMPLE_ROWS.forEach(addRow);
+        calc();
+  }
+
+  /* ── Events ── */
+  document.addEventListener('input', function(e){
+    if (e.target.id === 'sDone') e.target.dataset.auto = '0';
+    calc();
+  });
+  document.addEventListener('focusout', function(e){
+    var t=e.target; if(t.id==='tPaid'||t.id==='tDisc'||(t.classList&&t.classList.contains('p'))){ t.value = fx(t.value); }
+  });
+  document.addEventListener('change', function(e){ if (e.target.id==='wStart' || e.target.id==='rDate') calc(); });
+  rowsEl.addEventListener('click', function(e){
+    var b = e.target.closest('.rm'); if(!b) return;
+    b.closest('tr').remove(); calc();
+  });
+  $('btnAdd').addEventListener('click', function(){ addRow().querySelector('.title').focus(); });
+  $('btnSave').addEventListener('click', function(){
+    try { localStorage.setItem(KEY, JSON.stringify(snapshot())); toast('Draft saved on this device.'); }
+    catch(e){ toast('Could not save — this browser is blocking storage.'); }
+  });
+  var armed = false;
+  $('btnNew').addEventListener('click', function(){
+    var b = $('btnNew');
+    if(!armed){ armed = true; b.textContent = 'Tap again to clear'; setTimeout(function(){ armed=false; b.textContent='Start over'; }, 3000); return; }
+    armed = false; b.textContent = 'Start over';
+    try { localStorage.removeItem(KEY); } catch(e){}
+    if (CUST_ID && fromCRM()){ toast('Receipt refilled from the CRM record.'); return; }
+    fields().forEach(function(el){ if(el.isContentEditable) el.innerText=''; else if(el.tagName!=='SELECT') el.value=''; });
+    $('rDate').value = today(); $('wStart').value = today(); $('sDone').dataset.auto='1';
+    $('tDisc').value='0.00'; $('tRate').value='0.000'; $('tPaid').value='0.00';
+    rowsEl.innerHTML=''; addRow();
+        calc(); toast('Blank receipt ready.');
+  });
+  $('btnPrint').addEventListener('click', function(){ window.print(); });
+
+  init();
+})();
+</script>
+</body>
+</html>

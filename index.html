@@ -546,6 +546,100 @@
   .modal-btn-cancel:hover { background: var(--stone-dark); }
   .modal-btn-danger { background: var(--danger); color: var(--white); }
 
+
+  /* ── QUOTES & CHANGE ORDERS ── */
+  .xsec-note { font-size: 11px; color: var(--ink-muted); line-height: 1.5; margin: -4px 0 12px; }
+  .contract-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--stone-dark); border-radius: 8px; overflow: hidden; margin-bottom: 10px;
+  }
+  .cs-cell { background: var(--stone); padding: 10px 12px; }
+  .cs-cell.now { background: var(--ink); }
+  .cs-label { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-muted); display: block; }
+  .cs-cell.now .cs-label { color: var(--copper-light); }
+  .cs-val { font-size: 15px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; display: block; margin-top: 2px; }
+  .cs-cell.now .cs-val { color: var(--stone-light); }
+  .cs-val.up { color: var(--copper); }
+
+  .x-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .x-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center;
+    width: 100%; text-align: left; background: var(--white); border: 1px solid var(--stone-dark);
+    border-radius: 6px; padding: 12px 14px; cursor: pointer; min-height: 56px;
+    font-family: 'Inter', sans-serif; color: var(--ink); transition: border-color 0.15s;
+  }
+  .x-row:hover, .x-row:focus-visible { border-color: var(--copper-mid); outline: none; }
+  .x-num { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.1em; color: var(--copper); display: block; }
+  .x-title { font-size: 13px; font-weight: 600; line-height: 1.3; display: block; margin-top: 1px; }
+  .x-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .x-amt { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .x-amt.credit { color: var(--success); }
+  .x-empty { font-size: 12px; color: var(--ink-muted); font-style: italic; padding: 10px 2px; }
+
+  .st-pill {
+    font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.12em;
+    padding: 2px 8px; border-radius: 3px; background: var(--stone); color: var(--ink-soft); white-space: nowrap;
+  }
+  .st-pill.sent, .st-pill.pending { background: rgba(201,126,120,0.18); color: var(--copper); }
+  .st-pill.accepted, .st-pill.approved { background: var(--copper); color: var(--white); }
+  .st-pill.declined { background: rgba(139,32,32,0.1); color: var(--danger); }
+  .x-add { width: 100%; justify-content: center; }
+  .card-tag { font-size: 9px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.1em; color: var(--copper-mid); }
+
+  /* Editor sheet */
+  #x-editor {
+    display: none; position: fixed; inset: 0; z-index: 900; background: var(--stone-light);
+    flex-direction: column; height: 100vh; height: 100dvh;
+  }
+  #x-editor.active { display: flex; }
+  .xe-head {
+    background: var(--ink); color: var(--stone); display: flex; align-items: center; gap: 12px;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; flex-shrink: 0;
+    border-bottom: 2px solid var(--copper);
+  }
+  .xe-kind { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.18em; color: var(--copper-mid); display: block; }
+  .xe-num { font-family: 'Anton', sans-serif; font-size: 20px; letter-spacing: 0.02em; display: block; line-height: 1.1; }
+  .xe-close {
+    margin-left: auto; min-width: 48px; min-height: 48px; border-radius: 6px; cursor: pointer;
+    background: rgba(234,228,218,0.07); border: 1px solid rgba(234,228,218,0.12); color: var(--stone); font-size: 22px;
+  }
+  .xe-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px 16px 24px; }
+  .xe-inner { max-width: 640px; margin: 0 auto; }
+  .xe-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .xe-seg button {
+    min-height: 48px; border-radius: 5px; border: 1px solid var(--stone-dark); background: var(--white);
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--ink-soft); cursor: pointer;
+  }
+  .xe-seg button.on { background: var(--ink); border-color: var(--ink); color: var(--stone); }
+  .xe-seg button.on.credit { background: var(--success); border-color: var(--success); }
+  .xe-status { display: flex; flex-wrap: wrap; gap: 6px; }
+  .xe-status button {
+    min-height: 44px; padding: 0 14px; border-radius: 5px; border: 1px solid var(--stone-dark); background: var(--white);
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--ink-soft); cursor: pointer;
+  }
+  .xe-status button.on { background: var(--copper); border-color: var(--copper); color: var(--white); }
+  .xe-status button.on.bad { background: var(--danger); border-color: var(--danger); }
+  .xe-calc { background: var(--white); border: 1px solid var(--stone-dark); border-radius: 8px; padding: 14px; }
+  .xe-line { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-muted); padding: 3px 0; font-variant-numeric: tabular-nums; }
+  .xe-line.strong { color: var(--ink); font-weight: 600; font-size: 13px; }
+  .xe-line.total { border-top: 2px solid var(--ink); margin-top: 6px; padding-top: 8px; font-family: 'Anton', sans-serif; font-size: 16px; color: var(--copper); letter-spacing: 0.02em; }
+  .xe-line.total span:first-child { color: var(--ink); font-size: 14px; }
+  .xe-hint { font-size: 10px; color: var(--ink-muted); margin-bottom: 10px; letter-spacing: 0.04em; }
+  .xe-foot {
+    flex-shrink: 0; background: var(--white); border-top: 1px solid var(--stone-dark);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  .xe-foot-in { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: auto 1fr 1fr; gap: 8px; }
+  .xe-foot .proposal-btn { justify-content: center; min-height: 48px; }
+  .xe-del { background: transparent; color: var(--danger); border: 1px solid rgba(139,32,32,0.3) !important; }
+  .xe-del.armed { background: var(--danger); color: var(--white); }
+  @media (max-width: 480px) {
+    .contract-strip { grid-template-columns: 1fr 1fr; }
+    .cs-cell.now { grid-column: span 2; }
+    .xe-foot-in { grid-template-columns: 1fr 1fr; }
+    .xe-del { grid-column: span 2; order: 3; }
+  }
+
   /* ── PROPOSAL PRINT STYLES ── */
   .proposal-wrap { font-family: 'Inter', sans-serif; }
 
@@ -962,6 +1056,35 @@
           </div>
         </div>
 
+        <!-- ADDITIONAL QUOTES -->
+        <div class="form-section">
+          <div class="form-section-title">Additional Quotes</div>
+          <p class="xsec-note">Extra work for this same customer, quoted separately from the main proposal. Each prints on your proposal layout.</p>
+          <div class="x-list" id="quote-list"></div>
+          <button class="proposal-btn proposal-btn-secondary x-add" id="btn-new-quote" type="button">+ NEW QUOTE</button>
+        </div>
+
+        <!-- CHANGE ORDERS -->
+        <div class="form-section">
+          <div class="form-section-title">Change Orders</div>
+          <p class="xsec-note">Changes to the signed job: added work or credits. Only approved change orders count toward the contract.</p>
+          <div class="contract-strip" id="contract-strip"></div>
+          <div class="x-list" id="co-list"></div>
+          <button class="proposal-btn proposal-btn-secondary x-add" id="btn-new-co" type="button">+ NEW CHANGE ORDER</button>
+        </div>
+
+        <!-- RECEIPT -->
+        <div class="form-section">
+          <div class="form-section-title">Receipt</div>
+          <div class="proposal-section">
+            <div class="proposal-step-title">PAYMENT RECEIPT + 5-YR WARRANTY</div>
+            <button class="proposal-btn proposal-btn-primary" id="btn-receipt" type="button">
+              🧾 CREATE RECEIPT
+            </button>
+            <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens this customer&#39;s receipt with name, address, scope and price filled in. Edit the lines, then tap Print / Save PDF.</p>
+          </div>
+        </div>
+
         <!-- ACTIVITY LOG -->
         <div class="form-section">
           <div class="form-section-title">Activity Log</div>
@@ -979,6 +1102,20 @@
     <div class="modal-body" id="modal-body">Are you sure?</div>
     <div class="modal-actions" id="modal-actions"></div>
   </div>
+</div>
+
+<!-- QUOTE / CHANGE ORDER EDITOR -->
+<div id="x-editor" role="dialog" aria-modal="true" aria-labelledby="xe-num">
+  <div class="xe-head">
+    <div><span class="xe-kind" id="xe-kind">CHANGE ORDER</span><span class="xe-num" id="xe-num">—</span></div>
+    <button class="xe-close" id="xe-close" type="button" aria-label="Save and close">&times;</button>
+  </div>
+  <div class="xe-body" id="xe-body"><div class="xe-inner" id="xe-inner"></div></div>
+  <div class="xe-foot"><div class="xe-foot-in">
+    <button class="proposal-btn xe-del" id="xe-del" type="button">DELETE</button>
+    <button class="proposal-btn proposal-btn-secondary" id="xe-close2" type="button">SAVE &amp; CLOSE</button>
+    <button class="proposal-btn proposal-btn-primary" id="xe-pdf" type="button">OPEN PDF</button>
+  </div></div>
 </div>
 
 <!-- TOAST -->
@@ -1057,6 +1194,8 @@ function normalize(c) {
     scheddate: c.scheddate || '',
     activityLog: c.activityLog || [],
     proposalSent: c.proposalSent || false,
+    quotes: Array.isArray(c.quotes) ? c.quotes.map(normQuote) : [],
+    changeOrders: Array.isArray(c.changeOrders) ? c.changeOrders.map(normCO) : [],
   };
 }
 
@@ -1111,6 +1250,8 @@ function renderList() {
       <div class="card-meta">
         <span class="stage-pill ${stageClass}">${esc(c.stage)}</span>
         ${inProg && c.id === currentId ? '<span class="in-progress-tag">IN PROGRESS</span>' : ''}
+        ${c.quotes && c.quotes.length ? `<span class="card-tag">+${c.quotes.length} QUOTE${c.quotes.length > 1 ? 'S' : ''}</span>` : ''}
+        ${c.changeOrders && c.changeOrders.length ? `<span class="card-tag">${c.changeOrders.length} CO</span>` : ''}
         <span class="arc-num">${esc(c.arcNum)}</span>
       </div>
     </div>`;
@@ -1180,6 +1321,7 @@ function loadDetail() {
   renderActivityLog();
   updateScheduledSection();
   updateEmailBtn();
+  renderExtras();
 }
 
 function syncHeader() {
@@ -1339,6 +1481,7 @@ function calcTotals() {
   document.getElementById('calc-subtotal').textContent = fmt(sub);
   document.getElementById('calc-tax').textContent = fmt(tax);
   document.getElementById('calc-total').textContent = fmt(total);
+  renderContractStrip();
 }
 
 function fmt(n) {
@@ -1370,47 +1513,8 @@ function renderActivityLog() {
 
 // ── PROPOSAL ───────────────────────────────────────────
 
-function generateProposal() {
-  const c = getCurrent();
-  if (!c) return;
-  saveCustomer(false);
-
-  // Internal cost breakdown
-  const mat = parseFloat(c.materials) || 0;
-  const lab = parseFloat(c.labor) || 0;
-  const oth = parseFloat(c.other) || 0;
-  const cost = mat + lab + oth;
-  const margin = parseFloat(c.margin) || 0;
-  const markup = cost * (margin / 100);
-  // Customer-facing
-  const baseProposal = cost + markup;
-  const discountAmount = parseFloat(c.discountAmount) || 0;
-  const discountLabel = (c.discountLabel || '').trim();
-  const hasDiscount = discountAmount > 0;
-  const subtotal = Math.max(0, baseProposal - discountAmount);
-  const tax = subtotal * TAX_RATE;
-  const total = subtotal + tax;
-
-  const fullName = [c.first, c.last].filter(Boolean).join(' ') || 'Valued Customer';
-  const cityZip = [c.city, c.zip].filter(Boolean).join(', ');
-  const addrLine1 = c.address || 'TBD';
-  const addrLine2 = cityZip ? `${cityZip}` : '';
-  const today = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
-
-  function toBullets(text) {
-    if (!text) return '';
-    return text.split('\n').filter(l => l.trim()).map(l =>
-      `<li>${esc(l.trim())}</li>`
-    ).join('');
-  }
-
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Proposal ${c.arcNum} \u2014 ${fullName}</title>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
+// Shared document system — proposal, quotes and change orders all use this
+const ARC_DOC_CSS = `<style>
   @page { margin: 0; size: letter; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: #EAE4DA; }
@@ -1573,13 +1677,13 @@ function generateProposal() {
   .pfoot-left { font-weight: 600; }
   .pfoot-right { font-weight: 600; color: #1C1A18; }
   .pfoot-right .sep { color: #974930; margin: 0 6px; }
-</style>
-</head>
-<body>
 
-<div class="page">
+  /* sub-line under the hero (quotes, change orders) */
+  .hero-sub { font-size: 12px; color: #3A3734; letter-spacing: 0.02em; margin: -12px 0 20px; line-height: 1.4; }
+  .hero-sub b { color: #974930; font-weight: 600; }
+</style>`;
 
-  <!-- Header -->
+const ARC_DOC_HEAD = `<!-- Header -->
   <div class="ph">
     <div class="ph-left">
       <svg width="74" height="74" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg" style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
@@ -1612,17 +1716,75 @@ function generateProposal() {
       <span class="ph-specialty">FLAT ROOF SPECIALISTS</span>
       <div class="ph-rule"></div>
     </div>
-  </div>
+  </div>`;
+
+
+function generateProposal(opts) {
+  const cust = getCurrent();
+  if (!cust) return;
+  saveCustomer(false);
+  // An additional quote reuses the proposal layout with its own number, scope and pricing
+  const q = opts && opts.quote ? opts.quote : null;
+  const c = q ? Object.assign({}, cust, {
+    arcNum: q.num, scope: q.scope, requests: q.requests,
+    materials: q.materials, labor: q.labor, other: q.other, margin: q.margin,
+    discountLabel: q.discountLabel, discountAmount: q.discountAmount,
+  }) : cust;
+  const docWord = q ? 'Quote' : 'Proposal';
+
+  // Internal cost breakdown
+  const mat = parseFloat(c.materials) || 0;
+  const lab = parseFloat(c.labor) || 0;
+  const oth = parseFloat(c.other) || 0;
+  const cost = mat + lab + oth;
+  const margin = parseFloat(c.margin) || 0;
+  const markup = cost * (margin / 100);
+  // Customer-facing
+  const baseProposal = cost + markup;
+  const discountAmount = parseFloat(c.discountAmount) || 0;
+  const discountLabel = (c.discountLabel || '').trim();
+  const hasDiscount = discountAmount > 0;
+  const subtotal = Math.max(0, baseProposal - discountAmount);
+  const tax = subtotal * TAX_RATE;
+  const total = subtotal + tax;
+
+  const fullName = [c.first, c.last].filter(Boolean).join(' ') || 'Valued Customer';
+  const cityZip = [c.city, c.zip].filter(Boolean).join(', ');
+  const addrLine1 = c.address || 'TBD';
+  const addrLine2 = cityZip ? `${cityZip}` : '';
+  const today = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+  function toBullets(text) {
+    if (!text) return '';
+    return text.split('\n').filter(l => l.trim()).map(l =>
+      `<li>${esc(l.trim())}</li>`
+    ).join('');
+  }
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${docWord} ${c.arcNum} \u2014 ${fullName}</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+${ARC_DOC_CSS}
+</head>
+<body>
+
+<div class="page">
+
+  ${ARC_DOC_HEAD}
 
   <hr class="div-thin">
 
   <!-- Hero -->
-  <div class="hero-title">Proposal for <span class="name">${esc(fullName)}</span></div>
+  <div class="hero-title">${docWord} for <span class="name">${esc(fullName)}</span></div>
+  ${q ? `<div class="hero-sub"><b>${esc(q.title || 'Additional work')}</b> &middot; Additional to proposal ${esc(cust.arcNum)}</div>` : ''}
 
   <!-- Meta -->
   <div class="meta">
     <div class="meta-cell">
-      <span class="meta-label">Proposal No.</span>
+      <span class="meta-label">${docWord} No.</span>
       <span class="meta-value">${esc(c.arcNum)}</span>
     </div>
     <div class="meta-cell">
@@ -1670,7 +1832,7 @@ function generateProposal() {
       <div class="sh">Terms &amp; Conditions</div>
       <div class="sh-rule"></div>
       <ul class="b-list">
-        <li>Proposal valid for 30 days from date above.</li>
+        <li>${docWord} valid for 30 days from date above.</li>
         <li>50% deposit due upon acceptance; remaining balance due upon completion.</li>
         <li>Includes standard manufacturer warranty; details provided upon request.</li>
       </ul>
@@ -1695,7 +1857,7 @@ function generateProposal() {
 
 <script>
   window.onload = function() {
-    if (window.opener && window.opener.arcPDFReady) window.opener.arcPDFReady();
+    ${q ? '' : 'if (window.opener && window.opener.arcPDFReady) window.opener.arcPDFReady();'}
     window.print();
   };
 <\/script>
@@ -1703,23 +1865,19 @@ function generateProposal() {
 </html>`;
 
 
-  const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(html);
-    win.document.close();
-    proposalDone = true;
-    logActivity('Proposal opened for ' + c.arcNum);
-    saveCustomer(false);
+  if (q) {
+    logActivity('Quote ' + q.num + ' opened');
+    save();
     renderActivityLog();
-    updateEmailBtn();
-  } else {
-    // Popup blocked — try inline fallback
-    showModal(
-      'POPUP BLOCKED',
-      'Your browser blocked the proposal preview. Please allow popups for this site and try again.',
-      [{ label: 'OK', cls: 'modal-btn modal-btn-confirm', fn: closeModal }]
-    );
+    openDoc(html);
+    return;
   }
+  proposalDone = true;
+  logActivity('Proposal opened for ' + c.arcNum);
+  saveCustomer(false);
+  renderActivityLog();
+  updateEmailBtn();
+  openDoc(html);
 }
 
 // Mark PDF done from child window callback
@@ -1895,6 +2053,532 @@ function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+// ── QUOTES & CHANGE ORDERS ─────────────────────────────
+// Additional quotes: extra proposals for the same customer (ARC-00007-Q2, Q3…)
+// Change orders: priced changes to the signed contract (ARC-00007-CO1, CO2…)
+// Internal cost / margin never leaves the CRM — documents show customer price only.
+
+const Q_STATUSES = ['Draft', 'Sent', 'Accepted', 'Declined'];
+const CO_STATUSES = ['Pending', 'Approved', 'Declined'];
+const CO_REASONS = ['Customer request', 'Hidden or unforeseen condition', 'Code or inspection requirement', 'Material or scope change', 'Other'];
+
+function normQuote(q) {
+  q = q || {};
+  return {
+    id: q.id || genId(), num: q.num || '', title: q.title || '',
+    scope: q.scope || '', requests: q.requests || '',
+    materials: q.materials || '', labor: q.labor || '', other: q.other || '',
+    margin: (q.margin != null && q.margin !== '') ? q.margin : '30',
+    discountLabel: q.discountLabel || '', discountAmount: q.discountAmount || '',
+    status: Q_STATUSES.indexOf(q.status) > -1 ? q.status : 'Draft',
+    createdAt: q.createdAt || Date.now(), updatedAt: q.updatedAt || Date.now(),
+  };
+}
+
+function normCO(o) {
+  o = o || {};
+  return {
+    id: o.id || genId(), num: o.num || '', title: o.title || '',
+    direction: o.direction === 'deduct' ? 'deduct' : 'add',
+    reason: o.reason || CO_REASONS[0], description: o.description || '', days: o.days || '',
+    materials: o.materials || '', labor: o.labor || '', other: o.other || '',
+    margin: (o.margin != null && o.margin !== '') ? o.margin : '30',
+    date: o.date || localISODate(),
+    status: CO_STATUSES.indexOf(o.status) > -1 ? o.status : 'Pending',
+    approvedAt: o.approvedAt || '',
+    createdAt: o.createdAt || Date.now(), updatedAt: o.updatedAt || Date.now(),
+  };
+}
+
+function localISODate() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function priceOf(o) {
+  const cost = (parseFloat(o.materials) || 0) + (parseFloat(o.labor) || 0) + (parseFloat(o.other) || 0);
+  const markup = cost * ((parseFloat(o.margin) || 0) / 100);
+  const base = cost + markup;
+  const disc = parseFloat(o.discountAmount) || 0;
+  const sub = Math.max(0, base - disc);
+  const tax = sub * TAX_RATE;
+  return { cost: cost, markup: markup, base: base, disc: disc, sub: sub, tax: tax, total: sub + tax };
+}
+
+function coPrice(o) {
+  const p = priceOf({ materials: o.materials, labor: o.labor, other: o.other, margin: o.margin });
+  const s = o.direction === 'deduct' ? -1 : 1;
+  return { cost: p.cost, markup: p.markup, sub: s * p.sub, tax: s * p.tax, total: s * p.total };
+}
+
+function fmtSigned(n) {
+  if (Math.abs(n) < 0.005) return fmt(0);
+  return (n < 0 ? '− ' : '+ ') + fmt(Math.abs(n));
+}
+
+function taxPctLabel() {
+  return (TAX_RATE * 100).toFixed(4).replace(/0+$/, '').replace(/\.$/, '') + '%';
+}
+
+// Original contract = the main proposal, read live from the form when it's open
+function liveMainPrice() {
+  const g = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  return priceOf({ materials: g('f-materials'), labor: g('f-labor'), other: g('f-other'),
+    margin: g('f-margin'), discountAmount: g('f-discount-amount') });
+}
+
+function contractSummary(c, excludeId, useLive) {
+  const original = useLive ? liveMainPrice().total : priceOf(c).total;
+  const approved = (c.changeOrders || []).filter(x => x.status === 'Approved' && x.id !== excludeId);
+  const approvedSum = approved.reduce((s, x) => s + coPrice(x).total, 0);
+  return { original: original, approvedCount: approved.length, approvedSum: approvedSum, current: original + approvedSum };
+}
+
+function nextDocNum(c, kind) {
+  const list = kind === 'quote' ? c.quotes : c.changeOrders;
+  const re = kind === 'quote' ? /-Q(\d+)$/ : /-CO(\d+)$/;
+  const start = kind === 'quote' ? 1 : 0;   // Q1 is the original proposal
+  const max = list.reduce((m, x) => { const r = (x.num || '').match(re); return r ? Math.max(m, parseInt(r[1], 10)) : m; }, start);
+  return c.arcNum + (kind === 'quote' ? '-Q' : '-CO') + (max + 1);
+}
+
+// ── Render the two sections in the customer record ──
+function renderExtras() {
+  const c = getCurrent();
+  if (!c) return;
+  const ql = document.getElementById('quote-list');
+  const cl = document.getElementById('co-list');
+  if (!ql || !cl) return;
+
+  ql.innerHTML = c.quotes.length ? c.quotes.map(q => {
+    const p = priceOf(q);
+    return `<button class="x-row" type="button" data-kind="quote" data-id="${q.id}">
+      <span><span class="x-num">${esc(q.num)}</span><span class="x-title">${esc(q.title || 'Untitled quote')}</span></span>
+      <span class="x-right"><span class="st-pill ${q.status.toLowerCase()}">${esc(q.status)}</span><span class="x-amt">${fmt(p.total)}</span></span>
+    </button>`;
+  }).join('') : '<div class="x-empty">No additional quotes for this customer.</div>';
+
+  cl.innerHTML = c.changeOrders.length ? c.changeOrders.map(o => {
+    const p = coPrice(o);
+    return `<button class="x-row" type="button" data-kind="co" data-id="${o.id}">
+      <span><span class="x-num">${esc(o.num)}</span><span class="x-title">${esc(o.title || 'Untitled change order')}</span></span>
+      <span class="x-right"><span class="st-pill ${o.status.toLowerCase()}">${esc(o.status)}</span><span class="x-amt${p.total < 0 ? ' credit' : ''}">${fmtSigned(p.total)}</span></span>
+    </button>`;
+  }).join('') : '<div class="x-empty">No change orders yet.</div>';
+
+  renderContractStrip();
+}
+
+function renderContractStrip() {
+  const c = getCurrent();
+  const el = document.getElementById('contract-strip');
+  if (!c || !el) return;
+  const s = contractSummary(c, null, true);
+  el.innerHTML = `
+    <div class="cs-cell"><span class="cs-label">Original contract</span><span class="cs-val">${fmt(s.original)}</span></div>
+    <div class="cs-cell"><span class="cs-label">Approved changes${s.approvedCount ? ' (' + s.approvedCount + ')' : ''}</span><span class="cs-val${s.approvedSum > 0 ? ' up' : ''}">${fmtSigned(s.approvedSum)}</span></div>
+    <div class="cs-cell now"><span class="cs-label">Current contract</span><span class="cs-val">${fmt(s.current)}</span></div>`;
+}
+
+// ── Editor sheet ──
+let xe = null; // { kind, id, isNew }
+
+function xeItem() {
+  const c = getCurrent();
+  if (!c || !xe) return null;
+  const list = xe.kind === 'quote' ? c.quotes : c.changeOrders;
+  return list.find(x => x.id === xe.id) || null;
+}
+
+function newExtra(kind) {
+  const c = getCurrent();
+  if (!c) return;
+  saveCustomer(false);
+  const item = kind === 'quote'
+    ? normQuote({ num: nextDocNum(c, 'quote') })
+    : normCO({ num: nextDocNum(c, 'co') });
+  (kind === 'quote' ? c.quotes : c.changeOrders).push(item);
+  save();
+  openEditor(kind, item.id, true);
+}
+
+function openEditor(kind, id, isNew) {
+  saveCustomer(false);
+  xe = { kind: kind, id: id, isNew: !!isNew, touched: false };
+  const it = xeItem();
+  if (!it) { xe = null; return; }
+  document.getElementById('xe-kind').textContent = kind === 'quote' ? 'ADDITIONAL QUOTE' : 'CHANGE ORDER';
+  document.getElementById('xe-num').textContent = it.num;
+  document.getElementById('xe-pdf').textContent = kind === 'quote' ? 'OPEN QUOTE PDF' : 'OPEN CHANGE ORDER PDF';
+  const del = document.getElementById('xe-del');
+  del.classList.remove('armed'); del.textContent = 'DELETE';
+  document.getElementById('xe-inner').innerHTML = kind === 'quote' ? quoteForm(it) : coForm(it);
+  document.getElementById('x-editor').classList.add('active');
+  document.getElementById('xe-body').scrollTop = 0;
+  xeCalc();
+}
+
+function statusButtons(list, cur) {
+  return `<div class="xe-status">${list.map(s =>
+    `<button type="button" data-status="${s}" class="${s === cur ? 'on' : ''}${s === 'Declined' ? ' bad' : ''}">${s.toUpperCase()}</button>`).join('')}</div>`;
+}
+
+function costFields(it) {
+  const v = k => esc(it[k] || '');
+  return `
+    <div class="xe-hint">Enter your actual costs. The customer only sees the final price.</div>
+    <div class="price-row"><span class="price-label">Materials</span><input type="number" data-f="materials" value="${v('materials')}" placeholder="0.00" step="0.01" min="0" inputmode="decimal"></div>
+    <div class="price-row"><span class="price-label">Labor</span><input type="number" data-f="labor" value="${v('labor')}" placeholder="0.00" step="0.01" min="0" inputmode="decimal"></div>
+    <div class="price-row"><span class="price-label">Other</span><input type="number" data-f="other" value="${v('other')}" placeholder="0.00" step="0.01" min="0" inputmode="decimal"></div>
+    <div class="price-row"><span class="price-label" style="color:var(--copper);font-weight:600;">Margin %</span><input type="number" data-f="margin" value="${v('margin')}" placeholder="0" step="1" min="0" inputmode="decimal"></div>`;
+}
+
+function quoteForm(q) {
+  const v = k => esc(q[k] || '');
+  return `
+    <div class="form-section">
+      <div class="form-section-title">Quote</div>
+      <div class="form-grid cols-1">
+        <div class="form-group"><label for="xe-title">What is this quote for?</label>
+          <input type="text" id="xe-title" data-f="title" value="${v('title')}" placeholder="e.g. Detached garage — TPO recover"></div>
+        <div class="form-group"><label>Status</label>${statusButtons(Q_STATUSES, q.status)}</div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Scope of Work</div>
+      <div class="form-grid cols-1">
+        <div class="form-group"><label for="xe-scope">Scope description</label>
+          <textarea id="xe-scope" data-f="scope" rows="5" placeholder="One item per line. Each line prints as a bullet.">${v('scope')}</textarea></div>
+        <div class="form-group"><label for="xe-req">Customer requests / notes</label>
+          <textarea id="xe-req" data-f="requests" rows="3" placeholder="Optional">${v('requests')}</textarea></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Pricing — Your Cost Breakdown</div>
+      <div style="max-width:500px;">
+        ${costFields(q)}
+        <div class="price-row" style="margin-top:10px;"><span class="price-label" style="color:var(--copper);font-weight:600;">Discount</span><input type="text" data-f="discountLabel" value="${v('discountLabel')}" placeholder="Label, e.g. Veteran" style="font-size:12px;"></div>
+        <div class="price-row"><span class="price-label" style="color:var(--copper);font-weight:600;">Amount</span><input type="number" data-f="discountAmount" value="${v('discountAmount')}" placeholder="0.00" step="0.01" min="0" inputmode="decimal"></div>
+        <div class="xe-calc" id="xe-calc" style="margin-top:12px;"></div>
+      </div>
+    </div>`;
+}
+
+function coForm(o) {
+  const v = k => esc(o[k] || '');
+  return `
+    <div class="form-section">
+      <div class="form-section-title">Change Order</div>
+      <div class="form-grid">
+        <div class="form-group span-2"><label for="xe-title">What is changing?</label>
+          <input type="text" id="xe-title" data-f="title" value="${v('title')}" placeholder="e.g. Replace 3 sheets of wet roof decking"></div>
+        <div class="form-group span-2"><label>Type</label>
+          <div class="xe-seg">
+            <button type="button" data-dir="add" class="${o.direction === 'add' ? 'on' : ''}">ADDED WORK</button>
+            <button type="button" data-dir="deduct" class="credit${o.direction === 'deduct' ? ' on' : ''}">CREDIT / DEDUCT</button>
+          </div></div>
+        <div class="form-group"><label for="xe-reason">Reason</label>
+          <select id="xe-reason" data-f="reason">${CO_REASONS.map(r => `<option${r === o.reason ? ' selected' : ''}>${r}</option>`).join('')}</select></div>
+        <div class="form-group"><label for="xe-date">Date</label>
+          <input type="date" id="xe-date" data-f="date" value="${v('date')}"></div>
+        <div class="form-group span-2"><label>Status</label>${statusButtons(CO_STATUSES, o.status)}</div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Description of Change</div>
+      <div class="form-grid cols-1">
+        <div class="form-group"><label for="xe-desc">Work added or removed</label>
+          <textarea id="xe-desc" data-f="description" rows="5" placeholder="One item per line. Each line prints as a bullet.">${v('description')}</textarea></div>
+        <div class="form-group"><label for="xe-days">Schedule impact (working days)</label>
+          <input type="number" id="xe-days" data-f="days" value="${v('days')}" placeholder="0 = no change" min="0" step="1" inputmode="numeric"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Pricing — Your Cost Breakdown</div>
+      <div style="max-width:500px;">
+        ${costFields(o)}
+        <div class="xe-calc" id="xe-calc" style="margin-top:12px;"></div>
+      </div>
+    </div>`;
+}
+
+function xeCalc() {
+  const it = xeItem();
+  const box = document.getElementById('xe-calc');
+  if (!it || !box) return;
+  const line = (k, v, cls) => `<div class="xe-line${cls ? ' ' + cls : ''}"><span>${k}</span><span>${v}</span></div>`;
+  if (xe.kind === 'quote') {
+    const p = priceOf(it);
+    box.innerHTML = line('Cost total', fmt(p.cost)) + line('Markup', fmt(p.markup)) +
+      line('Customer price', fmt(p.base), 'strong') +
+      (p.disc > 0 ? line(esc(it.discountLabel || 'Discount'), '− ' + fmt(p.disc)) : '') +
+      line('Gross receipts tax (' + taxPctLabel() + ')', fmt(p.tax)) +
+      line('Total investment', fmt(p.total), 'total');
+  } else {
+    const c = getCurrent();
+    const p = coPrice(it);
+    const s = contractSummary(c, it.id, true);
+    box.innerHTML = line('Cost total', fmt(p.cost)) + line('Markup', fmt(p.markup)) +
+      line(it.direction === 'deduct' ? 'Credit to customer' : 'Added work price', fmtSigned(p.sub), 'strong') +
+      line('Gross receipts tax (' + taxPctLabel() + ')', fmtSigned(p.tax)) +
+      line('Change order total', fmtSigned(p.total), 'total') +
+      `<div style="height:10px"></div>` +
+      line('Contract before this change', fmt(s.current)) +
+      line('Revised contract if approved', fmt(s.current + p.total), 'strong');
+  }
+}
+
+function closeEditor() {
+  const c = getCurrent();
+  const it = xeItem();
+  if (c && it && xe.isNew && !xe.touched) {
+    // Opened by mistake and never filled in — don't leave an empty record behind
+    const key = xe.kind === 'quote' ? 'quotes' : 'changeOrders';
+    c[key] = c[key].filter(x => x.id !== it.id);
+  } else if (c && it && xe.touched) {
+    logActivity((xe.kind === 'quote' ? 'Quote ' : 'Change order ') + it.num + ' saved');
+  }
+  if (c) { c.updatedAt = Date.now(); save(); }
+  document.getElementById('x-editor').classList.remove('active');
+  xe = null;
+  renderExtras();
+  renderList();
+  renderActivityLog();
+}
+
+function touchItem() {
+  const it = xeItem();
+  if (!it) return;
+  xe.touched = true;
+  it.updatedAt = Date.now();
+  save();
+}
+
+// ── Change order document (same system as the proposal) ──
+function generateChangeOrder(o) {
+  const c = getCurrent();
+  if (!c) return;
+  const p = coPrice(o);
+  const s = contractSummary(c, o.id, false);
+  const credit = o.direction === 'deduct';
+  const fullName = [c.first, c.last].filter(Boolean).join(' ') || 'Valued Customer';
+  const cityZip = [c.city, c.zip].filter(Boolean).join(', ');
+  const d = o.date ? new Date(o.date + 'T12:00:00') : new Date();
+  const dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const days = parseInt(o.days, 10) || 0;
+  const bullets = t => (t || '').split('\n').filter(l => l.trim()).map(l => `<li>${esc(l.trim())}</li>`).join('');
+  const schedule = days > 0
+    ? `Adds ${days} working day${days === 1 ? '' : 's'} to the project schedule.`
+    : 'No change to the project schedule.';
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Change Order ${esc(o.num)} — ${esc(fullName)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+${ARC_DOC_CSS}
+<style>
+  .pr-credit { color: #2A5C3A; }
+  .pr-change { font-weight: 600; padding-top: 8px; }
+  .pr-prior { color: #3A3734; }
+  .co-type { display: inline-block; font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.16em; padding: 3px 9px 2px; border: 1px solid #974930; color: #974930; border-radius: 2px; margin-bottom: 14px; }
+  .co-type.credit { border-color: #2A5C3A; color: #2A5C3A; }
+  .para { font-size: 10.5px; line-height: 1.6; color: #1C1A18; }
+  .sig-row + .sig-row { margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="page">
+  ${ARC_DOC_HEAD}
+  <hr class="div-thin">
+
+  <div class="hero-title">Change Order for <span class="name">${esc(fullName)}</span></div>
+  <div class="hero-sub"><b>${esc(o.title || 'Change to contracted work')}</b> &middot; Amends proposal ${esc(c.arcNum)}</div>
+
+  <div class="meta">
+    <div class="meta-cell"><span class="meta-label">Change Order No.</span><span class="meta-value">${esc(o.num)}</span></div>
+    <div class="meta-cell"><span class="meta-label">Date</span><span class="meta-value">${dateStr}</span></div>
+    <div class="meta-cell"><span class="meta-label">Project Address</span><span class="meta-value">${esc(c.address || 'TBD')}${cityZip ? '<br>' + esc(cityZip) : ''}</span></div>
+    <div class="meta-cell"><span class="meta-label">Original Proposal</span><span class="meta-value">${esc(c.arcNum)}</span></div>
+  </div>
+
+  <div class="body">
+    <div>
+      <span class="co-type${credit ? ' credit' : ''}">${credit ? 'Credit to Customer' : 'Added Work'}</span>
+      <div class="section-block"><div class="sh">Reason for Change</div><div class="sh-rule"></div>
+        <p class="para">${esc(o.reason)}.</p></div>
+      <div class="section-block"><div class="sh">Description of Change</div><div class="sh-rule"></div>
+        ${o.description ? `<ul class="b-list">${bullets(o.description)}</ul>` : '<p class="para">As discussed on site with the customer.</p>'}</div>
+      <div class="section-block"><div class="sh">Schedule Impact</div><div class="sh-rule"></div>
+        <p class="para">${schedule}</p></div>
+    </div>
+    <div>
+      <div class="pbox">
+        <div class="pbox-title">Contract Adjustment</div>
+        <div class="pbox-rule"></div>
+        <div class="pr pr-prior"><span>Original Contract</span><span>${fmt(s.original)}</span></div>
+        ${s.approvedCount ? `<div class="pr pr-prior"><span>Approved Changes (${s.approvedCount})</span><span>${fmtSigned(s.approvedSum)}</span></div>` : ''}
+        <div class="pr-divider"></div>
+        <div class="pr pr-change${credit ? ' pr-credit' : ''}"><span>${credit ? 'This Change — Credit' : 'This Change'}</span><span>${fmtSigned(p.sub)}</span></div>
+        <div class="pr pr-tax"><span>Gross Receipts Tax (${taxPctLabel()})</span><span>${fmtSigned(p.tax)}</span></div>
+        <div class="pr pr-sub${credit ? ' pr-credit' : ''}"><span>Change Order Total</span><span>${fmtSigned(p.total)}</span></div>
+        <div class="pr pr-final"><span class="lbl">Revised Contract</span><span class="amt">${fmt(s.current + p.total)}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-row">
+    <div class="section-block">
+      <div class="sh">Authorization</div><div class="sh-rule"></div>
+      <div class="promise-text">By signing below, the customer ${credit ? 'accepts this credit' : 'authorizes Agency Roofing Co. to perform the work described above'} and agrees to the revised contract amount. Once signed, this change order becomes part of agreement ${esc(c.arcNum)}. ${credit ? '' : 'Work on this change begins only after it is signed.'}</div>
+    </div>
+    <div class="section-block">
+      <div class="sh">Terms &amp; Conditions</div><div class="sh-rule"></div>
+      <ul class="b-list">
+        <li>All other terms of the original agreement remain in effect.</li>
+        <li>${credit ? 'Credit is applied to the final payment.' : 'Change order amount is due with the final payment unless agreed otherwise in writing.'}</li>
+        <li>Pricing valid for 15 days from the date above.</li>
+        ${credit ? '' : '<li>Work in this change order is covered by our 5-year workmanship warranty.</li>'}
+      </ul>
+    </div>
+  </div>
+
+  <div class="sig-section">
+    <div class="sig-row">
+      <div class="sig-block"><label>Customer Signature</label><div class="sig-line">&nbsp;</div></div>
+      <div class="sig-block"><label>Printed Name</label><div class="sig-line">&nbsp;</div></div>
+      <div class="sig-block"><label>Date</label><div class="sig-line">&nbsp;</div></div>
+    </div>
+    <div class="sig-row">
+      <div class="sig-block"><label>Agency Roofing Co.</label><div class="sig-line">&nbsp;</div></div>
+      <div class="sig-block"><label>Printed Name</label><div class="sig-line">Orlando Montanez, Owner</div></div>
+      <div class="sig-block"><label>Date</label><div class="sig-line">&nbsp;</div></div>
+    </div>
+  </div>
+
+  <div class="pfoot">
+    <div class="pfoot-left">Built with agency.&nbsp;&nbsp;Driven by obligation.</div>
+    <div class="pfoot-right">Flat Roof Specialists <span class="sep">&bull;</span> Albuquerque, New Mexico</div>
+  </div>
+</div>
+<script>window.onload = function() { window.print(); };<\/script>
+</body>
+</html>`;
+
+  logActivity('Change order ' + o.num + ' opened');
+  save();
+  renderActivityLog();
+  openDoc(html);
+}
+
+// Open a generated document. New tab where allowed; iPhone Safari blocks that,
+// so fall back to opening it in this tab (Back returns to the same customer).
+function openDoc(html) {
+  let win = null;
+  try { win = window.open('', '_blank'); } catch (e) { win = null; }
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+    return;
+  }
+  try { sessionStorage.setItem('arc_return', currentId || ''); } catch (e) {}
+  location.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+}
+
+// ── Events (addEventListener — iOS Safari safe) ──
+(function wireExtras() {
+  const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+  on('btn-new-quote', e => { e.preventDefault(); newExtra('quote'); });
+  on('btn-new-co', e => { e.preventDefault(); newExtra('co'); });
+  on('xe-close', e => { e.preventDefault(); closeEditor(); });
+  on('xe-close2', e => { e.preventDefault(); closeEditor(); showToast('SAVED'); });
+
+  ['quote-list', 'co-list'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', e => {
+      const row = e.target.closest('.x-row');
+      if (row) openEditor(row.dataset.kind, row.dataset.id, false);
+    });
+  });
+
+  const inner = document.getElementById('xe-inner');
+  const handle = e => {
+    const f = e.target.dataset && e.target.dataset.f;
+    const it = xeItem();
+    if (!f || !it) return;
+    it[f] = e.target.value;
+    touchItem();
+    xeCalc();
+  };
+  inner.addEventListener('input', handle);
+  inner.addEventListener('change', handle);
+  inner.addEventListener('click', e => {
+    const it = xeItem();
+    if (!it) return;
+    const sb = e.target.closest('[data-status]');
+    if (sb) {
+      it.status = sb.dataset.status;
+      if (xe.kind === 'co') it.approvedAt = it.status === 'Approved' ? Date.now() : '';
+      inner.querySelectorAll('[data-status]').forEach(b => b.classList.toggle('on', b === sb));
+      logActivity((xe.kind === 'quote' ? 'Quote ' : 'Change order ') + it.num + ' marked ' + it.status);
+      touchItem(); xeCalc();
+      return;
+    }
+    const db = e.target.closest('[data-dir]');
+    if (db) {
+      it.direction = db.dataset.dir;
+      inner.querySelectorAll('[data-dir]').forEach(b => b.classList.toggle('on', b === db));
+      touchItem(); xeCalc();
+    }
+  });
+
+  on('xe-pdf', e => {
+    e.preventDefault();
+    const it = xeItem();
+    if (!it) return;
+    xe.touched = true;
+    const kind = xe.kind;
+    closeEditor();
+    if (kind === 'quote') generateProposal({ quote: it });
+    else generateChangeOrder(it);
+  });
+
+  on('xe-del', e => {
+    e.preventDefault();
+    const b = e.currentTarget;
+    if (!b.classList.contains('armed')) {
+      b.classList.add('armed'); b.textContent = 'TAP TO CONFIRM';
+      setTimeout(() => { b.classList.remove('armed'); b.textContent = 'DELETE'; }, 3000);
+      return;
+    }
+    const c = getCurrent(); const it = xeItem();
+    if (c && it) {
+      const key = xe.kind === 'quote' ? 'quotes' : 'changeOrders';
+      c[key] = c[key].filter(x => x.id !== it.id);
+      logActivity((xe.kind === 'quote' ? 'Quote ' : 'Change order ') + it.num + ' deleted');
+      xe.touched = false; xe.isNew = false;
+    }
+    save();
+    document.getElementById('x-editor').classList.remove('active');
+    xe = null;
+    renderExtras(); renderList(); renderActivityLog();
+    showToast('DELETED');
+  });
+
+})();
+
+function restoreReturn() {
+  // Coming back from a document opened in this tab → reopen that customer
+  try {
+    const rid = sessionStorage.getItem('arc_return');
+    if (rid) {
+      sessionStorage.removeItem('arc_return');
+      if (customers.some(c => c.id === rid)) selectCustomer(rid);
+    }
+  } catch (e) {}
+}
+
 // ── INIT ───────────────────────────────────────────────
 
 load();
@@ -1906,6 +2590,21 @@ document.getElementById('btn-new-customer').addEventListener('click', function(e
   newCustomer();
 });
 document.addEventListener('touchstart', function(){}, {passive: true});
+
+// ── RECEIPT ────────────────────────────────────────────
+var _rb = document.getElementById('btn-receipt');
+if (_rb) _rb.addEventListener('click', function(e) {
+  e.preventDefault();
+  var c = getCurrent();
+  if (!c) return;
+  saveCustomer(false);
+  logActivity('Receipt opened for ' + c.arcNum);
+  saveCustomer(false);
+  try { sessionStorage.setItem('arc_return', c.id); } catch (err) {}
+  location.href = 'receipt.html?id=' + encodeURIComponent(c.id);
+});
+
+restoreReturn();
 var _eb = document.getElementById('btn-export');
 if (_eb) _eb.addEventListener('click', exportData);
 var _eib = document.getElementById('btn-export-icon');

@@ -640,6 +640,39 @@
     .xe-del { grid-column: span 2; order: 3; }
   }
 
+
+  /* ── SIGNATURES & SETTINGS ── */
+  .sgn-box { display: flex; flex-direction: column; gap: 8px; }
+  .proposal-section .sgn-box, .proposal-section > [id^="sign-status"] { margin-bottom: 12px; }
+  .sgn-row { display: flex; gap: 10px; align-items: flex-start; }
+  .sgn-pill {
+    font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.12em; white-space: nowrap;
+    padding: 3px 8px 2px; border-radius: 3px; background: var(--stone-dark); color: var(--ink-soft); flex-shrink: 0;
+  }
+  .sgn-pill.ok { background: var(--copper); color: var(--white); }
+  .sgn-pill.warn { background: rgba(139,32,32,0.12); color: var(--danger); }
+  .sgn-txt { font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
+  .sgn-img { max-width: 220px; max-height: 64px; background: var(--white); border: 1px solid var(--stone-dark); border-radius: 4px; padding: 4px 8px; display: block; }
+  .sgn-link {
+    align-self: flex-start; background: none; border: none; padding: 6px 0; min-height: 36px;
+    font-size: 11px; color: var(--ink-muted); text-decoration: underline; cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .sgn-link.armed { color: var(--danger); font-weight: 600; }
+  #sign-status-proposal { margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+
+  .x-sheet {
+    display: none; position: fixed; inset: 0; z-index: 920; background: var(--stone-light);
+    flex-direction: column; height: 100vh; height: 100dvh;
+  }
+  .x-sheet.active { display: flex; }
+  .sg-row-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 12px; font-weight: 500; color: var(--ink-soft); text-transform: none; letter-spacing: 0; cursor: pointer; }
+  .sg-row-check input { width: 20px; height: 20px; accent-color: var(--copper); }
+  .set-qr { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--ink-muted); }
+  .set-qr .pay-qr svg { width: 84px; height: 84px; display: block; background: var(--white); padding: 6px; border: 1px solid var(--stone-dark); border-radius: 4px; }
+  .set-bad { color: var(--danger); }
+  .set-help { font-size: 11px; line-height: 1.55; color: var(--ink-muted); background: var(--stone); border-radius: 6px; padding: 10px 12px; }
+  .x-num .signed-mark { color: var(--copper); margin-left: 6px; }
+
   /* ── PROPOSAL PRINT STYLES ── */
   .proposal-wrap { font-family: 'Inter', sans-serif; }
 
@@ -819,6 +852,7 @@
 
     <div id="sidebar-footer">
       <button class="btn-footer" id="btn-export">EXPORT BACKUP</button>
+      <button class="btn-footer" id="btn-settings" type="button">SETTINGS</button>
       <label class="btn-footer" style="cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center;">
         IMPORT<input type="file" accept=".json" style="display:none" onchange="importData(this)">
       </label>
@@ -1048,6 +1082,11 @@
             <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens a new tab. Uncheck <em>Headers and Footers</em> in the print dialog, then save as PDF.</p>
           </div>
           <div class="proposal-section">
+            <div class="proposal-step-title">SIGN IN PERSON</div>
+            <div id="sign-status-proposal"></div>
+            <button class="proposal-btn proposal-btn-primary" id="btn-sign-proposal" type="button">✍ SIGN PROPOSAL</button>
+          </div>
+          <div class="proposal-section">
             <div class="proposal-step-title">STEP 2 — SEND EMAIL</div>
             <button class="proposal-btn proposal-btn-secondary" id="btn-email" onclick="sendEmail()" disabled>
               ✉ OPEN EMAIL
@@ -1082,6 +1121,10 @@
               🧾 CREATE RECEIPT
             </button>
             <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens this customer&#39;s receipt with name, address, scope and price filled in. Edit the lines, then tap Print / Save PDF.</p>
+            <div class="form-group" style="margin-top:12px;">
+              <label for="f-paylink">Payment link for this job (optional)</label>
+              <input type="text" id="f-paylink" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Leave blank to use your link from Settings">
+            </div>
           </div>
         </div>
 
@@ -1118,11 +1161,295 @@
   </div></div>
 </div>
 
+<!-- SETTINGS -->
+<div class="x-sheet" id="set-sheet" role="dialog" aria-modal="true" aria-labelledby="set-title">
+  <div class="xe-head">
+    <div><span class="xe-kind">AGENCY ROOFING CO.</span><span class="xe-num" id="set-title">Settings</span></div>
+    <button class="xe-close" id="set-close" type="button" aria-label="Save and close">&times;</button>
+  </div>
+  <div class="xe-body"><div class="xe-inner" id="set-inner"></div></div>
+  <div class="xe-foot"><div class="xe-foot-in" style="grid-template-columns:1fr;">
+    <button class="proposal-btn proposal-btn-primary" id="set-close2" type="button">SAVE &amp; CLOSE</button>
+  </div></div>
+</div>
+
 <!-- TOAST -->
 <div id="toast">SAVED</div>
 
 <!-- PROPOSAL PRINT TARGET -->
 <div id="proposal-print-target"></div>
+
+<script>
+/* QR Code Generator for JavaScript — Copyright (c) 2009 Kazuhiko Arase — MIT license */
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
+</script>
+<script>
+// ── ARC SIGN — in-person electronic signature pad (shared by CRM + receipt) ──
+// Captures a finger/stylus signature, printed name and consent to sign
+// electronically, and returns them with a timestamp for the audit record.
+(function () {
+  if (window.ARCSign) return;
+  var C = { stone: '#EAE4DA', stoneL: '#F2EDE6', ink: '#1C1A18', ink2: '#3A3734', muted: '#6B6560', copper: '#974930', mid: '#C97E78', hi: '#F0C8C2', paper: '#FDFCFA', line: '#D8D0C4' };
+
+  var css = [
+    '#sg{display:none;position:fixed;inset:0;z-index:1500;background:' + C.stoneL + ';flex-direction:column;height:100vh;height:100dvh;font-family:Inter,-apple-system,Helvetica,Arial,sans-serif;color:' + C.ink + '}',
+    '#sg.on{display:flex}',
+    '#sg *{box-sizing:border-box}',
+    '.sg-head{background:' + C.ink + ';color:' + C.stone + ';padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;border-bottom:2px solid ' + C.copper + ';flex-shrink:0;display:flex;align-items:center;gap:12px}',
+    '.sg-kick{font-family:"Bebas Neue",Oswald,sans-serif;font-size:12px;letter-spacing:.18em;color:' + C.mid + ';display:block}',
+    '.sg-num{font-family:Anton,Impact,sans-serif;font-size:20px;letter-spacing:.02em;display:block;line-height:1.1}',
+    '.sg-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px}',
+    '.sg-in{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:14px}',
+    '.sg-card{background:' + C.paper + ';border:1px solid rgba(151,73,48,.35);border-radius:6px;padding:14px 16px}',
+    '.sg-title{font-size:17px;font-weight:600;line-height:1.25}',
+    '.sg-title span{color:' + C.copper + '}',
+    '.sg-amt{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(28,26,24,.12);margin-top:10px;padding-top:10px}',
+    '.sg-amt-l{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + C.copper + '}',
+    '.sg-amt-v{font-family:Anton,Impact,sans-serif;font-size:22px;color:' + C.copper + '}',
+    '.sg-list{margin:8px 0 0;padding:0 0 0 16px;font-size:12.5px;line-height:1.5;color:' + C.ink2 + '}',
+    '.sg-lbl{font-family:"Bebas Neue",Oswald,sans-serif;font-size:14px;letter-spacing:.16em;color:' + C.copper + ';display:flex;justify-content:space-between;align-items:center}',
+    '.sg-name{width:100%;min-height:48px;border:1px solid ' + C.line + ';border-radius:6px;background:' + C.paper + ';font:500 16px Inter,-apple-system,sans-serif;padding:10px 12px;color:' + C.ink + ';-webkit-appearance:none}',
+    '.sg-name:focus{outline:none;border-color:' + C.mid + ';box-shadow:0 0 0 2px rgba(201,126,120,.15)}',
+    '.sg-pad{position:relative;height:clamp(160px,27vh,260px);background:#fff;border:1.5px solid ' + C.line + ';border-radius:8px;overflow:hidden;touch-action:none}',
+    '.sg-pad.inked{border-color:' + C.mid + '}',
+    '.sg-pad canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}',
+    '.sg-base{position:absolute;left:18px;right:18px;bottom:28%;border-bottom:1.5px solid ' + C.ink + ';opacity:.55;pointer-events:none}',
+    '.sg-x{position:absolute;left:18px;bottom:calc(28% + 6px);font:600 18px Inter,sans-serif;color:' + C.copper + ';pointer-events:none}',
+    '.sg-ph{position:absolute;left:0;right:0;top:34%;text-align:center;font-family:Lora,Georgia,serif;font-style:italic;font-size:16px;color:#B9B0A6;pointer-events:none}',
+    '.sg-pad.inked .sg-ph{display:none}',
+    '.sg-clear{min-height:40px;padding:0 14px;border:1px solid ' + C.line + ';background:' + C.paper + ';border-radius:5px;font-family:"Bebas Neue",Oswald,sans-serif;font-size:13px;letter-spacing:.12em;color:' + C.ink2 + ';cursor:pointer}',
+    '.sg-check{display:flex;gap:12px;align-items:flex-start;min-height:48px;padding:10px 12px;background:' + C.paper + ';border:1px solid ' + C.line + ';border-radius:6px;cursor:pointer;font-size:12.5px;line-height:1.5;color:' + C.ink2 + '}',
+    '#sg label.sg-check{text-transform:none;letter-spacing:0;font-weight:400;font-size:12.5px;color:' + C.ink2 + '}',
+    '#sg label.sg-lbl{text-transform:none}',
+    '.sg-check input{width:22px;height:22px;flex:none;margin:1px 0 0;accent-color:' + C.copper + '}',
+    '.sg-foot{flex-shrink:0;background:' + C.paper + ';border-top:1px solid ' + C.line + ';padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}',
+    '.sg-foot-in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr 2fr;gap:8px}',
+    '.sg-btn{min-height:52px;border-radius:6px;border:none;font-family:"Bebas Neue",Oswald,sans-serif;font-size:17px;letter-spacing:.12em;cursor:pointer}',
+    '.sg-btn.sec{background:' + C.stone + ';color:' + C.ink + '}',
+    '.sg-btn.pri{background:' + C.copper + ';color:#fff}',
+    '.sg-btn.pri:disabled{background:' + C.line + ';color:' + C.muted + ';cursor:not-allowed}',
+    '.sg-hint{font-size:11px;color:' + C.muted + ';text-align:center}',
+    '.sg-done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 8px}',
+    '.sg-done svg{width:84px;height:84px}',
+    '.sg-done h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:30px;letter-spacing:.02em;margin:4px 0 0}',
+    '.sg-done p{font-size:14px;line-height:1.55;color:' + C.ink2 + ';max-width:30em;margin:0}',
+    '.sg-done img{max-width:260px;max-height:80px;margin-top:6px}',
+    '.sg-acts{display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;margin-top:8px}',
+    '@media (min-width:700px){.sg-body{padding:24px}}'
+  ].join('\n');
+
+  var root, pad, canvas, ctx, strokes = [], cur = null, opts = {}, lastW = 0, lastH = 0;
+
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function escH(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  function build() {
+    if (root) return;
+    var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+    root = el('div'); root.id = 'sg'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true');
+    document.body.appendChild(root);
+  }
+
+  function tzName() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } }
+
+  // ── Canvas drawing ──
+  function sizeCanvas() {
+    if (!canvas) return;
+    var r = pad.getBoundingClientRect(), dpr = Math.max(1, window.devicePixelRatio || 1);
+    if (!r.width || !r.height) return;
+    if (lastW && lastH && (r.width !== lastW || r.height !== lastH)) {
+      var sx = r.width / lastW, sy = r.height / lastH;
+      strokes.forEach(function (s) { s.forEach(function (p) { p.x *= sx; p.y *= sy; }); });
+    }
+    lastW = r.width; lastH = r.height;
+    canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
+    ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    redraw();
+  }
+  function styleCtx(c, w) { c.strokeStyle = C.ink; c.fillStyle = C.ink; c.lineWidth = w; c.lineCap = 'round'; c.lineJoin = 'round'; }
+  function drawStroke(c, s) {
+    if (!s.length) return;
+    if (s.length < 3) { c.beginPath(); c.arc(s[0].x, s[0].y, c.lineWidth / 2, 0, Math.PI * 2); c.fill(); if (s.length === 1) return; }
+    c.beginPath(); c.moveTo(s[0].x, s[0].y);
+    for (var i = 1; i < s.length - 1; i++) {
+      var mx = (s[i].x + s[i + 1].x) / 2, my = (s[i].y + s[i + 1].y) / 2;
+      c.quadraticCurveTo(s[i].x, s[i].y, mx, my);
+    }
+    var l = s[s.length - 1]; c.lineTo(l.x, l.y); c.stroke();
+  }
+  function redraw() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, lastW, lastH); styleCtx(ctx, 2.6);
+    strokes.forEach(function (s) { drawStroke(ctx, s); });
+    pad.classList.toggle('inked', strokes.length > 0);
+    validate();
+  }
+  function pt(e) { var r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+  function down(e) { e.preventDefault(); try { canvas.setPointerCapture(e.pointerId); } catch (x) {} cur = [pt(e)]; strokes.push(cur); redraw(); }
+  function move(e) {
+    if (!cur) return; e.preventDefault();
+    var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    for (var i = 0; i < evs.length; i++) cur.push(pt(evs[i]));
+    redraw();
+  }
+  function up() { cur = null; validate(); }
+
+  function inkBox() {
+    var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9, n = 0;
+    strokes.forEach(function (s) { s.forEach(function (p) { n++; if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y; }); });
+    return { n: n, x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+  }
+  function hasInk() { var b = inkBox(); return b.n >= 6 && (b.w > 24 || b.h > 24); }
+
+  // Trimmed, transparent PNG of the signature
+  function exportPng() {
+    var b = inkBox(), padPx = 6, w = b.w + padPx * 2, h = b.h + padPx * 2;
+    var scale = Math.min(2, 900 / w, 300 / h);
+    var off = document.createElement('canvas');
+    off.width = Math.max(1, Math.round(w * scale)); off.height = Math.max(1, Math.round(h * scale));
+    var c = off.getContext('2d');
+    c.setTransform(scale, 0, 0, scale, (padPx - b.x) * scale, (padPx - b.y) * scale);
+    styleCtx(c, 2.6);
+    strokes.forEach(function (s) { drawStroke(c, s); });
+    return off.toDataURL('image/png');
+  }
+
+  function validate() {
+    if (!root) return;
+    var btn = root.querySelector('#sg-ok'); if (!btn) return;
+    var name = root.querySelector('#sg-name'), chk = root.querySelector('#sg-consent');
+    var ok = hasInk() && name && name.value.trim().length > 1 && chk && chk.checked;
+    btn.disabled = !ok;
+    var hint = root.querySelector('#sg-hint');
+    if (hint) hint.textContent = ok ? '' : (!hasInk() ? 'Sign in the box above.' : (!name.value.trim() ? 'Enter the signer’s full name.' : 'Check the box to agree to sign electronically.'));
+  }
+
+  // ── Public API ──
+  function open(o) {
+    build(); opts = o || {}; strokes = []; cur = null; lastW = lastH = 0;
+    var list = (opts.summary || []).filter(Boolean);
+    var more = list.length > 4;
+    root.innerHTML =
+      '<div class="sg-head"><div><span class="sg-kick">' + escH(opts.kicker || 'SIGN') + '</span><span class="sg-num">' + escH(opts.num || '') + '</span></div></div>' +
+      '<div class="sg-body"><div class="sg-in">' +
+        (opts.title ? '<div class="sg-card"><div class="sg-title">' + opts.title + '</div>' +
+          (list.length ? '<ul class="sg-list">' + list.slice(0, 4).map(function (l) { return '<li>' + escH(l) + '</li>'; }).join('') + (more ? '<li>…and ' + (list.length - 4) + ' more</li>' : '') + '</ul>' : '') +
+          (opts.amount ? '<div class="sg-amt"><span class="sg-amt-l">' + escH(opts.amountLabel || 'Total') + '</span><span class="sg-amt-v">' + escH(opts.amount) + '</span></div>' : '') +
+        '</div>' : '') +
+        '<div class="sg-lbl"><span>' + escH(opts.role || 'Signature') + '</span><button type="button" class="sg-clear" id="sg-clear">CLEAR</button></div>' +
+        '<div class="sg-pad" id="sg-pad"><div class="sg-ph">Sign here with your finger</div><div class="sg-base"></div><div class="sg-x">✕</div><canvas id="sg-canvas" aria-label="Signature area"></canvas></div>' +
+        '<label class="sg-lbl" for="sg-name" style="margin-top:2px"><span>Printed name</span></label>' +
+        '<input class="sg-name" id="sg-name" type="text" autocomplete="name" autocapitalize="words" value="' + escH(opts.name || '') + '" placeholder="Full name">' +
+        '<label class="sg-check"><input type="checkbox" id="sg-consent"><span>' + escH(opts.consent || 'I agree to sign this document electronically. My electronic signature has the same legal effect as my handwritten signature.') + '</span></label>' +
+        (opts.offerSave ? '<label class="sg-check"><input type="checkbox" id="sg-save" checked><span>Save as my signature and use it to countersign future documents.</span></label>' : '') +
+        '<div class="sg-hint" id="sg-hint"></div>' +
+      '</div></div>' +
+      '<div class="sg-foot"><div class="sg-foot-in">' +
+        '<button type="button" class="sg-btn sec" id="sg-cancel">' + escH(opts.skipLabel || 'CANCEL') + '</button>' +
+        '<button type="button" class="sg-btn pri" id="sg-ok" disabled>' + escH(opts.confirmLabel || 'SIGN') + '</button>' +
+      '</div></div>';
+    root.classList.add('on');
+    document.documentElement.style.overflow = 'hidden';
+    pad = root.querySelector('#sg-pad'); canvas = root.querySelector('#sg-canvas');
+    canvas.addEventListener('pointerdown', down);
+    canvas.addEventListener('pointermove', move);
+    canvas.addEventListener('pointerup', up);
+    canvas.addEventListener('pointercancel', up);
+    canvas.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+    root.querySelector('#sg-clear').addEventListener('click', function () { strokes = []; redraw(); });
+    root.querySelector('#sg-name').addEventListener('input', validate);
+    root.querySelector('#sg-consent').addEventListener('change', validate);
+    root.querySelector('#sg-cancel').addEventListener('click', function () {
+      if (opts.onSkip) { var f = opts.onSkip; f(); } else close();
+    });
+    root.querySelector('#sg-ok').addEventListener('click', function () {
+      if (this.disabled) return;
+      var res = {
+        name: root.querySelector('#sg-name').value.trim(),
+        img: exportPng(),
+        at: new Date().toISOString(),
+        tz: tzName(),
+        consent: true,
+        method: 'Signed on screen in person'
+      };
+      if (opts.offerSave) res.saveAsMine = !!(root.querySelector('#sg-save') || {}).checked;
+      if (opts.onSign) opts.onSign(res);
+    });
+    requestAnimationFrame(sizeCanvas);
+    validate();
+  }
+
+  function done(o) {
+    build(); o = o || {};
+    root.innerHTML =
+      '<div class="sg-head"><div><span class="sg-kick">' + escH(o.kicker || 'SIGNED') + '</span><span class="sg-num">' + escH(o.num || '') + '</span></div></div>' +
+      '<div class="sg-body"><div class="sg-in"><div class="sg-done">' +
+        '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="' + C.stone + '" stroke="' + C.ink + '" stroke-width="2.5"/><path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="' + C.mid + '" stroke-width="1.6"/><path d="M33 51 L45 63 L68 38" fill="none" stroke="' + C.copper + '" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '<h2>' + escH(o.title || 'Signed') + '</h2>' +
+        (o.message ? '<p>' + o.message + '</p>' : '') +
+        (o.img ? '<img src="' + o.img + '" alt="Signature">' : '') +
+        '<div class="sg-acts" id="sg-acts"></div>' +
+      '</div></div></div>';
+    var acts = root.querySelector('#sg-acts');
+    (o.actions || [{ label: 'DONE' }]).forEach(function (a) {
+      var b = el('button', 'sg-btn ' + (a.primary ? 'pri' : 'sec'), escH(a.label));
+      b.type = 'button';
+      b.addEventListener('click', function () { if (a.fn) a.fn(); else close(); });
+      acts.appendChild(b);
+    });
+    root.classList.add('on');
+  }
+
+  function close() {
+    if (!root) return;
+    root.classList.remove('on'); root.innerHTML = '';
+    document.documentElement.style.overflow = '';
+    strokes = []; canvas = null; ctx = null; pad = null;
+  }
+
+  window.addEventListener('resize', function () { if (root && root.classList.contains('on') && canvas) sizeCanvas(); });
+
+  // Short fingerprint of a document's contents — changes if scope or price changes
+  function docId(str) {
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0; i < str.length; i++) { var ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    var n = 4294967296 * (2097151 & h2) + (h1 >>> 0);
+    return n.toString(16).toUpperCase().padStart(14, '0').slice(-12).replace(/(.{4})(?=.)/g, '$1-');
+  }
+
+  function stamp(iso) {
+    try { return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }); }
+    catch (e) { return iso; }
+  }
+  function day(iso) {
+    try { return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
+  }
+
+  // QR code as inline SVG (uses the bundled qrcode-generator)
+  function qrSvg(text) {
+    try {
+      var q = qrcode(0, 'M'); q.addData(text); q.make();
+      return q.createSvgTag({ cellSize: 2, margin: 0, scalable: true })
+        .replace(/fill="black"/g, 'fill="' + C.ink + '"').replace(/fill="white"/g, 'fill="' + C.paper + '"');
+    } catch (e) { return ''; }
+  }
+
+  function settings() {
+    var d = { payLink: '', showPay: true, autoCountersign: true };
+    try { var s = JSON.parse(localStorage.getItem('arc_settings') || '{}'); for (var k in s) d[k] = s[k]; } catch (e) {}
+    return d;
+  }
+  function saveSettings(s) { try { localStorage.setItem('arc_settings', JSON.stringify(s)); } catch (e) {} }
+  function ownerSig() { try { return JSON.parse(localStorage.getItem('arc_owner_sig') || 'null'); } catch (e) { return null; } }
+  function saveOwnerSig(v) { try { if (v) localStorage.setItem('arc_owner_sig', JSON.stringify(v)); else localStorage.removeItem('arc_owner_sig'); } catch (e) {} }
+
+  window.ARCSign = { open: open, done: done, close: close, docId: docId, stamp: stamp, day: day, qrSvg: qrSvg,
+    settings: settings, saveSettings: saveSettings, ownerSig: ownerSig, saveOwnerSig: saveOwnerSig, tz: tzName };
+})();
+</script>
 
 <script>
 // ═══════════════════════════════════════════════════════
@@ -1150,8 +1477,21 @@ function load() {
   } catch(e) { customers = []; }
 }
 
+let _saveWarned = false;
 function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
+    _saveWarned = false;
+  } catch (e) {
+    // Storage full (signatures are images) — never fail silently
+    if (!_saveWarned) {
+      _saveWarned = true;
+      showModal('STORAGE FULL',
+        'Your latest change could not be saved because this phone’s CRM storage is full. Tap Export Backup now so nothing is lost, then remove signatures or customers you no longer need.',
+        [{ label: 'EXPORT BACKUP', cls: 'modal-btn modal-btn-confirm', fn: () => { closeModal(); exportData(); } },
+         { label: 'OK', cls: 'modal-btn modal-btn-cancel', fn: closeModal }]);
+    }
+  }
 }
 
 function normalize(c) {
@@ -1194,6 +1534,8 @@ function normalize(c) {
     scheddate: c.scheddate || '',
     activityLog: c.activityLog || [],
     proposalSent: c.proposalSent || false,
+    sig: c.sig || null,
+    payLink: c.payLink || '',
     quotes: Array.isArray(c.quotes) ? c.quotes.map(normQuote) : [],
     changeOrders: Array.isArray(c.changeOrders) ? c.changeOrders.map(normCO) : [],
   };
@@ -1314,6 +1656,7 @@ function loadDetail() {
   document.getElementById('f-discount-label').value = c.discountLabel || '';
   document.getElementById('f-discount-amount').value = c.discountAmount || '';
   document.getElementById('f-scheddate').value = c.scheddate;
+  document.getElementById('f-paylink').value = c.payLink || '';
 
   syncHeader();
   calcTotals();
@@ -1322,6 +1665,7 @@ function loadDetail() {
   updateScheduledSection();
   updateEmailBtn();
   renderExtras();
+  renderSignStatus();
 }
 
 function syncHeader() {
@@ -1453,6 +1797,7 @@ function saveCustomer(toast = true) {
   c.discountLabel = document.getElementById('f-discount-label').value.trim();
   c.discountAmount = document.getElementById('f-discount-amount').value;
   c.scheddate = document.getElementById('f-scheddate').value;
+  c.payLink = document.getElementById('f-paylink').value.trim();
   c.updatedAt = Date.now();
 
   save();
@@ -1530,7 +1875,7 @@ const ARC_DOC_CSS = `<style>
   }
   @media print {
     html, body { height: auto !important; }
-    .page { min-height: 0; height: auto; padding-bottom: 0.9in; overflow: visible; }
+    .page { min-height: 0; height: auto; padding-bottom: 0.72in; overflow: visible; }
   }
 
   /* ─── HEADER ─── */
@@ -1681,6 +2026,20 @@ const ARC_DOC_CSS = `<style>
   /* sub-line under the hero (quotes, change orders) */
   .hero-sub { font-size: 12px; color: #3A3734; letter-spacing: 0.02em; margin: -12px 0 20px; line-height: 1.4; }
   .hero-sub b { color: #974930; font-weight: 600; }
+  /* e-signatures */
+  .sig-block { position: relative; }
+  .sig-img { position: absolute; left: 0; bottom: 17px; height: 36px; max-width: 100%; object-fit: contain; object-position: left bottom; }
+  .esig-audit { margin-top: 12px; padding-top: 6px; border-top: 1px dashed rgba(151,73,48,0.35); font-size: 7.5px; line-height: 1.5; color: #6B6560; letter-spacing: 0.02em; }
+  .esig-audit b { color: #974930; font-weight: 700; }
+  /* pay online */
+  .paybox { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(28,26,24,0.15); display: grid; grid-template-columns: 60px 1fr; gap: 10px; align-items: center; }
+  .pay-qr svg { width: 60px; height: 60px; display: block; }
+  .pay-t { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; color: #974930; text-transform: uppercase; margin-bottom: 3px; }
+  .sig-row + .sig-row { margin-top: 14px; }
+  .pay-line { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: #1C1A18; margin-bottom: 4px; }
+  .pay-line b { color: #974930; font-weight: 700; }
+  .pay-note { font-size: 8.5px; line-height: 1.45; color: #3A3734; }
+  .pay-url { font-size: 8px; color: #974930; margin-top: 3px; word-break: break-all; }
 </style>`;
 
 const ARC_DOC_HEAD = `<!-- Header -->
@@ -1817,6 +2176,7 @@ ${ARC_DOC_CSS}
         <div class="pr pr-sub"><span>Subtotal</span><span>${fmt(subtotal)}</span></div>
         <div class="pr pr-tax"><span>Gross Receipts Tax (7.3125%)</span><span>${fmt(tax)}</span></div>
         <div class="pr pr-final"><span class="lbl">Final Investment</span><span class="amt">${fmt(total)}</span></div>
+        ${payBlock(cust, total * 0.5, '50% deposit due', c.arcNum)}
       </div>
     </div>
   </div>
@@ -1840,13 +2200,7 @@ ${ARC_DOC_CSS}
   </div>
 
   <!-- Signature -->
-  <div class="sig-section">
-    <div class="sig-row">
-      <div class="sig-block"><label>Customer Signature</label><div class="sig-line">&nbsp;</div></div>
-      <div class="sig-block"><label>Printed Name</label><div class="sig-line">&nbsp;</div></div>
-      <div class="sig-block"><label>Date</label><div class="sig-line">&nbsp;</div></div>
-    </div>
-  </div>
+  ${docSigSection(q ? validSig(q, quoteContent(cust, q)) : validSig(cust, proposalContent(cust)), false)}
 
   <!-- Footer -->
   <div class="pfoot">
@@ -2071,6 +2425,7 @@ function normQuote(q) {
     margin: (q.margin != null && q.margin !== '') ? q.margin : '30',
     discountLabel: q.discountLabel || '', discountAmount: q.discountAmount || '',
     status: Q_STATUSES.indexOf(q.status) > -1 ? q.status : 'Draft',
+    sig: q.sig || null,
     createdAt: q.createdAt || Date.now(), updatedAt: q.updatedAt || Date.now(),
   };
 }
@@ -2086,6 +2441,7 @@ function normCO(o) {
     date: o.date || localISODate(),
     status: CO_STATUSES.indexOf(o.status) > -1 ? o.status : 'Pending',
     approvedAt: o.approvedAt || '',
+    sig: o.sig || null,
     createdAt: o.createdAt || Date.now(), updatedAt: o.updatedAt || Date.now(),
   };
 }
@@ -2153,7 +2509,7 @@ function renderExtras() {
   ql.innerHTML = c.quotes.length ? c.quotes.map(q => {
     const p = priceOf(q);
     return `<button class="x-row" type="button" data-kind="quote" data-id="${q.id}">
-      <span><span class="x-num">${esc(q.num)}</span><span class="x-title">${esc(q.title || 'Untitled quote')}</span></span>
+      <span><span class="x-num">${esc(q.num)}${validSig(q, quoteContent(c, q)) ? '<span class="signed-mark">✍ SIGNED</span>' : ''}</span><span class="x-title">${esc(q.title || 'Untitled quote')}</span></span>
       <span class="x-right"><span class="st-pill ${q.status.toLowerCase()}">${esc(q.status)}</span><span class="x-amt">${fmt(p.total)}</span></span>
     </button>`;
   }).join('') : '<div class="x-empty">No additional quotes for this customer.</div>';
@@ -2161,7 +2517,7 @@ function renderExtras() {
   cl.innerHTML = c.changeOrders.length ? c.changeOrders.map(o => {
     const p = coPrice(o);
     return `<button class="x-row" type="button" data-kind="co" data-id="${o.id}">
-      <span><span class="x-num">${esc(o.num)}</span><span class="x-title">${esc(o.title || 'Untitled change order')}</span></span>
+      <span><span class="x-num">${esc(o.num)}${validSig(o, coContent(c, o)) ? '<span class="signed-mark">✍ SIGNED</span>' : ''}</span><span class="x-title">${esc(o.title || 'Untitled change order')}</span></span>
       <span class="x-right"><span class="st-pill ${o.status.toLowerCase()}">${esc(o.status)}</span><span class="x-amt${p.total < 0 ? ' credit' : ''}">${fmtSigned(p.total)}</span></span>
     </button>`;
   }).join('') : '<div class="x-empty">No change orders yet.</div>';
@@ -2212,10 +2568,11 @@ function openEditor(kind, id, isNew) {
   document.getElementById('xe-pdf').textContent = kind === 'quote' ? 'OPEN QUOTE PDF' : 'OPEN CHANGE ORDER PDF';
   const del = document.getElementById('xe-del');
   del.classList.remove('armed'); del.textContent = 'DELETE';
-  document.getElementById('xe-inner').innerHTML = kind === 'quote' ? quoteForm(it) : coForm(it);
+  document.getElementById('xe-inner').innerHTML = (kind === 'quote' ? quoteForm(it) : coForm(it)) + editorSignSection();
   document.getElementById('x-editor').classList.add('active');
   document.getElementById('xe-body').scrollTop = 0;
   xeCalc();
+  renderEditorSign();
 }
 
 function statusButtons(list, cur) {
@@ -2382,10 +2739,18 @@ ${ARC_DOC_CSS}
   .pr-credit { color: #2A5C3A; }
   .pr-change { font-weight: 600; padding-top: 8px; }
   .pr-prior { color: #3A3734; }
-  .co-type { display: inline-block; font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.16em; padding: 3px 9px 2px; border: 1px solid #974930; color: #974930; border-radius: 2px; margin-bottom: 14px; }
+  .co-type { display: inline-block; font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.16em; padding: 3px 9px 2px; border: 1px solid #974930; color: #974930; border-radius: 2px; margin-bottom: 10px; }
+  .body .section-block { margin-bottom: 12px; }
+  .bottom-row { margin-bottom: 10px; }
+  .body { margin-bottom: 12px; }
+  .esig-audit { margin-top: 8px; }
+  .sig-row + .sig-row { margin-top: 10px; }
+  .bottom-row .b-list li { padding: 2px 0 2px 14px; }
+  @media print { .page { padding-bottom: 0.66in; } }
+  .hero-title { margin-bottom: 18px; }
+  .meta { margin-bottom: 20px; }
   .co-type.credit { border-color: #2A5C3A; color: #2A5C3A; }
   .para { font-size: 10.5px; line-height: 1.6; color: #1C1A18; }
-  .sig-row + .sig-row { margin-top: 18px; }
 </style>
 </head>
 <body>
@@ -2424,6 +2789,7 @@ ${ARC_DOC_CSS}
         <div class="pr pr-tax"><span>Gross Receipts Tax (${taxPctLabel()})</span><span>${fmtSigned(p.tax)}</span></div>
         <div class="pr pr-sub${credit ? ' pr-credit' : ''}"><span>Change Order Total</span><span>${fmtSigned(p.total)}</span></div>
         <div class="pr pr-final"><span class="lbl">Revised Contract</span><span class="amt">${fmt(s.current + p.total)}</span></div>
+        ${credit ? '' : payBlock(c, p.total, 'Change order amount', o.num)}
       </div>
     </div>
   </div>
@@ -2444,18 +2810,7 @@ ${ARC_DOC_CSS}
     </div>
   </div>
 
-  <div class="sig-section">
-    <div class="sig-row">
-      <div class="sig-block"><label>Customer Signature</label><div class="sig-line">&nbsp;</div></div>
-      <div class="sig-block"><label>Printed Name</label><div class="sig-line">&nbsp;</div></div>
-      <div class="sig-block"><label>Date</label><div class="sig-line">&nbsp;</div></div>
-    </div>
-    <div class="sig-row">
-      <div class="sig-block"><label>Agency Roofing Co.</label><div class="sig-line">&nbsp;</div></div>
-      <div class="sig-block"><label>Printed Name</label><div class="sig-line">Orlando Montanez, Owner</div></div>
-      <div class="sig-block"><label>Date</label><div class="sig-line">&nbsp;</div></div>
-    </div>
-  </div>
+  ${docSigSection(validSig(o, coContent(c, o)), true, 'Orlando Montanez, Owner')}
 
   <div class="pfoot">
     <div class="pfoot-left">Built with agency.&nbsp;&nbsp;Driven by obligation.</div>
@@ -2566,6 +2921,368 @@ function openDoc(html) {
     showToast('DELETED');
   });
 
+})();
+
+// ── E-SIGNATURES & PAY ONLINE ──────────────────────────
+// Signatures are stored on the proposal (customer record), each quote and each
+// change order: { customer, contractor, docId }. docId fingerprints the scope
+// and price at signing — if either changes later, the signature no longer
+// prints and the CRM asks for a new one.
+
+function proposalContent(c) {
+  return ['P', c.arcNum, c.first, c.last, c.address, c.scope, c.requests, priceOf(c).total.toFixed(2)].join('|');
+}
+function quoteContent(c, q) {
+  return ['Q', q.num, c.first, c.last, c.address, q.title, q.scope, q.requests, priceOf(q).total.toFixed(2)].join('|');
+}
+function coContent(c, o) {
+  return ['CO', o.num, c.first, c.last, c.address, o.title, o.direction, o.reason, o.description, o.days, coPrice(o).total.toFixed(2)].join('|');
+}
+
+function sigState(obj, content) {
+  if (!obj || !obj.sig || !obj.sig.customer) return 'none';
+  return obj.sig.docId === ARCSign.docId(content) ? 'valid' : 'stale';
+}
+function validSig(obj, content) { return sigState(obj, content) === 'valid' ? obj.sig : null; }
+
+function bullets(t) { return (t || '').split('\n').map(l => l.trim()).filter(Boolean); }
+
+// What's being signed, for the signing screen and the documents
+function signTarget(c, t) {
+  const name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer';
+  if (t.kind === 'proposal') {
+    const p = priceOf(c);
+    return {
+      obj: c, word: 'Proposal', num: c.arcNum, content: proposalContent(c),
+      title: `Proposal for <span>${esc(name)}</span>`, summary: bullets(c.scope),
+      amountLabel: 'Final investment', amount: fmt(p.total),
+      apply() {
+        const i = STAGES.indexOf(c.stage);
+        if (c.stage !== 'Declined' && i > -1 && i < STAGES.indexOf('Signed')) { c.stage = 'Signed'; logActivity('Stage → Signed'); }
+      },
+      openPdf() { generateProposal(); },
+    };
+  }
+  const list = t.kind === 'quote' ? c.quotes : c.changeOrders;
+  const it = list.find(x => x.id === t.id);
+  if (!it) return null;
+  if (t.kind === 'quote') {
+    return {
+      obj: it, word: 'Quote', num: it.num, content: quoteContent(c, it),
+      title: `${esc(it.title || 'Additional work')} <span>for ${esc(name)}</span>`, summary: bullets(it.scope),
+      amountLabel: 'Total investment', amount: fmt(priceOf(it).total),
+      apply() { it.status = 'Accepted'; },
+      openPdf() { generateProposal({ quote: it }); },
+    };
+  }
+  const p = coPrice(it);
+  const s = contractSummary(c, it.id, false);
+  return {
+    obj: it, word: 'Change order', num: it.num, content: coContent(c, it),
+    title: `${esc(it.title || 'Change to contracted work')} <span>for ${esc(name)}</span>`, summary: bullets(it.description),
+    amountLabel: 'Revised contract', amount: fmt(s.current + p.total) + '  (' + fmtSigned(p.total) + ')',
+    apply() { it.status = 'Approved'; it.approvedAt = Date.now(); },
+    openPdf() { generateChangeOrder(it); },
+  };
+}
+
+function startSigning(t) {
+  const c = getCurrent();
+  if (!c) return;
+  saveCustomer(false);
+  const info = signTarget(c, t);
+  if (!info) return;
+  const custName = [c.first, c.last].filter(Boolean).join(' ');
+
+  ARCSign.open({
+    kicker: 'SIGN · ' + info.word.toUpperCase(), num: info.num,
+    title: info.title, summary: info.summary, amountLabel: info.amountLabel, amount: info.amount,
+    role: 'Customer signature', name: custName,
+    confirmLabel: 'SIGN ' + info.word.toUpperCase(),
+    onSign(cust) {
+      const finish = contractor => {
+        info.obj.sig = { customer: cust, contractor: contractor || null, docId: ARCSign.docId(info.content) };
+        info.apply();
+        logActivity(info.word + ' ' + info.num + ' signed by ' + cust.name + (contractor ? ', countersigned' : ''));
+        c.updatedAt = Date.now();
+        save();
+        refreshAfterSign();
+        ARCSign.done({
+          kicker: 'SIGNED · ' + info.word.toUpperCase(), num: info.num, title: 'Signed',
+          message: `${esc(info.word)} ${esc(info.num)} was signed by <b>${esc(cust.name)}</b>` +
+            (contractor ? ` and countersigned by <b>${esc(contractor.name)}</b>` : '') +
+            ` on ${esc(ARCSign.stamp(cust.at))}. The signature is saved with this customer and prints on the PDF.`,
+          img: cust.img,
+          actions: [
+            { label: 'OPEN SIGNED PDF', primary: true, fn() { ARCSign.close(); info.openPdf(); } },
+            { label: 'DONE', fn() { ARCSign.close(); } },
+          ],
+        });
+      };
+      const st = ARCSign.settings(), own = ARCSign.ownerSig();
+      if (own && st.autoCountersign) {
+        finish({ name: own.name, img: own.img, at: new Date().toISOString(), tz: ARCSign.tz(), consent: true, method: 'Saved contractor signature' });
+        return;
+      }
+      ARCSign.open({
+        kicker: 'COUNTERSIGN · ' + info.word.toUpperCase(), num: info.num,
+        title: `Customer signed: <span>${esc(cust.name)}</span>`, amountLabel: info.amountLabel, amount: info.amount,
+        role: 'Agency Roofing Co. signature', name: own ? own.name : 'Orlando Montanez',
+        consent: 'I agree to sign this document electronically on behalf of Agency Roofing Co. LLC.',
+        confirmLabel: 'COUNTERSIGN', skipLabel: 'SKIP',
+        offerSave: !own,
+        onSkip() { finish(null); },
+        onSign(o) {
+          if (o.saveAsMine) ARCSign.saveOwnerSig({ name: o.name, img: o.img, at: o.at });
+          delete o.saveAsMine;
+          finish(o);
+        },
+      });
+    },
+  });
+}
+
+function clearSignature(t) {
+  const c = getCurrent();
+  if (!c) return;
+  const info = signTarget(c, t);
+  if (!info || !info.obj.sig) return;
+  info.obj.sig = null;
+  logActivity('Signatures removed from ' + info.word.toLowerCase() + ' ' + info.num);
+  save();
+  refreshAfterSign();
+  showToast('SIGNATURES REMOVED');
+}
+
+function refreshAfterSign() {
+  renderSignStatus();
+  renderExtras();
+  renderPipeline();
+  renderList();
+  renderActivityLog();
+  if (xe) {
+    const it = xeItem();
+    if (it) {
+      xe.touched = true;
+      const inner = document.getElementById('xe-inner');
+      inner.querySelectorAll('[data-status]').forEach(b => b.classList.toggle('on', b.dataset.status === it.status));
+      renderEditorSign();
+      xeCalc();
+    }
+  }
+}
+
+function signStatusHTML(obj, content, t) {
+  const s = sigState(obj, content);
+  const key = t.kind + (t.id ? ':' + t.id : '');
+  if (s === 'none') {
+    return `<div class="sgn-row"><span class="sgn-pill">NOT SIGNED</span><span class="sgn-txt">Hand your phone to the customer to sign on screen.</span></div>`;
+  }
+  const g = obj.sig;
+  if (s === 'stale') {
+    return `<div class="sgn-row"><span class="sgn-pill warn">EDITED AFTER SIGNING</span><span class="sgn-txt">Scope or price changed after ${esc(g.customer.name)} signed. The old signature won't print. Have them sign again.</span></div>
+      <button type="button" class="sgn-link" data-unsign="${key}">Remove old signature</button>`;
+  }
+  return `<div class="sgn-row"><span class="sgn-pill ok">SIGNED</span><span class="sgn-txt"><b>${esc(g.customer.name)}</b> · ${esc(ARCSign.stamp(g.customer.at))}${g.contractor ? `<br>Countersigned by ${esc(g.contractor.name)}` : '<br>Not countersigned'}</span></div>
+    <img class="sgn-img" src="${g.customer.img}" alt="Customer signature">
+    <button type="button" class="sgn-link" data-unsign="${key}">Remove signatures</button>`;
+}
+
+function renderSignStatus() {
+  const c = getCurrent();
+  const el = document.getElementById('sign-status-proposal');
+  const btn = document.getElementById('btn-sign-proposal');
+  if (!c || !el) return;
+  const s = sigState(c, proposalContent(c));
+  el.innerHTML = signStatusHTML(c, proposalContent(c), { kind: 'proposal' });
+  btn.innerHTML = s === 'none' ? '✍ SIGN PROPOSAL' : '✍ SIGN AGAIN';
+}
+
+function renderEditorSign() {
+  const c = getCurrent(); const it = xeItem();
+  const el = document.getElementById('xe-sign-status'); const btn = document.getElementById('xe-sign');
+  if (!c || !it || !el) return;
+  const content = xe.kind === 'quote' ? quoteContent(c, it) : coContent(c, it);
+  el.innerHTML = signStatusHTML(it, content, { kind: xe.kind, id: it.id });
+  const word = xe.kind === 'quote' ? 'QUOTE' : 'CHANGE ORDER';
+  btn.innerHTML = sigState(it, content) === 'none' ? '✍ SIGN ' + word : '✍ SIGN AGAIN';
+}
+
+function editorSignSection() {
+  return `<div class="form-section">
+    <div class="form-section-title">Signatures</div>
+    <div class="sgn-box"><div id="xe-sign-status"></div>
+    <button class="proposal-btn proposal-btn-primary x-add" id="xe-sign" type="button">✍ SIGN</button></div>
+  </div>`;
+}
+
+// ── Pieces printed on the documents ──
+function docSigSection(sig, contractorAlways, contractorPrinted) {
+  const cs = sig && sig.customer, os = sig && sig.contractor;
+  const img = s => s ? `<img class="sig-img" src="${s.img}" alt="">` : '';
+  const row = (label, s, printed) => `<div class="sig-row">
+      <div class="sig-block">${img(s)}<label>${label}</label><div class="sig-line">&nbsp;</div></div>
+      <div class="sig-block"><label>Printed Name</label><div class="sig-line">${s ? esc(s.name) : (printed || '&nbsp;')}</div></div>
+      <div class="sig-block"><label>Date</label><div class="sig-line">${s ? ARCSign.day(s.at) : '&nbsp;'}</div></div>
+    </div>`;
+  let html = '<div class="sig-section">' + row('Customer Signature', cs);
+  if (contractorAlways || os) html += row('Agency Roofing Co.', os, contractorPrinted);
+  html += '</div>';
+  if (cs) {
+    html += `<div class="esig-audit"><b>Electronically signed.</b> Customer: ${esc(cs.name)}, ${esc(ARCSign.stamp(cs.at))}, signed on screen in person with consent to sign electronically.` +
+      (os ? ` Agency Roofing Co.: ${esc(os.name)}, ${esc(ARCSign.stamp(os.at))}.` : '') +
+      ` Document ID ${esc(sig.docId)}.</div>`;
+  }
+  return html;
+}
+
+function payLinkFor(c) {
+  const st = ARCSign.settings();
+  if (!st.showPay) return '';
+  return ((c && c.payLink) || st.payLink || '').trim();
+}
+
+function payBlock(c, amount, label, ref) {
+  const link = payLinkFor(c);
+  if (!link || !(amount > 0.004)) return '';
+  const qr = ARCSign.qrSvg(link);
+  return `<div class="paybox">
+    ${qr ? `<div class="pay-qr">${qr}</div>` : ''}
+    <div class="pay-txt">
+      <div class="pay-t">Pay Online</div>
+      <div class="pay-line"><span>${esc(label)}</span><b>${fmt(amount)}</b></div>
+      <div class="pay-note">Scan to pay by card or bank transfer (ACH). Include reference <b>${esc(ref)}</b> with your payment.</div>
+      <div class="pay-url">${esc(link.replace(/^https?:\/\//, ''))}</div>
+    </div>
+  </div>`;
+}
+
+// ── Settings sheet ──
+function openSettings() {
+  const st = ARCSign.settings();
+  const own = ARCSign.ownerSig();
+  const body = document.getElementById('set-inner');
+  body.innerHTML = `
+    <div class="form-section">
+      <div class="form-section-title">Pay Online</div>
+      <p class="xsec-note">Paste your Stripe payment link. Proposals and quotes show a QR code for the 50% deposit, change orders for their amount, and receipts for any balance due.</p>
+      <div class="form-grid cols-1">
+        <div class="form-group"><label for="set-paylink">Stripe payment link</label>
+          <input type="text" id="set-paylink" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://buy.stripe.com/…" value="${esc(st.payLink)}"></div>
+        <label class="sg-row-check"><input type="checkbox" id="set-showpay" ${st.showPay ? 'checked' : ''}> Show Pay Online on documents</label>
+        <div class="set-qr" id="set-qr"></div>
+        <div class="set-help"><b>Set up once in Stripe:</b> Payment Links → Create → choose <i>Customers choose what to pay</i> → turn on cards and US bank account → copy the link here.</div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Your Signature</div>
+      <div class="sgn-box">
+        ${own ? `<div class="sgn-row"><span class="sgn-pill ok">SAVED</span><span class="sgn-txt">${esc(own.name)}</span></div><img class="sgn-img" src="${own.img}" alt="Your signature">`
+              : `<div class="sgn-row"><span class="sgn-pill">NOT SAVED</span><span class="sgn-txt">Save your signature once and it countersigns documents for you.</span></div>`}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          <button class="proposal-btn proposal-btn-secondary" id="set-draw" type="button">${own ? 'REDRAW MY SIGNATURE' : 'DRAW MY SIGNATURE'}</button>
+          ${own ? '<button class="proposal-btn xe-del" id="set-clear-sig" type="button">REMOVE</button>' : ''}
+        </div>
+        <label class="sg-row-check" style="margin-top:10px;"><input type="checkbox" id="set-auto" ${st.autoCountersign ? 'checked' : ''}> Countersign automatically after the customer signs</label>
+      </div>
+    </div>`;
+  document.getElementById('set-sheet').classList.add('active');
+  renderSettingsQR();
+}
+
+function readSettingsForm() {
+  const st = ARCSign.settings();
+  const g = id => document.getElementById(id);
+  if (g('set-paylink')) st.payLink = g('set-paylink').value.trim();
+  if (g('set-showpay')) st.showPay = g('set-showpay').checked;
+  if (g('set-auto')) st.autoCountersign = g('set-auto').checked;
+  return st;
+}
+
+function renderSettingsQR() {
+  const el = document.getElementById('set-qr');
+  const v = (document.getElementById('set-paylink') || {}).value || '';
+  if (!el) return;
+  if (!/^https?:\/\/\S+\.\S+/.test(v.trim())) { el.innerHTML = v.trim() ? '<span class="set-bad">That doesn\'t look like a full link yet. It should start with https://</span>' : ''; return; }
+  el.innerHTML = `<div class="pay-qr">${ARCSign.qrSvg(v.trim())}</div><span>Preview. Customers scan this to pay.</span>`;
+}
+
+function closeSettings() {
+  ARCSign.saveSettings(readSettingsForm());
+  document.getElementById('set-sheet').classList.remove('active');
+  showToast('SETTINGS SAVED');
+}
+
+(function wireSigning() {
+  const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+  on('btn-sign-proposal', e => { e.preventDefault(); startSigning({ kind: 'proposal' }); });
+  on('btn-settings', e => { e.preventDefault(); openSettings(); });
+  on('set-close', e => { e.preventDefault(); closeSettings(); });
+  on('set-close2', e => { e.preventDefault(); closeSettings(); });
+
+  // Remove-signature links (two taps)
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-unsign]');
+    if (!b) return;
+    e.preventDefault();
+    if (!b.classList.contains('armed')) {
+      b.classList.add('armed'); const t = b.textContent; b.textContent = 'Tap again to remove';
+      setTimeout(() => { b.classList.remove('armed'); b.textContent = t; }, 3000);
+      return;
+    }
+    const [kind, id] = b.dataset.unsign.split(':');
+    clearSignature({ kind: kind, id: id });
+  });
+
+  const inner = document.getElementById('xe-inner');
+  inner.addEventListener('click', e => {
+    if (e.target.closest('#xe-sign') && xe) { e.preventDefault(); touchItem(); startSigning({ kind: xe.kind, id: xe.id }); }
+  });
+  // Keep the signature status honest while editing
+  inner.addEventListener('input', () => { if (xe) renderEditorSign(); });
+
+  const setInner = document.getElementById('set-inner');
+  setInner.addEventListener('input', e => { if (e.target.id === 'set-paylink') renderSettingsQR(); });
+  setInner.addEventListener('click', e => {
+    if (e.target.closest('#set-draw')) {
+      e.preventDefault();
+      ARCSign.saveSettings(readSettingsForm());
+      const own = ARCSign.ownerSig();
+      ARCSign.open({
+        kicker: 'YOUR SIGNATURE', num: 'Agency Roofing Co.',
+        role: 'Your signature', name: own ? own.name : 'Orlando Montanez',
+        consent: 'I adopt this as my electronic signature for documents I countersign for Agency Roofing Co. LLC.',
+        confirmLabel: 'SAVE SIGNATURE',
+        onSign(o) { ARCSign.saveOwnerSig({ name: o.name, img: o.img, at: o.at }); ARCSign.close(); openSettings(); showToast('SIGNATURE SAVED'); },
+      });
+    }
+    if (e.target.closest('#set-clear-sig')) {
+      e.preventDefault();
+      const b = e.target.closest('#set-clear-sig');
+      if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = 'TAP TO CONFIRM'; setTimeout(() => { b.classList.remove('armed'); b.textContent = 'REMOVE'; }, 3000); return; }
+      ARCSign.saveSettings(readSettingsForm());
+      ARCSign.saveOwnerSig(null); openSettings(); showToast('SIGNATURE REMOVED');
+    }
+  });
+
+  // Proposal status updates live as scope or price is edited
+  ['f-scope', 'f-requests', 'f-materials', 'f-labor', 'f-other', 'f-margin', 'f-discount-amount', 'f-first', 'f-last', 'f-address'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => {
+      const c = getCurrent(); if (!c || !c.sig) return;
+      // compare against the unsaved form values
+      const tmp = Object.assign({}, c, {
+        scope: document.getElementById('f-scope').value.trim(), requests: document.getElementById('f-requests').value.trim(),
+        materials: document.getElementById('f-materials').value, labor: document.getElementById('f-labor').value,
+        other: document.getElementById('f-other').value, margin: document.getElementById('f-margin').value,
+        discountAmount: document.getElementById('f-discount-amount').value,
+        first: document.getElementById('f-first').value.trim(), last: document.getElementById('f-last').value.trim(),
+        address: document.getElementById('f-address').value.trim(),
+      });
+      const el2 = document.getElementById('sign-status-proposal');
+      if (el2) el2.innerHTML = signStatusHTML(c, proposalContent(tmp), { kind: 'proposal' });
+    });
+  });
 })();
 
 function restoreReturn() {

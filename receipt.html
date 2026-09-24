@@ -426,7 +426,6 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
 
   <!-- SIGNATURES -->
   <section class="sigs">
-    <div class="sig"><div class="line"><img class="sig-im" id="sigCimg" alt="" hidden></div><div class="who"><span id="sigCwho">Customer</span><span id="sigCdate">Date</span></div></div>
     <div class="sig"><div class="line"><img class="sig-im" id="sigOimg" alt="" hidden></div><div class="who"><span>Agency Roofing Co.</span><span id="sigOdate">Date</span></div></div>
   </section>
   <div class="esig" id="esig" hidden></div>
@@ -811,19 +810,18 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function receiptContent(){ return ['R', $('rNo').value, $('cName').value, $('tTotal').textContent, fx($('tPaid').value)].join('|'); }
   function renderSig(){
     var st = !SIG ? 'none' : (SIG.docId === ARCSign.docId(receiptContent()) ? 'valid' : 'stale');
-    var cs = st === 'valid' ? SIG.customer : null, os = st === 'valid' ? SIG.contractor : null;
-    $('sigCimg').hidden = !cs; if (cs) $('sigCimg').src = cs.img;
-    $('sigOimg').hidden = !os; if (os) $('sigOimg').src = os.img;
-    $('sigCwho').textContent = cs ? 'Customer · ' + cs.name : 'Customer';
-    $('sigCdate').textContent = cs ? ARCSign.day(cs.at) : 'Date';
-    $('sigOdate').textContent = os ? ARCSign.day(os.at) : 'Date';
+    // Receipts carry only the contractor signature (customers sign proposals and change orders)
+    var os = st !== 'none' ? SIG.contractor : null;
+    if (!os) st = 'none';
+    var vs = st === 'valid' ? os : null;
+    $('sigOimg').hidden = !vs; if (vs) $('sigOimg').src = vs.img;
+    $('sigOdate').textContent = vs ? ARCSign.day(vs.at) : 'Date';
     var a = $('esig');
-    a.hidden = !cs;
-    if (cs) a.innerHTML = '<b>Electronically signed.</b> Customer: ' + escH(cs.name) + ', ' + escH(ARCSign.stamp(cs.at)) + ', signed on screen in person with consent to sign electronically.' +
-      (os ? ' Agency Roofing Co.: ' + escH(os.name) + ', ' + escH(ARCSign.stamp(os.at)) + '.' : '') + ' Document ID ' + escH(SIG.docId) + '.';
+    a.hidden = !vs;
+    if (vs) a.innerHTML = '<b>Electronically signed.</b> Agency Roofing Co.: ' + escH(vs.name) + ', ' + escH(ARCSign.stamp(vs.at)) + '. Document ID ' + escH(SIG.docId) + '.';
     var n = $('sigNote');
     n.hidden = st !== 'stale';
-    if (st === 'stale') n.textContent = 'This receipt changed after ' + SIG.customer.name + ' signed it, so the signature is hidden. Tap Sign to have them sign again.';
+    if (st === 'stale') n.textContent = 'This receipt changed after you signed it, so your signature is hidden. Tap Sign to sign it again.';
     $('btnSign').textContent = st === 'valid' ? 'Signed \u2713' : 'Sign';
   }
   function payLink(){
@@ -977,31 +975,24 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     calc();
     var name = $('cName').value.trim();
     var lines = readRows().map(function(r){ return r.t; }).filter(Boolean);
+    function finish(os){
+      SIG = { contractor: os, docId: ARCSign.docId(receiptContent()) };
+      saveDraftQuiet(); renderSig();
+      ARCSign.done({ kicker: 'SIGNED · RECEIPT', num: $('rNo').value, title: 'Signed',
+        message: 'Receipt ' + escH($('rNo').value) + ' was signed by <b>' + escH(os.name) + '</b> for Agency Roofing Co. It\u2019s saved with this receipt.',
+        img: os.img,
+        actions: [ { label: 'PRINT / SAVE PDF', primary: true, fn: function(){ ARCSign.close(); window.print(); } }, { label: 'DONE' } ] });
+    }
+    var st = ARCSign.settings(), own = ARCSign.ownerSig();
+    if (own && st.autoCountersign) { finish({ name: own.name, img: own.img, at: new Date().toISOString(), tz: ARCSign.tz(), consent: true, method: 'Saved contractor signature' }); return; }
     ARCSign.open({
       kicker: 'SIGN · RECEIPT', num: $('rNo').value,
       title: 'Payment receipt for <span>' + escH(name || 'customer') + '</span>', summary: lines,
       amountLabel: 'Amount paid', amount: money(num($('tPaid').value)),
-      role: 'Customer signature', name: name,
-      consent: 'I confirm the payment and work described on this receipt and agree to sign it electronically. My electronic signature has the same legal effect as my handwritten signature.',
-      confirmLabel: 'SIGN RECEIPT',
-      onSign: function(cu){
-        function finish(os){
-          SIG = { customer: cu, contractor: os || null, docId: ARCSign.docId(receiptContent()) };
-          saveDraftQuiet(); renderSig();
-          ARCSign.done({ kicker: 'SIGNED · RECEIPT', num: $('rNo').value, title: 'Signed',
-            message: 'Receipt ' + escH($('rNo').value) + ' was signed by <b>' + escH(cu.name) + '</b>' + (os ? ' and countersigned by <b>' + escH(os.name) + '</b>' : '') + '. It\u2019s saved with this receipt.',
-            img: cu.img,
-            actions: [ { label: 'PRINT / SAVE PDF', primary: true, fn: function(){ ARCSign.close(); window.print(); } }, { label: 'DONE' } ] });
-        }
-        var st = ARCSign.settings(), own = ARCSign.ownerSig();
-        if (own && st.autoCountersign) { finish({ name: own.name, img: own.img, at: new Date().toISOString(), tz: ARCSign.tz(), consent: true, method: 'Saved contractor signature' }); return; }
-        ARCSign.open({ kicker: 'COUNTERSIGN · RECEIPT', num: $('rNo').value, title: 'Customer signed: <span>' + escH(cu.name) + '</span>',
-          role: 'Agency Roofing Co. signature', name: own ? own.name : 'Orlando Montanez',
-          consent: 'I agree to sign this document electronically on behalf of Agency Roofing Co. LLC.',
-          confirmLabel: 'COUNTERSIGN', skipLabel: 'SKIP', offerSave: !own,
-          onSkip: function(){ finish(null); },
-          onSign: function(o){ if (o.saveAsMine) ARCSign.saveOwnerSig({ name: o.name, img: o.img, at: o.at }); delete o.saveAsMine; finish(o); } });
-      }
+      role: 'Agency Roofing Co. signature', name: own ? own.name : 'Orlando Montanez',
+      consent: 'I agree to sign this receipt electronically on behalf of Agency Roofing Co. LLC.',
+      confirmLabel: 'SIGN RECEIPT', offerSave: !own,
+      onSign: function(o){ if (o.saveAsMine) ARCSign.saveOwnerSig({ name: o.name, img: o.img, at: o.at }); delete o.saveAsMine; finish(o); }
     });
   });
 

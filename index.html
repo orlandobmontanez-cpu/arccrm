@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ARC CRM · Agency Roofing Co.</title>
+<link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="ARC CRM">
 <meta name="theme-color" content="#EAE4DA">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2047,6 +2050,14 @@ const ARC_DOC_CSS = `<style>
   .pay-url { font-size: 8px; color: #974930; margin-top: 3px; word-break: break-all; }
 </style>`;
 
+// Site icon for document tabs (they open as about:blank / blob pages, so links must be absolute)
+const ARC_DOC_ICONS = (() => {
+  const u = p => new URL(p, location.href).href;
+  return `<link rel="icon" href="${u('icon.svg')}" type="image/svg+xml">
+<link rel="icon" href="${u('favicon-32.png')}" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="${u('apple-touch-icon.png')}">`;
+})();
+
 const ARC_DOC_HEAD = `<!-- Header -->
   <div class="ph">
     <div class="ph-left">
@@ -2130,6 +2141,7 @@ function generateProposal(opts) {
 <head>
 <meta charset="UTF-8">
 <title>${docWord} ${c.arcNum} \u2014 ${fullName}</title>
+${ARC_DOC_ICONS}
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 ${ARC_DOC_CSS}
 </head>
@@ -2738,6 +2750,7 @@ function generateChangeOrder(o) {
 <head>
 <meta charset="UTF-8">
 <title>Change Order ${esc(o.num)} — ${esc(fullName)}</title>
+${ARC_DOC_ICONS}
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 ${ARC_DOC_CSS}
 <style>

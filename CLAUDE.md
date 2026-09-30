@@ -73,3 +73,13 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - Confirm the gross receipts tax rate; add the NM license number to documents once issued.
 - Have an attorney review the warranty exclusions and e-signature consent wording.
 - Remote (not in-person) signing and multi-device sync need a cloud database — planned move to Supabase.
+
+## Customer forms sent through DocuSign
+
+- `forms/insurance-repair-agreement.pdf` is the blank insurance repair agreement, served publicly at
+  https://orlandobmontanez-cpu.github.io/arccrm/forms/insurance-repair-agreement.pdf so DocuSign can pull it (remoteUrl).
+- `forms/insurance-repair-agreement.docusign.json` holds the tab layout (points, top-left origin). Always give text tabs
+  an explicit `width`/`height` from that file; without them DocuSign shrinks them to a tiny square over the label.
+- Send: Gerald-style envelope = customer signer (routing 1: text tabs on page 1, signHere + dateSigned on the Homeowner
+  line, page 2) then Orlando `agencyroofingco@gmail.com` (routing 2: signHere + dateSigned on the contractor line).
+  Pre-fill Homeowner, Email and Company Representative = "Orlando Montanez" as locked tabs.

@@ -1,0 +1,93 @@
+{
+ "document": "forms/insurance-repair-agreement.pdf",
+ "units": "points, top-left origin, page 1 for text tabs",
+ "text_tabs": [
+  {
+   "label": "Homeowner",
+   "x": 61,
+   "y": 179,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "Date of Loss",
+   "x": 228,
+   "y": 179,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "Insurance Company",
+   "x": 396,
+   "y": 179,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "Homeowner Address",
+   "x": 61,
+   "y": 215,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "Original Roof Type",
+   "x": 228,
+   "y": 215,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "Policy Number",
+   "x": 396,
+   "y": 215,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "City, State, Zip",
+   "x": 61,
+   "y": 251,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "Email",
+   "x": 228,
+   "y": 251,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "Claim Number",
+   "x": 396,
+   "y": 251,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "Cell Phone",
+   "x": 61,
+   "y": 287,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "Company Representative",
+   "x": 228,
+   "y": 287,
+   "width": 155,
+   "height": 14
+  },
+  {
+   "label": "Adjuster Name",
+   "x": 396,
+   "y": 287,
+   "width": 155,
+   "height": 14
+  }
+ ],
+ "contractor_line_y": 426,
+ "homeowner_line_y": 476,
+ "line_x": 54
+}

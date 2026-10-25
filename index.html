@@ -1642,18 +1642,89 @@ let formItems = [];
 
 // ── DATA ──────────────────────────────────────────────
 
+// Backward compatibility: arc_v3 is always written in the format the previous
+// version of the app reads (so a revert loads every record, repair jobs keep
+// their price, signatures stay valid). Fields that version doesn't know live
+// in arc_ext, keyed by customer id, which older versions never touch.
+const EXT_KEY = 'arc_ext';
+const LEGACY_FIELDS = ['id', 'arcNum', 'createdAt', 'updatedAt', 'stage', 'first', 'last', 'phone', 'email', 'address', 'city', 'zip',
+  'rooftype', 'roofsize', 'scope', 'requests', 'materials', 'labor', 'other', 'margin', 'discountLabel', 'discountAmount', 'scheddate',
+  'activityLog', 'proposalSent', 'sig', 'payLink', 'quotes', 'changeOrders'];
+const LEGACY_QUOTE_FIELDS = ['id', 'num', 'title', 'scope', 'requests', 'materials', 'labor', 'other', 'margin', 'discountLabel',
+  'discountAmount', 'status', 'sig', 'createdAt', 'updatedAt'];
+
+function pick(o, keys) { const r = {}; keys.forEach(k => { if (o[k] !== undefined) r[k] = o[k]; }); return r; }
+
+// Repair work priced the old way: Materials = line-item total, margin 0 (same total, same fingerprint)
+function legacyPrice(o) { return { materials: itemsTotal(o.items).toFixed(2), labor: '', other: '', margin: '0' }; }
+
+function legacyZip(c) {
+  if (!c.zip) return '';
+  return c.zipFormat === 'plain' ? c.zip : [c.state || 'NM', c.zip].join(' ');
+}
+
+function toStored(c) {
+  const o = pick(c, LEGACY_FIELDS);
+  o.zip = legacyZip(c);
+  if (isRepair(c)) Object.assign(o, legacyPrice(c));
+  o.quotes = c.quotes.map(q => Object.assign(pick(q, LEGACY_QUOTE_FIELDS), isRepair(q) ? legacyPrice(q) : {}));
+  return o;
+}
+
+function extOf(c) {
+  const e = { state: c.state, jobType: c.jobType, items: c.items, completedAt: c.completedAt, nextInspection: c.nextInspection, lastInspected: c.lastInspected };
+  if (isRepair(c)) { e.costs = pick(c, ['materials', 'labor', 'other', 'margin']); e.mirror = legacyPrice(c).materials; }
+  const qs = {};
+  c.quotes.forEach(q => {
+    if (!isRepair(q) && !q.items.length) return;
+    qs[q.id] = { type: q.type, items: q.items };
+    if (isRepair(q)) { qs[q.id].costs = pick(q, ['materials', 'labor', 'other', 'margin']); qs[q.id].mirror = legacyPrice(q).materials; }
+  });
+  if (Object.keys(qs).length) e.quotes = qs;
+  return e;
+}
+
+// Put arc_ext data back on a stored record. If an older version edited a
+// repair job's price after a revert, its numbers win and it loads as a replacement job.
+function applyExt(r, e) {
+  if (!e) return r;
+  const c = Object.assign({}, r);
+  ['items', 'completedAt', 'nextInspection', 'lastInspected'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
+  if (e.state && !/^[A-Za-z]{2}[\s,]/.test(String(r.zip || ''))) c.state = e.state;
+  const mirrored = (o, x) => String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0';
+  if (e.jobType === 'repair') {
+    if (mirrored(r, e)) Object.assign(c, { jobType: 'repair' }, e.costs || {});
+    else c.jobType = 'replace';
+  }
+  if (e.quotes && Array.isArray(r.quotes)) {
+    c.quotes = r.quotes.map(q => {
+      const x = q && e.quotes[q.id];
+      if (!x) return q;
+      const nq = Object.assign({}, q, { items: x.items });
+      if (x.type === 'repair' && mirrored(q, x)) Object.assign(nq, { type: 'repair' }, x.costs || {});
+      return nq;
+    });
+  }
+  return c;
+}
+
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
+    let ext = {};
+    try { ext = JSON.parse(localStorage.getItem(EXT_KEY) || '{}') || {}; } catch (e) {}
     customers = raw ? JSON.parse(raw) : [];
-    customers = customers.map(normalize);
+    customers = customers.map(r => normalize(applyExt(r, r && ext[r.id])));
   } catch(e) { customers = []; }
 }
 
 let _saveWarned = false;
 function save() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
+    const ext = {};
+    customers.forEach(c => { ext[c.id] = extOf(c); });
+    localStorage.setItem(EXT_KEY, JSON.stringify(ext));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(customers.map(toStored)));
     _saveWarned = false;
   } catch (e) {
     // Storage full (signatures are images) — never fail silently
@@ -1682,12 +1753,12 @@ function normalize(c) {
   if (STAGES.indexOf(stage) === -1) stage = 'Lead';
 
   // Older records kept "NM 87120" in the ZIP box — split it into State + ZIP
+  // (zipFormat remembers how it was typed so arc_v3 gets it back the same way)
   let zip = String(c.zip || '').trim(), state = String(c.state || '').trim().toUpperCase();
-  if (!state) {
-    const m = zip.match(/^([A-Za-z]{2}|new mexico)[\s,]+(\d{5}(?:-\d{4})?)$/i);
-    if (m) { state = /^new mexico$/i.test(m[1]) ? 'NM' : m[1].toUpperCase(); zip = m[2]; }
-    else if (/^[A-Za-z]{2}$/.test(zip)) { state = zip.toUpperCase(); zip = ''; }
-  }
+  let zipFormat = c.zipFormat || (zip && !/^[A-Za-z]/.test(zip) ? 'plain' : 'combined');
+  const m = zip.match(/^([A-Za-z]{2}|new mexico)[\s,]+(\d{5}(?:-\d{4})?)$/i);
+  if (m) { state = /^new mexico$/i.test(m[1]) ? 'NM' : m[1].toUpperCase(); zip = m[2]; zipFormat = 'combined'; }
+  else if (!state && /^[A-Za-z]{2}$/.test(zip)) { state = zip.toUpperCase(); zip = ''; }
 
   return {
     id: c.id || genId(),
@@ -1703,6 +1774,7 @@ function normalize(c) {
     city: c.city || 'Albuquerque',
     state: state || 'NM',
     zip: zip,
+    zipFormat: zipFormat,
     rooftype: c.rooftype || '',
     roofsize: c.roofsize || '',
     scope: c.scope || '',
@@ -2555,7 +2627,9 @@ function deleteCustomer() {
 // ── EXPORT / IMPORT ────────────────────────────────────
 
 function exportData() {
-  const blob = new Blob([JSON.stringify(customers, null, 2)], { type: 'application/json' });
+  // Same backward-compatible format as storage; arcExt carries the newer fields
+  const data = customers.map(c => Object.assign(toStored(c), { arcExt: extOf(c) }));
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const ts = new Date().toISOString().slice(0,10);
@@ -2585,7 +2659,7 @@ function importData(input) {
             closeModal();
             const existingIds = new Set(customers.map(c => c.id));
             data.forEach(d => {
-              const nd = normalize(d);
+              const nd = normalize(applyExt(d, d && d.arcExt));
               if (existingIds.has(nd.id)) {
                 const idx = customers.findIndex(c => c.id === nd.id);
                 customers[idx] = nd;
@@ -3085,7 +3159,7 @@ function normItems(a) {
 function defaultItems() { return REPAIR_ITEMS.map(l => ({ label: l, amount: '' })); }
 // Customers carry jobType, quotes carry type
 function isRepair(o) { return !!o && (o.jobType != null ? o.jobType : o.type) === 'repair'; }
-function itemsTotal(items) { return (items || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0); }
+function itemsTotal(items) { return Math.round((items || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0) * 100) / 100; }
 
 function priceOf(o) {
   const repair = isRepair(o);
@@ -3588,15 +3662,16 @@ function generateChangeOrder(o) {
 // and price at signing — if either changes later, the signature no longer
 // prints and the CRM asks for a new one.
 
-// Replacement fingerprints are unchanged, so existing signatures stay valid
-function repairContent(o) {
-  return isRepair(o) ? '|R|' + (o.items || []).map(i => i.label + '=' + (parseFloat(i.amount) || 0).toFixed(2)).join(';') : '';
+// docId uses the same formula as earlier versions, so a signature checks out
+// in either version. Repair line items get their own fingerprint (sig.linesId).
+function linesId(o) {
+  return isRepair(o) ? ARCSign.docId('R|' + (o.items || []).map(i => i.label + '=' + (parseFloat(i.amount) || 0).toFixed(2)).join(';')) : '';
 }
 function proposalContent(c) {
-  return ['P', c.arcNum, c.first, c.last, c.address, c.scope, c.requests, priceOf(c).total.toFixed(2)].join('|') + repairContent(c);
+  return ['P', c.arcNum, c.first, c.last, c.address, c.scope, c.requests, priceOf(c).total.toFixed(2)].join('|');
 }
 function quoteContent(c, q) {
-  return ['Q', q.num, c.first, c.last, c.address, q.title, q.scope, q.requests, priceOf(q).total.toFixed(2)].join('|') + repairContent(q);
+  return ['Q', q.num, c.first, c.last, c.address, q.title, q.scope, q.requests, priceOf(q).total.toFixed(2)].join('|');
 }
 function coContent(c, o) {
   return ['CO', o.num, c.first, c.last, c.address, o.title, o.direction, o.reason, o.description, o.days, coPrice(o).total.toFixed(2)].join('|');
@@ -3604,7 +3679,8 @@ function coContent(c, o) {
 
 function sigState(obj, content) {
   if (!obj || !obj.sig || !obj.sig.customer) return 'none';
-  return obj.sig.docId === ARCSign.docId(content) ? 'valid' : 'stale';
+  if (obj.sig.docId !== ARCSign.docId(content)) return 'stale';
+  return (obj.sig.linesId || '') === linesId(obj) ? 'valid' : 'stale';
 }
 function validSig(obj, content) { return sigState(obj, content) === 'valid' ? obj.sig : null; }
 
@@ -3674,6 +3750,7 @@ function startSigning(t) {
     onSign(cust) {
       const finish = contractor => {
         info.obj.sig = { customer: cust, contractor: contractor || null, docId: ARCSign.docId(info.content) };
+        if (linesId(info.obj)) info.obj.sig.linesId = linesId(info.obj);
         info.apply();
         logActivity(info.word + ' ' + info.num + ' signed by ' + cust.name + (contractor ? ', countersigned' : ''));
         c.updatedAt = Date.now();
@@ -3957,7 +4034,7 @@ function refreshProposalSignStatus() {
     jobType: formJobType, items: normItems(formItems),
   });
   const el2 = document.getElementById('sign-status-proposal');
-  if (el2) el2.innerHTML = signStatusHTML(c, proposalContent(tmp), { kind: 'proposal' });
+  if (el2) el2.innerHTML = signStatusHTML(tmp, proposalContent(tmp), { kind: 'proposal' });
 }
 
 // ── QUOTE TYPE + REPAIR LINE ITEMS ─────────────────────

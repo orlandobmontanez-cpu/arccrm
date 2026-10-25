@@ -843,6 +843,23 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function fields(){ return document.querySelectorAll('[data-k]'); }
 
   var SIG = null, CUST = null, JOBTYPE = 'replace';
+  /* Customer record from the CRM: arc_v3 (older-version format) + arc_ext (newer fields) */
+  function crmRecord(id){
+    var list, ext = {};
+    try { list = JSON.parse(localStorage.getItem('arc_v3') || '[]') || []; } catch(e){ return null; }
+    try { ext = JSON.parse(localStorage.getItem('arc_ext') || '{}') || {}; } catch(e){}
+    var r = list.filter(function(x){ return x && x.id === id; })[0];
+    if (!r) return null;
+    var e = ext[id], c = JSON.parse(JSON.stringify(r));
+    function mirrored(o, x){ return String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0'; }
+    if (e) {
+      if (e.state && !c.state) c.state = e.state;
+      if (e.items && !c.items) c.items = e.items;
+      if (e.jobType === 'repair' && mirrored(r, e)) c.jobType = 'repair';
+      if (e.quotes) (c.quotes || []).forEach(function(q){ var x = e.quotes[q.id]; if (x && x.type === 'repair' && mirrored(q, x)) { q.type = 'repair'; q.items = x.items; } });
+    }
+    return c;
+  }
   function setJobType(t){ JOBTYPE = t === 'repair' ? 'repair' : 'replace'; $('sheet').classList.toggle('repair', JOBTYPE === 'repair'); }
   function escH(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function receiptContent(){ return ['R', $('rNo').value, $('cName').value, $('tTotal').textContent, fx($('tPaid').value)].join('|'); }
@@ -914,8 +931,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   /* ── Fill from an ARC CRM customer record (same site, localStorage arc_v3) ── */
   function fromCRM(){
     if (!CUST_ID) return false;
-    var list; try { list = JSON.parse(localStorage.getItem('arc_v3') || '[]'); } catch(e){ return false; }
-    var c = (list || []).filter(function(x){ return x && x.id === CUST_ID; })[0];
+    var c = crmRecord(CUST_ID);
     if (!c) return false;
     SIG = null;
     var rate = num(CRM_TAX) / 100;
@@ -976,7 +992,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   function init(){
-    if (CUST_ID) { try { CUST = (JSON.parse(localStorage.getItem('arc_v3') || '[]') || []).filter(function(x){ return x && x.id === CUST_ID; })[0] || null; } catch(e){} }
+    if (CUST_ID) CUST = crmRecord(CUST_ID);
     $('rDate').value = today();
     $('wStart').value = today();
     var saved = null;

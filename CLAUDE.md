@@ -33,6 +33,10 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   - Quote type: customer `jobType` / quote `type` = `'replace'` (cost + margin) or `'repair'` (`items: [{label, amount}]`, customer prices).
   - Inspections: `completedAt`, `nextInspection`, `lastInspected` (YYYY-MM-DD).
 - Never break existing records: old data must load unchanged. Import/Export backups are a JSON array of customers.
+- **Revert-safe storage:** `arc_v3` is always written in the previous version's format (`toStored`): repair work is priced there as
+  Materials = line-item total, margin 0, and ZIP keeps the way it was typed. Newer fields live in `arc_ext` (`extOf` / `applyExt`),
+  which older versions never touch; backups carry them as `arcExt`. Signature `docId` keeps the old formula; repair line items are
+  checked by `sig.linesId`. Keep this when adding fields, so reverting `index.html` never loses or misprices a record.
 - Pipeline stages: Lead → Inspected → Proposed → Signed → In Production → Closed (+ Declined).
 - Numbering: customers `ARC-00007`; additional quotes `ARC-00007-Q2…` (Q1 = main proposal); change orders `ARC-00007-CO1…`; receipts `ARC-00007-R`.
 - Pricing: materials + labor + other, plus margin % = customer price; discount applied pre-tax; NM gross receipts tax `TAX_RATE = 0.073125`.

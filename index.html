@@ -1094,6 +1094,8 @@
                 <option>PVC</option>
                 <option>Built-Up</option>
                 <option>Silicone Coating</option>
+                <option>Asphalt Shingle</option>
+                <option>Metal R-Panel</option>
                 <option>Other</option>
               </select>
             </div>
@@ -1905,7 +1907,10 @@ function loadDetail() {
   document.getElementById('f-city').value = c.city || 'Albuquerque';
   document.getElementById('f-state').value = c.state || 'NM';
   document.getElementById('f-zip').value = c.zip;
-  document.getElementById('f-rooftype').value = c.rooftype;
+  // A saved roof type that isn't in the list (e.g. from an import) is added, never blanked
+  const rt = document.getElementById('f-rooftype');
+  if (c.rooftype && ![...rt.options].some(o => o.value === c.rooftype)) rt.add(new Option(c.rooftype, c.rooftype), rt.options[rt.options.length - 1]);
+  rt.value = c.rooftype;
   document.getElementById('f-roofsize').value = c.roofsize;
   document.getElementById('f-scope').value = c.scope;
   document.getElementById('f-requests').value = c.requests;
@@ -2316,8 +2321,12 @@ const ARC_DOC_CSS = `<style>
   .pay-url { font-size: 8px; color: #974930; margin-top: 3px; word-break: break-all; }
   /* scope bold, repair line items, About This Repair */
   .b-list li b { font-weight: 600; }
-  .pr-item { padding: 4px 0; }
-  .pr-item span:first-child { padding-right: 10px; }
+  /* repair acknowledgment above the signature row */
+  .ack-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 10px; color: #1C1A18; }
+  .ack-box { width: 11px; height: 11px; border: 1.2px solid #1C1A18; flex: none; position: relative; background: #FDFCFA; }
+  .ack-box.on::after { content: ''; position: absolute; left: 3px; top: 0; width: 3px; height: 7px; border: solid #974930; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+  .ack-init { display: inline-flex; align-items: flex-end; gap: 6px; margin-left: 14px; font-size: 8.5px; font-weight: 700; letter-spacing: 0.16em; color: #974930; text-transform: uppercase; }
+  .ack-init i { display: inline-block; width: 0.6in; border-bottom: 1px solid #1C1A18; height: 12px; }
   .about { margin-bottom: 4px; }
   .about-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
   .about-cols p { font-size: 9.5px; line-height: 1.55; color: #1C1A18; }
@@ -2495,18 +2504,12 @@ function generateProposal(opts) {
 
   // Customer-facing price only (internal cost and margin never print)
   const p = priceOf(c);
-  const discountLabel = (c.discountLabel || '').trim();
-  const hasDiscount = p.disc > 0;
 
   const fullName = [c.first, c.last].filter(Boolean).join(' ') || 'Valued Customer';
   const addrLine1 = c.address || 'TBD';
   const addrLine2 = cityLine(c);
   const today = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
 
-  const priceRows = repair
-    ? (c.items || []).filter(i => (parseFloat(i.amount) || 0) !== 0)
-        .map(i => `<div class="pr pr-item"><span>${esc(plainLine(i.label) || 'Repair work')}</span><span>${fmt(parseFloat(i.amount) || 0)}</span></div>`).join('')
-    : `<div class="pr pr-base"><span>Base Proposal</span><span>${fmt(p.base)}</span></div>`;
 
   const flow = `
   ${ARC_DOC_HEAD}
@@ -2547,9 +2550,7 @@ function generateProposal(opts) {
       <div class="pbox">
         <div class="pbox-title">Pricing Summary</div>
         <div class="pbox-rule"></div>
-        ${priceRows}
-        ${hasDiscount ? `<div class="pr pr-discount"><span>${esc(discountLabel || 'Discount')}</span><span>&minus;&nbsp;${fmt(p.disc)}</span></div>` : ''}
-        <div class="pr-divider"></div>
+        <!-- Customers see Subtotal, tax and total only; line items and discount stay in the CRM -->
         <div class="pr pr-sub"><span>Subtotal</span><span>${fmt(p.sub)}</span></div>
         <div class="pr pr-tax"><span>Gross Receipts Tax (7.3125%)</span><span>${fmt(p.tax)}</span></div>
         <div class="pr pr-final"><span class="lbl">Final Investment</span><span class="amt">${fmt(p.total)}</span></div>
@@ -2577,7 +2578,8 @@ function generateProposal(opts) {
   </div>
   ${repair ? aboutRepairBlock() : ''}`;
 
-  const tail = docSigSection(q ? validSig(q, quoteContent(cust, q)) : validSig(cust, proposalContent(cust)), false);
+  const sig = q ? validSig(q, quoteContent(cust, q)) : validSig(cust, proposalContent(cust));
+  const tail = docSigSection(sig, false, '', repair);
   const html = docShell({ title: `${docWord} ${c.arcNum} — ${fullName}`, flow, tail });
 
   logActivity(docWord + ' ' + c.arcNum + ' previewed');
@@ -3447,7 +3449,6 @@ function generateChangeOrder(o) {
   const c = getCurrent();
   if (!c) return;
   const p = coPrice(o);
-  const s = contractSummary(c, o.id, false);
   const credit = o.direction === 'deduct';
   const fullName = [c.first, c.last].filter(Boolean).join(' ') || 'Valued Customer';
   const cityZip = cityLine(c);
@@ -3504,13 +3505,9 @@ function generateChangeOrder(o) {
       <div class="pbox">
         <div class="pbox-title">Contract Adjustment</div>
         <div class="pbox-rule"></div>
-        <div class="pr pr-prior"><span>Original Contract</span><span>${fmt(s.original)}</span></div>
-        ${s.approvedCount ? `<div class="pr pr-prior"><span>Approved Changes (${s.approvedCount})</span><span>${fmtSigned(s.approvedSum)}</span></div>` : ''}
-        <div class="pr-divider"></div>
-        <div class="pr pr-change${credit ? ' pr-credit' : ''}"><span>${credit ? 'This Change — Credit' : 'This Change'}</span><span>${fmtSigned(p.sub)}</span></div>
+        <div class="pr pr-sub${credit ? ' pr-credit' : ''}"><span>Subtotal</span><span>${fmtSigned(p.sub)}</span></div>
         <div class="pr pr-tax"><span>Gross Receipts Tax (${taxPctLabel()})</span><span>${fmtSigned(p.tax)}</span></div>
-        <div class="pr pr-sub${credit ? ' pr-credit' : ''}"><span>Change Order Total</span><span>${fmtSigned(p.total)}</span></div>
-        <div class="pr pr-final"><span class="lbl">Revised Contract</span><span class="amt">${fmt(s.current + p.total)}</span></div>
+        <div class="pr pr-final"><span class="lbl">Final Investment</span><span class="amt">${fmtSigned(p.total)}</span></div>
         ${credit ? '' : payBlock(c, p.total, 'Change order amount', o.num)}
       </div>
     </div>
@@ -3866,15 +3863,16 @@ function editorSignSection() {
 }
 
 // ── Pieces printed on the documents ──
-function docSigSection(sig, contractorAlways, contractorPrinted) {
+function docSigSection(sig, contractorAlways, contractorPrinted, repairAck) {
   const cs = sig && sig.customer, os = sig && sig.contractor;
+  const ack = repairAck ? `<div class="ack-row"><span class="ack-box${cs && cs.ackRead ? ' on' : ''}"></span><span>I&rsquo;ve read About This Repair</span><span class="ack-init">Initials <i></i></span></div>` : '';
   const img = s => s ? `<img class="sig-img" src="${s.img}" alt="">` : '';
   const row = (label, s, printed) => `<div class="sig-row">
       <div class="sig-block">${img(s)}<label>${label}</label><div class="sig-line">&nbsp;</div></div>
       <div class="sig-block"><label>Printed Name</label><div class="sig-line">${s ? esc(s.name) : (printed || '&nbsp;')}</div></div>
       <div class="sig-block"><label>Date</label><div class="sig-line">${s ? ARCSign.day(s.at) : '&nbsp;'}</div></div>
     </div>`;
-  let html = '<div class="sig-section">' + row('Customer Signature', cs);
+  let html = '<div class="sig-section">' + ack + row('Customer Signature', cs);
   if (contractorAlways || os) html += row('Agency Roofing Co.', os, contractorPrinted);
   html += '</div>';
   if (cs) {
@@ -4451,13 +4449,17 @@ function pvSend() {
   const email = (c.email || '').trim();
   const title = 'Your Agency Roofing Co. ' + pv.word;
   const text = `Hi ${c.first || 'there'}, attached is your ${pv.word.toLowerCase()} for ${c.address || 'your property'}. Reply or call ${ARC_PHONE} with any questions. – Orlando, Agency Roofing Co.`;
-  // Same tap: copy the customer's email, then open the share sheet with the PDF
-  if (email && navigator.clipboard && navigator.clipboard.writeText) {
-    try { navigator.clipboard.writeText(email).then(() => showToast('Email copied — paste it into To.'), () => {}); } catch (e) {}
+  // Same tap: copy the customer's email + message, then share the PDF alone.
+  // (Any title/text in the share makes iOS "Save to Files" add a stray .txt file.)
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      navigator.clipboard.writeText(email ? email + '\n\n' + text : text)
+        .then(() => showToast(email ? 'Email + message copied — paste into Mail.' : 'Message copied — paste into Mail.'), () => {});
+    } catch (e) {}
   }
   const what = pv.word + ' ' + pv.num;
   if (canShareFile(pv.file)) {
-    navigator.share({ files: [pv.file], title: title, text: text })
+    navigator.share({ files: [pv.file] })
       .then(() => { logActivity(what + ' shared' + (email ? ' for ' + email : '')); save(); renderActivityLog(); })
       .catch(err => { if (err && err.name !== 'AbortError') pdfFallback(pv.file, { to: email, subject: title, body: text }); });
     return;
@@ -4470,7 +4472,7 @@ function pvSend() {
 function pvSave() {
   if (!pv || !pv.file) { showToast('PDF IS STILL BUILDING…'); return; }
   if (canShareFile(pv.file)) {
-    navigator.share({ files: [pv.file], title: pv.file.name }).catch(err => { if (err && err.name !== 'AbortError') pdfFallback(pv.file); });
+    navigator.share({ files: [pv.file] }).catch(err => { if (err && err.name !== 'AbortError') pdfFallback(pv.file); });
     return;
   }
   pdfFallback(pv.file);

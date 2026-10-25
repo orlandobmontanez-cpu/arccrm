@@ -40,7 +40,9 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - Pipeline stages: Lead → Inspected → Proposed → Signed → In Production → Closed (+ Declined).
 - Numbering: customers `ARC-00007`; additional quotes `ARC-00007-Q2…` (Q1 = main proposal); change orders `ARC-00007-CO1…`; receipts `ARC-00007-R`.
 - Pricing: materials + labor + other, plus margin % = customer price; discount applied pre-tax; NM gross receipts tax `TAX_RATE = 0.073125`.
-- **Internal cost, labor, and margin are never shown on anything customer-facing.** Customers see price, discount, tax, total only.
+- **Internal cost, labor, and margin are never shown on anything customer-facing.** Every customer-facing price card (proposal, quotes,
+  change orders, repair quotes, receipt print/PDF) shows only: Subtotal, Gross Receipts Tax (7.3125%), Final Investment. No line items,
+  no "Base Proposal", no discount line. Receipts also keep Amount Paid / Balance Due. Line items stay visible inside the CRM.
 - `save()` catches storage-full errors and warns. Signatures are images (~17 KB each); keep them small.
 
 ## Documents (proposal, quote, change order, receipt)
@@ -50,13 +52,15 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   signatures + footer pinned to the bottom, poppy bottom-right above the footer rule.
 - Every document must print on **one US Letter page**. Check with a print render after any change. If content truly overflows,
   `ARC_DOC_PAGINATE` moves whole blocks/bullets to page 2 (never splits a line item, the pricing card or signatures).
-- Documents open in the inline preview (`openPreview`), which builds the PDF in the background so **Send** (copy email → share sheet)
-  and **Save PDF** work in one tap. PDF names: `ARC Proposal|Quote|Change Order|Receipt - [Last] - [number].pdf`.
+- Documents open in the inline preview (`openPreview`), which builds the PDF in the background so **Send** and **Save PDF** work in one tap.
+  Both call `navigator.share({ files })` with the PDF only — any title/text makes iOS "Save to Files" add a stray .txt. Send copies
+  the customer's email + the message to the clipboard instead. PDF names: `ARC Proposal|Quote|Change Order|Receipt - [Last] - [number].pdf`.
   The receipt page (`receipt.html`) builds its own PDF from its print layout. Back from the receipt returns via `sessionStorage.arc_return`.
 - Scope/notes text renders `**bold**` and drops markdown escapes (`richLine`).
 - Terms on proposals: 30-day validity, 50% deposit on acceptance, balance on completion. Receipts carry a 5-year workmanship warranty.
 - Repair / maintenance work: **no** 5-year warranty anywhere; the "About This Repair" text replaces the manufacturer-warranty term,
-  and the customer must tick "I've read About This Repair." before signing. Closing a repair job sets the next inspection +12 months.
+  and the customer must tick "I've read About This Repair." before signing. Repair proposals/quotes print a "☐ I've read About This
+  Repair" box + Initials line directly above the signature row, checked when the customer ticked it in the app. Closing a repair job sets the next inspection +12 months.
 
 ## E-signatures and payments
 

@@ -27,8 +27,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   and, for PDFs only, html2canvas 1.4.1 + jsPDF 2.5.1 from cdnjs (Orlando asked for this; loaded on demand when a preview or receipt opens).
 - Data lives in the phone's browser `localStorage` (per device, same origin as the site):
   - `arc_v3` — array of customer records (the whole CRM)
-  - `arc_settings` — `{ payLink, showPay, autoCountersign, lastQuoteType, taxRate, lastBackupAt }`
-    (`taxRate` in percent, default 7.3125; `lastBackupAt` ms timestamp of the last Export Backup)
+  - `arc_settings` — `{ payLink, showPay, autoCountersign, lastQuoteType, taxRates, lastBackupAt }`
+    (`taxRates` = `[{ city, rate }]` in percent, starts with Albuquerque 7.3125; `lastBackupAt` ms timestamp of the last Export Backup)
   - `arc_owner_sig` — Orlando's saved signature `{ name, img (PNG data URL), at }`
   - `arc_receipt_<customerId>` — receipt drafts
 - `normalize(c)` whitelists customer fields. **Any new field must be added there**, or it is silently dropped on load. Same for `normQuote` / `normCO`.
@@ -36,6 +36,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
     Documents always print "City, NM ZIP" via `cityLine(c)`.
   - Quote type: customer `jobType` / quote `type` = `'replace'` (cost + margin) or `'repair'` (`items: [{label, amount}]`, customer prices).
   - Inspections: `completedAt`, `nextInspection`, `lastInspected` (YYYY-MM-DD).
+  - Tax: `taxRate` (percent, per job) and `taxAuto` (rate follows the job city via Settings → Tax rates until typed over).
+    Existing customers keep 7.3125. Stored in `arc_ext` like the other newer fields.
 - Never break existing records: old data must load unchanged. Import/Export backups are a JSON array of customers
   (importable by every version). The first record carries `arcBackup: { settings, ownerSig }`; import restores those only after a
   second confirm. Import also accepts `{ customers, settings, ownerSig }`. A banner on the customer list asks for a backup after 7 days.
@@ -46,10 +48,14 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   checked by `sig.linesId`. Keep this when adding fields, so reverting `index.html` never loses or misprices a record.
 - Pipeline stages: Lead → Inspected → Proposed → Signed → In Production → Closed (+ Declined).
 - Numbering: customers `ARC-00007`; additional quotes `ARC-00007-Q2…` (Q1 = main proposal); change orders `ARC-00007-CO1…`; receipts `ARC-00007-R`.
-- Pricing: materials + labor + other, plus margin % = customer price; discount applied pre-tax; NM gross receipts tax from
-  Settings (`ARCSign.taxRate()`, default 7.3125%). Both pages read it from there — never hard-code the rate.
+- Pricing: materials + labor + other, plus margin % = customer price; discount applied pre-tax; NM gross receipts tax is **per job**
+  (`customer.taxRate`), filled from the job city with `ARCSign.cityRate(city)`; an unknown city gets the Albuquerque rate and a
+  "Check tax rate for [city]" note. Never hard-code a rate. Signing locks the rate into the signature (`sig.taxRate`, `sig.taxCity`);
+  a document is priced at its locked rate while its signature matches (`mainRate` / `quoteRate` / `coRate`), so table changes never
+  alter a signed total. Signatures without `taxRate` were made at 7.3125%. The receipt gets the rate from the CRM (`?rate=&tcity=`)
+  and saves it in the draft, so a saved or signed receipt keeps its rate.
 - **Internal cost, labor, and margin are never shown on anything customer-facing.** Every customer-facing price card (proposal, quotes,
-  change orders, repair quotes, receipt print/PDF) shows only: Subtotal, Gross Receipts Tax (7.3125%), Final Investment. No line items,
+  change orders, repair quotes, receipt print/PDF) shows only: Subtotal, Gross Receipts Tax (City, rate%), Final Investment. No line items,
   no "Base Proposal", no discount line. Receipts also keep Amount Paid / Balance Due. Line items stay visible inside the CRM.
 - `save()` catches storage-full errors and warns. Signatures are images (~17 KB each); keep them small.
 

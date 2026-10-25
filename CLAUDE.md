@@ -20,14 +20,23 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 ## Architecture
 
-- Everything is plain HTML/CSS/JS in single files. **No build step, no frameworks, no external JS.** The only outside resource is Google Fonts.
+- Everything is plain HTML/CSS/JS in single files. **No build step, no frameworks, no external JS.** The only outside resources are Google Fonts
+  and, for PDFs only, html2canvas 1.4.1 + jsPDF 2.5.1 from cdnjs (Orlando asked for this; loaded on demand when a preview or receipt opens).
 - Data lives in the phone's browser `localStorage` (per device, same origin as the site):
   - `arc_v3` — array of customer records (the whole CRM)
-  - `arc_settings` — `{ payLink, showPay, autoCountersign }`
+  - `arc_settings` — `{ payLink, showPay, autoCountersign, lastQuoteType }`
   - `arc_owner_sig` — Orlando's saved signature `{ name, img (PNG data URL), at }`
   - `arc_receipt_<customerId>` — receipt drafts
 - `normalize(c)` whitelists customer fields. **Any new field must be added there**, or it is silently dropped on load. Same for `normQuote` / `normCO`.
+  - Address: `address` (street + unit), `city`, `state` (default NM), `zip`. Old records with "NM 87120" in `zip` are split on load.
+    Documents always print "City, NM ZIP" via `cityLine(c)`.
+  - Quote type: customer `jobType` / quote `type` = `'replace'` (cost + margin) or `'repair'` (`items: [{label, amount}]`, customer prices).
+  - Inspections: `completedAt`, `nextInspection`, `lastInspected` (YYYY-MM-DD).
 - Never break existing records: old data must load unchanged. Import/Export backups are a JSON array of customers.
+- **Revert-safe storage:** `arc_v3` is always written in the previous version's format (`toStored`): repair work is priced there as
+  Materials = line-item total, margin 0, and ZIP keeps the way it was typed. Newer fields live in `arc_ext` (`extOf` / `applyExt`),
+  which older versions never touch; backups carry them as `arcExt`. Signature `docId` keeps the old formula; repair line items are
+  checked by `sig.linesId`. Keep this when adding fields, so reverting `index.html` never loses or misprices a record.
 - Pipeline stages: Lead → Inspected → Proposed → Signed → In Production → Closed (+ Declined).
 - Numbering: customers `ARC-00007`; additional quotes `ARC-00007-Q2…` (Q1 = main proposal); change orders `ARC-00007-CO1…`; receipts `ARC-00007-R`.
 - Pricing: materials + labor + other, plus margin % = customer price; discount applied pre-tax; NM gross receipts tax `TAX_RATE = 0.073125`.
@@ -36,10 +45,18 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 ## Documents (proposal, quote, change order, receipt)
 
-- Proposal, quote and change order share one style: `ARC_DOC_CSS` + `ARC_DOC_HEAD` in `index.html`. Change it there, not per document.
-- Every document must print on **one US Letter page**. Check with a print render after any change.
-- Documents open with `openDoc(html)`: new tab if allowed, otherwise the same tab (iPhone). Back returns to the customer via `sessionStorage.arc_return`.
+- Proposal, quote and change order share one style: `ARC_DOC_CSS` + `ARC_DOC_HEAD` + `docShell()` in `index.html`. Change it there, not per document.
+  Layout is locked: stone page edge to edge, 1.2pt Ink rule 0.25in in + 0.6pt #C97E78 rule inside it, content 0.6in in,
+  signatures + footer pinned to the bottom, poppy bottom-right above the footer rule.
+- Every document must print on **one US Letter page**. Check with a print render after any change. If content truly overflows,
+  `ARC_DOC_PAGINATE` moves whole blocks/bullets to page 2 (never splits a line item, the pricing card or signatures).
+- Documents open in the inline preview (`openPreview`), which builds the PDF in the background so **Send** (copy email → share sheet)
+  and **Save PDF** work in one tap. PDF names: `ARC Proposal|Quote|Change Order|Receipt - [Last] - [number].pdf`.
+  The receipt page (`receipt.html`) builds its own PDF from its print layout. Back from the receipt returns via `sessionStorage.arc_return`.
+- Scope/notes text renders `**bold**` and drops markdown escapes (`richLine`).
 - Terms on proposals: 30-day validity, 50% deposit on acceptance, balance on completion. Receipts carry a 5-year workmanship warranty.
+- Repair / maintenance work: **no** 5-year warranty anywhere; the "About This Repair" text replaces the manufacturer-warranty term,
+  and the customer must tick "I've read About This Repair." before signing. Closing a repair job sets the next inspection +12 months.
 
 ## E-signatures and payments
 
@@ -65,6 +82,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 ## Testing before every push
 
 - Playwright with Chromium at 390×844 (phone). Chromium is at `/opt/pw-browsers/chromium`.
+- Paste-to-Sort parser unit tests: `node tests/sort-it.test.js`. Add a sample when you fix a parsing case.
 - Run the flows you touched end to end, check there are zero JavaScript errors, and print-render each affected document to confirm it is still one page.
 - Tell Orlando in one line what changed and what to tap on his phone to check it.
 

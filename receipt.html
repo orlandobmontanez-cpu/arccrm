@@ -162,6 +162,12 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
 .w-body p{margin:0 0 5px}
 .w-body strong{color:var(--ink)}
 
+/* Repair / maintenance receipts: no warranty seal, About This Repair instead */
+.about-r{display:none; border:1.5px solid var(--copper); padding:14px 18px}
+.sheet.repair .warranty{display:none}
+.sheet.repair .about-r{display:block}
+.about-r .w-body p:last-child{margin:0}
+
 /* Signatures */
 .sigs{display:grid; grid-template-columns:1fr 1fr; gap:34px; margin-top:4px}
 .sig .line{border-bottom:1px solid var(--ink); height:34px}
@@ -182,6 +188,7 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
 .esig b{color:var(--copper)}
 .signote{max-width:8.5in; margin:-8px auto 14px; background:#FBEAEA; color:#8B2020; padding:10px 14px; border-radius:6px; font-size:13px; line-height:1.45}
 .paybox-r{display:grid; grid-template-columns:52px 1fr; gap:10px; align-items:center; margin-top:8px; padding:6px 8px; border:1px solid var(--mid); border-radius:3px}
+.paybox-r[hidden]{display:none}
 .paybox-r svg{width:52px; height:52px; display:block}
 .paybox-r .pt{font-family:var(--bebas); letter-spacing:.16em; color:var(--copper); font-size:13px}
 .paybox-r .pl{font-size:12px; font-weight:600}
@@ -189,10 +196,15 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
 .paybox-r .pu{font-size:9.5px; color:var(--copper); word-break:break-all}
 
 /* ── Phone-width screen layout ── */
+.bar-pdf{display:flex; gap:8px}
+.btn:disabled{opacity:.55; cursor:default}
+.pdfstat{max-width:8.5in; margin:-14px auto 12px; color:#B9B0A6; font-size:12px; min-height:16px}
 @media screen and (max-width:560px){
   .bar-title{display:none}
-  .bar-in{flex-wrap:nowrap; gap:6px}
-  .bar-in .btn{flex:1 1 auto; padding:0 10px; font-size:13px; white-space:nowrap}
+  .bar-in{gap:6px}
+  .bar-in > .btn{flex:1 1 auto; padding:0 10px; font-size:13px; white-space:nowrap}
+  .bar-pdf{flex:1 1 100%}
+  .bar-pdf .btn{flex:1 1 0; padding:0 10px; font-size:13px; white-space:nowrap}
 }
 @media screen and (max-width:760px){
   .sheet{padding:28px 18px 22px; gap:20px}
@@ -215,7 +227,7 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
 @page{size:letter; margin:0}
 @media print{
   html,body{background:#fff; padding:0; min-height:0}
-  .bar,.toast,.addrow,.rm,.col-x,.noprint{display:none!important}
+  .bar,.toast,.pdfstat,.addrow,.rm,.col-x,.noprint{display:none!important}
   .sheet{box-shadow:none; max-width:none; width:8.5in; min-height:10.95in; margin:0; padding:0.38in 0.5in 0.28in; gap:10px}
   .lockup svg{width:66px;height:66px}
   .wm .agency{font-size:38px}
@@ -257,7 +269,8 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
   .f{border-bottom-color:transparent!important; background:transparent!important}
   .f::placeholder{color:transparent}
   .items tr{break-inside:avoid}
-  .warranty,.sigs,.money{break-inside:avoid}
+  .warranty,.about-r,.sigs,.money{break-inside:avoid}
+  .about-r{padding:12px 16px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -271,10 +284,14 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
     <button class="btn" id="btnNew" type="button">Start over</button>
     <button class="btn" id="btnSave" type="button">Save</button>
     <button class="btn" id="btnSign" type="button">Sign</button>
-    <button class="btn primary" id="btnPrint" type="button">Print / PDF</button>
+    <div class="bar-pdf">
+      <button class="btn" id="btnPdf" type="button" disabled>Save PDF</button>
+      <button class="btn primary" id="btnSend" type="button" disabled>Send Receipt</button>
+    </div>
   </div>
 </div>
 <div class="toast noprint" id="toast" role="status" aria-live="polite"></div>
+<div class="pdfstat noprint" id="pdfStat" role="status" aria-live="polite"></div>
 <div class="signote noprint" id="sigNote" hidden></div>
 
 <main class="sheet" id="sheet">
@@ -424,6 +441,15 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
     </div>
   </section>
 
+  <!-- ABOUT THIS REPAIR (repair / maintenance jobs) -->
+  <section class="about-r" id="aboutRepair">
+    <div class="lbl">About This Repair</div>
+    <div class="w-body">
+      <p>Flat-roof leaks rarely come from just one place. Water can travel under the membrane and show up far from where it got in. Based on our inspection and years on flat roofs, we've identified the most likely source and will repair it the right way, with the right materials. We'll always tell you what we found, what we fixed, and anything else we noticed while we were up there.</p>
+      <p>Because a leak's true source can be hidden, repair and maintenance work does not include a workmanship warranty, and we can't guarantee it will stop every leak. Any manufacturer material warranty passes through to you. This doesn't limit our responsibility for damage caused by our own negligence. If a larger issue turns up, we'll walk you through your options honestly, with no pressure.</p>
+    </div>
+  </section>
+
   <!-- SIGNATURES -->
   <section class="sigs">
     <div class="sig"><div class="line"><img class="sig-im" id="sigOimg" alt="" hidden></div><div class="who"><span>Agency Roofing Co.</span><span id="sigOdate">Date</span></div></div>
@@ -495,6 +521,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     '.sg-done p{font-size:14px;line-height:1.55;color:' + C.ink2 + ';max-width:30em;margin:0}',
     '.sg-done img{max-width:260px;max-height:80px;margin-top:6px}',
     '.sg-acts{display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;margin-top:8px}',
+    '.sg-notice{font-size:12.5px;line-height:1.55;color:' + C.ink2 + '}',
+    '.sg-notice b{display:block;font-family:"Bebas Neue",Oswald,sans-serif;font-weight:400;font-size:15px;letter-spacing:.16em;color:' + C.copper + ';margin-bottom:6px}',
+    '.sg-notice p{margin:0 0 8px}',
+    '.sg-notice p:last-child{margin:0}',
     '@media (min-width:700px){.sg-body{padding:24px}}'
   ].join('\n');
 
@@ -579,10 +609,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!root) return;
     var btn = root.querySelector('#sg-ok'); if (!btn) return;
     var name = root.querySelector('#sg-name'), chk = root.querySelector('#sg-consent');
-    var ok = hasInk() && name && name.value.trim().length > 1 && chk && chk.checked;
+    var ack = root.querySelector('#sg-ack');
+    var ok = hasInk() && name && name.value.trim().length > 1 && chk && chk.checked && (!ack || ack.checked);
     btn.disabled = !ok;
     var hint = root.querySelector('#sg-hint');
-    if (hint) hint.textContent = ok ? '' : (!hasInk() ? 'Sign in the box above.' : (!name.value.trim() ? 'Enter the signer’s full name.' : 'Check the box to agree to sign electronically.'));
+    if (hint) hint.textContent = ok ? '' : (ack && !ack.checked ? 'Check the box: ' + opts.ack : !hasInk() ? 'Sign in the box above.' : (!name.value.trim() ? 'Enter the signer’s full name.' : 'Check the box to agree to sign electronically.'));
   }
 
   // ── Public API ──
@@ -597,6 +628,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           (list.length ? '<ul class="sg-list">' + list.slice(0, 4).map(function (l) { return '<li>' + escH(l) + '</li>'; }).join('') + (more ? '<li>…and ' + (list.length - 4) + ' more</li>' : '') + '</ul>' : '') +
           (opts.amount ? '<div class="sg-amt"><span class="sg-amt-l">' + escH(opts.amountLabel || 'Total') + '</span><span class="sg-amt-v">' + escH(opts.amount) + '</span></div>' : '') +
         '</div>' : '') +
+        (opts.notice ? '<div class="sg-card sg-notice">' + opts.notice + '</div>' : '') +
+        (opts.ack ? '<label class="sg-check"><input type="checkbox" id="sg-ack"><span>' + escH(opts.ack) + '</span></label>' : '') +
         '<div class="sg-lbl"><span>' + escH(opts.role || 'Signature') + '</span><button type="button" class="sg-clear" id="sg-clear">CLEAR</button></div>' +
         '<div class="sg-pad" id="sg-pad"><div class="sg-ph">Sign here with your finger</div><div class="sg-base"></div><div class="sg-x">✕</div><canvas id="sg-canvas" aria-label="Signature area"></canvas></div>' +
         '<label class="sg-lbl" for="sg-name" style="margin-top:2px"><span>Printed name</span></label>' +
@@ -620,6 +653,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     root.querySelector('#sg-clear').addEventListener('click', function () { strokes = []; redraw(); });
     root.querySelector('#sg-name').addEventListener('input', validate);
     root.querySelector('#sg-consent').addEventListener('change', validate);
+    if (opts.ack) root.querySelector('#sg-ack').addEventListener('change', validate);
     root.querySelector('#sg-cancel').addEventListener('click', function () {
       if (opts.onSkip) { var f = opts.onSkip; f(); } else close();
     });
@@ -633,6 +667,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         consent: true,
         method: 'Signed on screen in person'
       };
+      if (opts.ack) res.ackRead = opts.ack;
       if (opts.offerSave) res.saveAsMine = !!(root.querySelector('#sg-save') || {}).checked;
       if (opts.onSign) opts.onSign(res);
     });
@@ -736,7 +771,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     return d.toLocaleDateString('en-US',{month:'long', day:'numeric', year:'numeric'});
   }
 
-  function flat(t){ return String(t||'').split('\n').map(function(x){return x.trim();}).filter(Boolean).join(' \u00b7 '); }
+  function plain(t){ return String(t||'').trim().replace(/^[-*\u2022\u00b7]\s+/, '').replace(/\\([\\`*_{}\[\]()#+\-.!>~|])/g, '$1').replace(/\*\*/g, '').trim(); }
+  function flat(t){ return String(t||'').split('\n').map(plain).filter(Boolean).join(' \u00b7 '); }
   function addRow(r){
     r = r || {t:'', n:'', q:'1', p:'0.00'};
     r.n = flat(r.n);
@@ -791,6 +827,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     renderPay(Math.max(bal, 0));
     renderSig();
     document.getElementById('sheet').classList.toggle('crowded', many || !$('payBox').hidden || !$('esig').hidden);
+    schedulePdf();
   }
 
   function warrantyEnd(){
@@ -805,7 +842,25 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   function fields(){ return document.querySelectorAll('[data-k]'); }
 
-  var SIG = null, CUST = null;
+  var SIG = null, CUST = null, JOBTYPE = 'replace';
+  /* Customer record from the CRM: arc_v3 (older-version format) + arc_ext (newer fields) */
+  function crmRecord(id){
+    var list, ext = {};
+    try { list = JSON.parse(localStorage.getItem('arc_v3') || '[]') || []; } catch(e){ return null; }
+    try { ext = JSON.parse(localStorage.getItem('arc_ext') || '{}') || {}; } catch(e){}
+    var r = list.filter(function(x){ return x && x.id === id; })[0];
+    if (!r) return null;
+    var e = ext[id], c = JSON.parse(JSON.stringify(r));
+    function mirrored(o, x){ return String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0'; }
+    if (e) {
+      if (e.state && !c.state) c.state = e.state;
+      if (e.items && !c.items) c.items = e.items;
+      if (e.jobType === 'repair' && mirrored(r, e)) c.jobType = 'repair';
+      if (e.quotes) (c.quotes || []).forEach(function(q){ var x = e.quotes[q.id]; if (x && x.type === 'repair' && mirrored(q, x)) { q.type = 'repair'; q.items = x.items; } });
+    }
+    return c;
+  }
+  function setJobType(t){ JOBTYPE = t === 'repair' ? 'repair' : 'replace'; $('sheet').classList.toggle('repair', JOBTYPE === 'repair'); }
   function escH(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function receiptContent(){ return ['R', $('rNo').value, $('cName').value, $('tTotal').textContent, fx($('tPaid').value)].join('|'); }
   function renderSig(){
@@ -838,13 +893,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   function snapshot(){
-    var o = {rows: readRows(), sig: SIG};
+    var o = {rows: readRows(), sig: SIG, jobType: JOBTYPE};
     fields().forEach(function(el){ o[el.dataset.k] = el.isContentEditable ? el.innerText : el.value; });
     return o;
   }
   function apply(o){
     fields().forEach(function(el){ var v=o[el.dataset.k]; if (v == null) return; if (el.isContentEditable) el.innerText = v; else el.value = v; });
     SIG = o.sig || null;
+    setJobType(o.jobType || (CUST && CUST.jobType) || 'replace');
     if (o.rows){ rowsEl.innerHTML=''; o.rows.forEach(addRow); }
         calc();
   }
@@ -875,18 +931,26 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   /* ── Fill from an ARC CRM customer record (same site, localStorage arc_v3) ── */
   function fromCRM(){
     if (!CUST_ID) return false;
-    var list; try { list = JSON.parse(localStorage.getItem('arc_v3') || '[]'); } catch(e){ return false; }
-    var c = (list || []).filter(function(x){ return x && x.id === CUST_ID; })[0];
+    var c = crmRecord(CUST_ID);
     if (!c) return false;
     SIG = null;
     var rate = num(CRM_TAX) / 100;
+    function isRepair(o){ return (o.jobType != null ? o.jobType : o.type) === 'repair'; }
     function priceOf(o){
+      if (isRepair(o)) return Math.round((o.items || []).reduce(function(s, i){ return s + num(i.amount); }, 0) * 100) / 100;
       var cost = num(o.materials) + num(o.labor) + num(o.other);
       return Math.round(cost * (1 + num(o.margin)/100) * 100) / 100;
     }
     var price = priceOf(c);
     var disc = num(c.discountAmount);
     var rows = [{ t: 'Roofing services per proposal ' + (c.arcNum || ''), n: (c.scope || '').trim(), q: '1', p: price.toFixed(2) }];
+    if (isRepair(c)) {
+      /* Repair / maintenance: each priced line item becomes its own receipt line */
+      rows = (c.items || []).filter(function(i){ return num(i.amount) !== 0; }).map(function(i, k){
+        return { t: i.label || 'Repair work', n: k === 0 ? (c.scope || '').trim() : '', q: '1', p: num(i.amount).toFixed(2) };
+      });
+      if (!rows.length) rows = [{ t: 'Repair / maintenance per proposal ' + (c.arcNum || ''), n: (c.scope || '').trim(), q: '1', p: '0.00' }];
+    }
     /* Accepted additional quotes and approved change orders become their own lines */
     (c.quotes || []).filter(function(q){ return q.status === 'Accepted'; }).forEach(function(q){
       rows.push({ t: 'Quote ' + q.num + (q.title ? ' \u2014 ' + q.title : ''), n: (q.scope || '').trim(), q: '1', p: priceOf(q).toFixed(2) });
@@ -901,7 +965,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var taxable = Math.max(sub - disc, 0);
     var total = Math.round((taxable + Math.round(taxable * rate * 100) / 100) * 100) / 100;
     var name = [c.first, c.last].filter(Boolean).join(' ');
-    var cityZip = [c.city ? c.city + ', NM' : '', c.zip].filter(Boolean).join(' ');
+    /* "City, NM ZIP" — older records kept "NM 87120" in the ZIP box */
+    var zip = String(c.zip || '').trim(), st = String(c.state || '').trim().toUpperCase();
+    var zm = zip.match(/^([A-Za-z]{2})[\s,]+(\d{5}(?:-\d{4})?)$/);
+    if (zm) { if (!st) st = zm[1].toUpperCase(); zip = zm[2]; }
+    var cityZip = [c.city, [st || 'NM', zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
     var sq = num(c.roofsize);
     var done = c.scheddate || today();
     var extras = [];
@@ -915,7 +983,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       tDisc: fx(disc), tRate: CRM_TAX, tPaid: fx(total),
       pRef: '',
       agree: 'Work performed per signed proposal ' + (c.arcNum || '') + (extras.length ? ' and ' + extras.join(', ') : '') + '. Customer and Agency Roofing Co. agreed to a total contract price of ' + money(total) + (num(c.discountAmount) > 0 && c.discountLabel ? ' (includes ' + c.discountLabel + ')' : '') + '. This receipt confirms payment received against that agreement.',
-      rows: rows
+      rows: rows,
+      jobType: isRepair(c) ? 'repair' : 'replace'
     });
     $('sDone').dataset.auto = '1';
     warrantyEnd();
@@ -923,7 +992,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   function init(){
-    if (CUST_ID) { try { CUST = (JSON.parse(localStorage.getItem('arc_v3') || '[]') || []).filter(function(x){ return x && x.id === CUST_ID; })[0] || null; } catch(e){} }
+    if (CUST_ID) CUST = crmRecord(CUST_ID);
     $('rDate').value = today();
     $('wStart').value = today();
     var saved = null;
@@ -967,7 +1036,111 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     rowsEl.innerHTML=''; addRow();
         calc(); toast('Blank receipt ready.');
   });
-  $('btnPrint').addEventListener('click', function(){ window.print(); });
+
+  /* ── PDF + share: built in the background (html2canvas + jsPDF from cdnjs) so
+     Save PDF and Send Receipt open the share sheet in the same tap ── */
+  var PDF_LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+                  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
+  var libsP = null, pdfFile = null, pdfTimer = null, pdfRun = 0;
+  function loadLibs(){
+    if (window.html2canvas && window.jspdf) return Promise.resolve();
+    if (!libsP) libsP = Promise.all(PDF_LIBS.map(function(src){ return new Promise(function(res, rej){
+      var sc = document.createElement('script'); sc.src = src; sc.crossOrigin = 'anonymous'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc);
+    }); })).catch(function(e){ libsP = null; throw e; });
+    return libsP;
+  }
+  /* The PDF uses the print layout: copy the @media print rules into the render */
+  function printCss(){
+    var out = '';
+    [].forEach.call(document.styleSheets, function(ss){
+      var rules; try { rules = ss.cssRules; } catch(e){ return; }
+      [].forEach.call(rules || [], function(r){
+        if (r.media && /print/.test(r.media.mediaText)) [].forEach.call(r.cssRules, function(x){ out += x.cssText + '\n'; });
+      });
+    });
+    return out;
+  }
+  function pdfName(){
+    var who = (CUST && (CUST.last || CUST.first)) || $('cName').value.trim().split(/\s+/).pop() || 'Customer';
+    return 'ARC Receipt - ' + String(who).replace(/[\\/:*?"<>|]+/g, '') + ' - ' + ($('rNo').value.trim() || 'Receipt') + '.pdf';
+  }
+  function pdfButtons(on){ $('btnPdf').disabled = !on; $('btnSend').disabled = !on; }
+  function schedulePdf(){
+    pdfFile = null; pdfButtons(false); $('pdfStat').textContent = 'Updating PDF\u2026';
+    clearTimeout(pdfTimer); pdfTimer = setTimeout(buildPdf, 900);
+  }
+  function buildPdf(){
+    var run = ++pdfRun;
+    loadLibs().then(function(){
+      return Promise.all(['400 12px Inter','600 12px Inter','700 12px Inter','12px Anton','12px "Bebas Neue"','italic 12px Lora'].map(function(f){
+        return document.fonts ? document.fonts.load(f).catch(function(){}) : null; }));
+    }).then(function(){
+      var css = printCss();
+      return window.html2canvas($('sheet'), { scale: 2, backgroundColor: '#FFFFFF', logging: false, windowWidth: 816, windowHeight: 1056,
+        onclone: function(doc){
+          var st = doc.createElement('style'); st.textContent = css; doc.head.appendChild(st);
+          /* Form fields → plain text so nothing is clipped; empty ones hide like they do in print */
+          var live = document.querySelectorAll('#sheet input, #sheet select');
+          [].forEach.call(doc.querySelectorAll('#sheet input, #sheet select'), function(el, k){
+            var src = live[k] || el, v = src.tagName === 'SELECT' ? (src.options[src.selectedIndex] || {}).text || '' : src.value;
+            if (src.type === 'date') v = v ? fmtDate(v) : '';
+            var sp = doc.createElement('span');
+            sp.className = el.className; sp.textContent = v || '\u00a0';
+            sp.style.display = 'inline-block'; sp.style.whiteSpace = 'pre'; sp.style.overflow = 'hidden';
+            sp.style.width = doc.defaultView.getComputedStyle(el).width;   /* keep the field's print width */
+            if (!v && el.closest('.party')) sp.style.display = 'none';
+            el.parentNode.replaceChild(sp, el);
+          });
+          var eds = document.querySelectorAll('#sheet div.f[contenteditable]');
+          [].forEach.call(doc.querySelectorAll('#sheet div.f[contenteditable]'), function(d, k){ if (eds[k] && !eds[k].textContent.trim()) d.style.display = 'none'; });
+        } });
+    }).then(function(canvas){
+      if (run !== pdfRun) return;
+      var pdf = new window.jspdf.jsPDF({ unit: 'in', format: 'letter', orientation: 'portrait', compress: true });
+      var w = 8.5, h = canvas.height / canvas.width * 8.5;
+      if (h > 11) { w = 8.5 * 11 / h; h = 11; }   /* receipts always fit one page */
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (8.5 - w) / 2, 0, w, h, undefined, 'FAST');
+      pdf.setProperties({ title: 'Receipt ' + $('rNo').value, author: 'Agency Roofing Co.', creator: 'ARC CRM' });
+      pdfFile = new File([pdf.output('blob')], pdfName(), { type: 'application/pdf' });
+      pdfButtons(true); $('pdfStat').textContent = 'PDF ready \u00b7 ' + pdfFile.name;
+    }).catch(function(){
+      if (run !== pdfRun) return;
+      $('pdfStat').textContent = 'Couldn\u2019t build the PDF \u2014 check the internet connection, then edit any field to try again.';
+    });
+  }
+  function canShare(f){ try { return !!(navigator.share && navigator.canShare && navigator.canShare({ files: [f] })); } catch(e){ return false; } }
+  /* No file sharing (desktop): download the PDF, then open a pre-filled email */
+  function fallback(f, mail){
+    var url = URL.createObjectURL(f), a = document.createElement('a');
+    a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+    if (!mail) { toast('PDF downloaded.'); return; }
+    toast('PDF downloaded \u2014 attach it to the email.');
+    setTimeout(function(){ location.href = 'mailto:' + encodeURI(mail.to || '') + '?subject=' + encodeURIComponent(mail.subject) + '&body=' + encodeURIComponent(mail.body); }, 400);
+  }
+  $('btnPdf').addEventListener('click', function(){
+    if (!pdfFile) { toast('PDF is still updating \u2014 tap again in a second.'); return; }
+    if (canShare(pdfFile)) { navigator.share({ files: [pdfFile], title: pdfFile.name }).catch(function(err){ if (err && err.name !== 'AbortError') fallback(pdfFile); }); return; }
+    fallback(pdfFile);
+  });
+  $('btnSend').addEventListener('click', function(){
+    if (!pdfFile) { toast('PDF is still updating \u2014 tap again in a second.'); return; }
+    var email = $('cEmail').value.trim();
+    var first = (CUST && CUST.first) || $('cName').value.trim().split(/\s+/)[0] || 'there';
+    var site = $('sAddr1').value.trim();
+    var addr = (site && !/^same as billing$/i.test(site) ? site : $('cAddr1').value.trim()) || 'your property';
+    var title = 'Your Agency Roofing Co. Receipt';
+    var text = 'Hi ' + first + ', attached is your receipt for ' + addr + '. Reply or call (505) 900-1711 with any questions. \u2013 Orlando, Agency Roofing Co.';
+    /* Same tap: copy the customer's email, then open the share sheet */
+    if (email && navigator.clipboard && navigator.clipboard.writeText) {
+      try { navigator.clipboard.writeText(email).then(function(){ toast('Email copied \u2014 paste it into To.'); }, function(){}); } catch(e){}
+    }
+    if (canShare(pdfFile)) {
+      navigator.share({ files: [pdfFile], title: title, text: text }).catch(function(err){ if (err && err.name !== 'AbortError') fallback(pdfFile, { to: email, subject: title, body: text }); });
+      return;
+    }
+    fallback(pdfFile, { to: email, subject: title, body: text });
+  });
 
   /* ── Sign in person ── */
   function saveDraftQuiet(){ try { localStorage.setItem(KEY, JSON.stringify(snapshot())); } catch(e){} }
@@ -977,11 +1150,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var lines = readRows().map(function(r){ return r.t; }).filter(Boolean);
     function finish(os){
       SIG = { contractor: os, docId: ARCSign.docId(receiptContent()) };
-      saveDraftQuiet(); renderSig();
+      saveDraftQuiet(); renderSig(); schedulePdf();
       ARCSign.done({ kicker: 'SIGNED · RECEIPT', num: $('rNo').value, title: 'Signed',
-        message: 'Receipt ' + escH($('rNo').value) + ' was signed by <b>' + escH(os.name) + '</b> for Agency Roofing Co. It\u2019s saved with this receipt.',
+        message: 'Receipt ' + escH($('rNo').value) + ' was signed by <b>' + escH(os.name) + '</b> for Agency Roofing Co. It\u2019s saved with this receipt. The PDF updates in a moment \u2014 then tap Save PDF or Send Receipt.',
         img: os.img,
-        actions: [ { label: 'PRINT / SAVE PDF', primary: true, fn: function(){ ARCSign.close(); window.print(); } }, { label: 'DONE' } ] });
+        actions: [ { label: 'DONE', primary: true } ] });
     }
     var st = ARCSign.settings(), own = ARCSign.ownerSig();
     if (own && st.autoCountersign) { finish({ name: own.name, img: own.img, at: new Date().toISOString(), tz: ARCSign.tz(), consent: true, method: 'Saved contractor signature' }); return; }

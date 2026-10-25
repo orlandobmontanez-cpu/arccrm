@@ -681,6 +681,13 @@
   .set-help { font-size: 11px; line-height: 1.55; color: var(--ink-muted); background: var(--stone); border-radius: 6px; padding: 10px 12px; }
   .x-num .signed-mark { color: var(--copper); margin-left: 6px; }
 
+  /* ── BACKUP REMINDER ── */
+  #backup-banner { margin: 0 16px 10px; display: flex; background: var(--copper); border-radius: 6px; flex-shrink: 0; overflow: hidden; }
+  #backup-banner[hidden] { display: none; }
+  .bb-go { flex: 1; min-height: 48px; background: none; border: none; color: var(--white); text-align: left; padding: 8px 12px;
+    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; line-height: 1.35; cursor: pointer; }
+  .bb-x { min-width: 48px; min-height: 48px; background: rgba(28,26,24,0.18); border: none; color: var(--white); font-size: 20px; cursor: pointer; }
+
   /* ── PASTE-TO-SORT ── */
   .sort-box { margin-bottom: 14px; }
   .sort-toggle {
@@ -917,6 +924,11 @@
       <button class="btn-new" id="btn-new-customer">+ NEW CUSTOMER</button>
       <button class="btn-icon" id="btn-export-icon" title="Export backup">⬇</button>
       <label class="btn-icon" title="Import backup" style="cursor:pointer;">⬆<input type="file" accept=".json" id="import-file" style="display:none" onchange="importData(this)"></label>
+    </div>
+
+    <div id="backup-banner" hidden>
+      <button type="button" class="bb-go" id="bb-go"></button>
+      <button type="button" class="bb-x" id="bb-x" aria-label="Dismiss">&times;</button>
     </div>
 
     <div id="search-wrap">
@@ -1178,7 +1190,7 @@
               <span class="price-amount" id="calc-subtotal" style="margin-left:auto;font-weight:700;">$0.00</span>
             </div>
             <div class="price-row" style="background:transparent;border:none;">
-              <span class="price-label" style="color:var(--ink-muted);font-size:11px;">Tax (7.3125%)</span>
+              <span class="price-label" style="color:var(--ink-muted);font-size:11px;" id="calc-tax-label">Tax (7.3125%)</span>
               <span class="price-amount" id="calc-tax" style="margin-left:auto;font-weight:400;font-size:12px;color:var(--ink-muted);">$0.00</span>
             </div>
             <div class="price-row" style="background:transparent;border:none;border-top:2px solid var(--ink);padding-top:8px;margin-top:4px;">
@@ -1611,7 +1623,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   function settings() {
-    var d = { payLink: '', showPay: true, autoCountersign: true };
+    var d = { payLink: '', showPay: true, autoCountersign: true, taxRate: 7.3125 };
     try { var s = JSON.parse(localStorage.getItem('arc_settings') || '{}'); for (var k in s) d[k] = s[k]; } catch (e) {}
     return d;
   }
@@ -1619,8 +1631,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function ownerSig() { try { return JSON.parse(localStorage.getItem('arc_owner_sig') || 'null'); } catch (e) { return null; } }
   function saveOwnerSig(v) { try { if (v) localStorage.setItem('arc_owner_sig', JSON.stringify(v)); else localStorage.removeItem('arc_owner_sig'); } catch (e) {} }
 
+  // NM gross receipts tax as a fraction — the one place both pages read it from (Settings → Tax rate)
+  function taxRate() { var r = parseFloat(settings().taxRate); return isFinite(r) && r >= 0 && r < 25 ? r / 100 : 0.073125; }
+
   window.ARCSign = { open: open, done: done, close: close, docId: docId, stamp: stamp, day: day, qrSvg: qrSvg,
-    settings: settings, saveSettings: saveSettings, ownerSig: ownerSig, saveOwnerSig: saveOwnerSig, tz: tzName };
+    settings: settings, saveSettings: saveSettings, ownerSig: ownerSig, saveOwnerSig: saveOwnerSig, tz: tzName, taxRate: taxRate };
 })();
 </script>
 
@@ -1632,7 +1647,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
 const STORAGE_KEY = 'arc_v3';
 const STAGES = ['Lead','Inspected','Proposed','Signed','In Production','Closed','Declined'];
-const TAX_RATE = 0.073125;
+let TAX_RATE = ARCSign.taxRate();   // from Settings (default 7.3125%)
 const ARC_EMAIL = 'agencyroofingco@gmail.com';
 const ARC_PHONE = '(505) 900-1711';
 
@@ -1823,6 +1838,7 @@ function getCurrent() {
 
 function renderList() {
   updateInsCount();
+  renderBackupBanner();
   const q = (document.getElementById('search').value || '').toLowerCase();
   const stageF = document.getElementById('stage-select').value;
 
@@ -2552,7 +2568,7 @@ function generateProposal(opts) {
         <div class="pbox-rule"></div>
         <!-- Customers see Subtotal, tax and total only; line items and discount stay in the CRM -->
         <div class="pr pr-sub"><span>Subtotal</span><span>${fmt(p.sub)}</span></div>
-        <div class="pr pr-tax"><span>Gross Receipts Tax (7.3125%)</span><span>${fmt(p.tax)}</span></div>
+        <div class="pr pr-tax"><span>Gross Receipts Tax (${taxPctLabel()})</span><span>${fmt(p.tax)}</span></div>
         <div class="pr pr-final"><span class="lbl">Final Investment</span><span class="amt">${fmt(p.total)}</span></div>
         ${payBlock(cust, p.total * 0.5, '50% deposit due', c.arcNum)}
       </div>
@@ -2629,9 +2645,17 @@ function deleteCustomer() {
 // ── EXPORT / IMPORT ────────────────────────────────────
 
 function exportData() {
-  // Same backward-compatible format as storage; arcExt carries the newer fields
+  // Same backward-compatible format as storage: a plain array of customers that
+  // any version can import. arcExt carries newer fields; the first record also
+  // carries arcBackup = { settings, ownerSig } (older versions ignore both).
   const data = customers.map(c => Object.assign(toStored(c), { arcExt: extOf(c) }));
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const st = ARCSign.settings();
+  st.lastBackupAt = Date.now();
+  ARCSign.saveSettings(st);
+  const extra = { version: 2, exportedAt: new Date(st.lastBackupAt).toISOString(), settings: st, ownerSig: ARCSign.ownerSig() };
+  if (data.length) data[0].arcBackup = extra;
+  // No customers yet: the object form still saves settings + signature
+  const blob = new Blob([JSON.stringify(data.length ? data : { customers: [], settings: extra.settings, ownerSig: extra.ownerSig }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const ts = new Date().toISOString().slice(0,10);
@@ -2642,6 +2666,57 @@ function exportData() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('BACKUP EXPORTED');
+  renderBackupBanner();
+}
+
+// Backups: plain array (any version), or { customers, settings, ownerSig }
+function readBackup(data) {
+  if (Array.isArray(data)) {
+    const meta = data.map(d => d && d.arcBackup).find(Boolean) || null;
+    return { customers: data.filter(d => d && typeof d === 'object'), settings: meta && meta.settings, ownerSig: meta && meta.ownerSig };
+  }
+  if (data && typeof data === 'object' && Array.isArray(data.customers)) {
+    return { customers: data.customers, settings: data.settings || null, ownerSig: data.ownerSig || null };
+  }
+  return null;
+}
+
+// Settings + saved signature come back only after a separate yes
+function offerRestoreExtras(b) {
+  const hasSet = b.settings && typeof b.settings === 'object', hasSig = b.ownerSig && b.ownerSig.img;
+  if (!hasSet && !hasSig) return;
+  const what = [hasSet ? 'Settings (payment link, tax rate)' : '', hasSig ? 'your saved signature' : ''].filter(Boolean).join(' and ');
+  showModal('RESTORE SETTINGS TOO?',
+    `This backup also has ${what}. Restoring replaces what is on this phone now.`,
+    [{ label: 'KEEP CURRENT', cls: 'modal-btn modal-btn-cancel', fn: closeModal },
+     { label: 'RESTORE', cls: 'modal-btn modal-btn-confirm', fn: () => {
+       closeModal();
+       if (hasSet) {
+         const keep = ARCSign.settings().lastBackupAt;   // this phone's own backup date
+         const st = Object.assign({}, b.settings);
+         if (keep) st.lastBackupAt = keep; else delete st.lastBackupAt;
+         ARCSign.saveSettings(st);
+         applyTaxRate();
+       }
+       if (hasSig) ARCSign.saveOwnerSig({ name: b.ownerSig.name || 'Orlando Montanez', img: b.ownerSig.img, at: b.ownerSig.at || new Date().toISOString() });
+       renderBackupBanner();
+       showToast('SETTINGS RESTORED');
+     } }]);
+}
+
+function renderBackupBanner() {
+  const el = document.getElementById('backup-banner');
+  if (!el) return;
+  let dismissed = false;
+  try { dismissed = sessionStorage.getItem('arc_backup_dismissed') === '1'; } catch (e) {}
+  const last = ARCSign.settings().lastBackupAt;
+  const days = last ? Math.floor((Date.now() - last) / 864e5) : null;
+  const due = days === null || days > 7;
+  el.hidden = dismissed || !due || !customers.length;
+  if (el.hidden) return;
+  document.getElementById('bb-go').textContent = days === null
+    ? 'No backup yet — tap to back up.'
+    : `Last backup ${days} day${days === 1 ? '' : 's'} ago — tap to back up.`;
 }
 
 function importData(input) {
@@ -2650,8 +2725,9 @@ function importData(input) {
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const data = JSON.parse(e.target.result);
-      if (!Array.isArray(data)) throw new Error('Invalid format');
+      const backup = readBackup(JSON.parse(e.target.result));
+      if (!backup) throw new Error('Invalid format');
+      const data = backup.customers;
       showModal(
         'IMPORT BACKUP?',
         `This will merge ${data.length} customer records. Existing records with the same ID will be updated. Continue?`,
@@ -2661,7 +2737,7 @@ function importData(input) {
             closeModal();
             const existingIds = new Set(customers.map(c => c.id));
             data.forEach(d => {
-              const nd = normalize(applyExt(d, d && d.arcExt));
+              const nd = normalize(applyExt(d, d.arcExt));
               if (existingIds.has(nd.id)) {
                 const idx = customers.findIndex(c => c.id === nd.id);
                 customers[idx] = nd;
@@ -2672,6 +2748,7 @@ function importData(input) {
             save();
             renderList();
             showToast('IMPORT COMPLETE');
+            offerRestoreExtras(backup);
           }}
         ]
       );
@@ -3911,6 +3988,14 @@ function openSettings() {
   const body = document.getElementById('set-inner');
   body.innerHTML = `
     <div class="form-section">
+      <div class="form-section-title">Tax Rate</div>
+      <div class="form-grid cols-1">
+        <div class="form-group"><label for="set-tax">NM gross receipts tax (%)</label>
+          <input type="number" id="set-tax" inputmode="decimal" step="0.0001" min="0" max="20" value="${esc(String(Math.round(TAX_RATE * 1e8) / 1e6))}"></div>
+        <div class="set-help">Used on every proposal, quote, change order and receipt. Changing it changes the total on documents already made, and signed ones will show <i>Edited after signing</i>. Receipt drafts you already saved keep their own rate.</div>
+      </div>
+    </div>
+    <div class="form-section">
       <div class="form-section-title">Pay Online</div>
       <p class="xsec-note">Paste your Stripe payment link. Proposals and quotes show a QR code for the 50% deposit, change orders for their amount, and receipts for any balance due.</p>
       <div class="form-grid cols-1">
@@ -3943,7 +4028,19 @@ function readSettingsForm() {
   if (g('set-paylink')) st.payLink = g('set-paylink').value.trim();
   if (g('set-showpay')) st.showPay = g('set-showpay').checked;
   if (g('set-auto')) st.autoCountersign = g('set-auto').checked;
+  if (g('set-tax')) {
+    const r = parseFloat(g('set-tax').value);
+    if (isFinite(r) && r >= 0 && r <= 20) st.taxRate = r;
+  }
   return st;
+}
+
+// Re-read the tax rate and refresh anything showing a total
+function applyTaxRate() {
+  TAX_RATE = ARCSign.taxRate();
+  const lbl = document.getElementById('calc-tax-label');
+  if (lbl) lbl.textContent = 'Tax (' + taxPctLabel() + ')';
+  if (getCurrent()) { calcTotals(); renderExtras(); renderSignStatus(); }
 }
 
 function renderSettingsQR() {
@@ -3955,9 +4052,11 @@ function renderSettingsQR() {
 }
 
 function closeSettings() {
+  const el = document.getElementById('set-tax'), r = el ? parseFloat(el.value) : NaN;
   ARCSign.saveSettings(readSettingsForm());
+  applyTaxRate();
   document.getElementById('set-sheet').classList.remove('active');
-  showToast('SETTINGS SAVED');
+  showToast(el && !(isFinite(r) && r >= 0 && r <= 20) ? 'TAX RATE NOT CHANGED — USE 0 TO 20' : 'SETTINGS SAVED');
 }
 
 (function wireSigning() {
@@ -4506,6 +4605,18 @@ function restoreReturn() {
 
 load();
 renderList();
+applyTaxRate();
+renderBackupBanner();
+// Ask the browser not to clear this site's storage under pressure (silent; ignore failures)
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
+(function wireBackupBanner() {
+  document.getElementById('bb-go').addEventListener('click', e => { e.preventDefault(); exportData(); });
+  document.getElementById('bb-x').addEventListener('click', e => {
+    e.preventDefault();
+    try { sessionStorage.setItem('arc_backup_dismissed', '1'); } catch (x) {}
+    document.getElementById('backup-banner').hidden = true;
+  });
+})();
 
 document.getElementById('btn-new-customer').addEventListener('click', function(e) {
   e.preventDefault();

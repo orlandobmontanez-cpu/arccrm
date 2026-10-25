@@ -743,7 +743,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   function settings() {
-    var d = { payLink: '', showPay: true, autoCountersign: true };
+    var d = { payLink: '', showPay: true, autoCountersign: true, taxRate: 7.3125 };
     try { var s = JSON.parse(localStorage.getItem('arc_settings') || '{}'); for (var k in s) d[k] = s[k]; } catch (e) {}
     return d;
   }
@@ -751,8 +751,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function ownerSig() { try { return JSON.parse(localStorage.getItem('arc_owner_sig') || 'null'); } catch (e) { return null; } }
   function saveOwnerSig(v) { try { if (v) localStorage.setItem('arc_owner_sig', JSON.stringify(v)); else localStorage.removeItem('arc_owner_sig'); } catch (e) {} }
 
+  // NM gross receipts tax as a fraction — the one place both pages read it from (Settings → Tax rate)
+  function taxRate() { var r = parseFloat(settings().taxRate); return isFinite(r) && r >= 0 && r < 25 ? r / 100 : 0.073125; }
+
   window.ARCSign = { open: open, done: done, close: close, docId: docId, stamp: stamp, day: day, qrSvg: qrSvg,
-    settings: settings, saveSettings: saveSettings, ownerSig: ownerSig, saveOwnerSig: saveOwnerSig, tz: tzName };
+    settings: settings, saveSettings: saveSettings, ownerSig: ownerSig, saveOwnerSig: saveOwnerSig, tz: tzName, taxRate: taxRate };
 })();
 </script>
 <script>
@@ -761,7 +764,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   var CUST_ID = null;
   try { CUST_ID = new URLSearchParams(location.search).get('id'); } catch(e){}
   if (CUST_ID) KEY = 'arc_receipt_' + CUST_ID;
-  var CRM_TAX = '7.3125'; /* matches TAX_RATE in the CRM */
+  var CRM_TAX = String(Math.round(ARCSign.taxRate() * 1e8) / 1e6); /* the CRM's rate from Settings, e.g. '7.3125' */
   var rowsEl = document.getElementById('rows');
   var $ = function(id){ return document.getElementById(id); };
 
@@ -771,8 +774,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     {t:'Silicone roof coating — Gaco Roof', n:'Two-coat application to manufacturer spec, 2,150 sq ft', q:'21.5', p:'300.00'}
   ];
 
-  function money(n){ return '$' + (isFinite(n)?n:0).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
-  function fx(v){ return num(v).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+  /* Same rounding as the CRM's fmt() (toFixed), so a half cent rounds the same way on both pages */
+  function fx(v){ var n = typeof v === 'number' ? v : num(v); return (isFinite(n) ? n : 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function money(n){ var s = fx(n); return s.charAt(0) === '-' ? '-$' + s.slice(1) : '$' + s; }
   function num(v){ var n = parseFloat(String(v||'').replace(/[^0-9.\-]/g,'')); return isFinite(n)?n:0; }
   function today(){ var d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
   function fmtDate(iso){
@@ -798,15 +802,18 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     tr.querySelector('.note').textContent = r.n;
     tr.querySelector('.q').value = r.q;
     tr.querySelector('.p').value = fx(r.p);
+    tr.dataset.exact = String(r.p);   /* CRM price before rounding to cents (kept until the price is edited) */
     rowsEl.appendChild(tr);
     calc();
     return tr;
   }
 
+  /* A line's price: the exact CRM figure while the shown rate is untouched, so totals match the signed proposal to the cent */
+  function rowPrice(tr){ var v = tr.querySelector('.p').value, e = tr.dataset.exact; return e != null && fx(e) === v ? e : v; }
   function readRows(){
     return Array.prototype.map.call(rowsEl.children, function(tr){
       return { t:tr.querySelector('.title').textContent, n:tr.querySelector('.note').textContent,
-               q:tr.querySelector('.q').value, p:tr.querySelector('.p').value };
+               q:tr.querySelector('.q').value, p:rowPrice(tr) };
     });
   }
 
@@ -815,13 +822,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var many = rowsEl.children.length > 2;
     Array.prototype.forEach.call(rowsEl.children, function(tr){ tr.classList.toggle('many', many); });
     Array.prototype.forEach.call(rowsEl.children, function(tr){
-      var a = num(tr.querySelector('.q').value) * num(tr.querySelector('.p').value);
+      var a = num(tr.querySelector('.q').value) * num(rowPrice(tr));
       tr.querySelector('.amt').textContent = money(a);
       sub += a;
     });
     var disc = num($('tDisc').value);
     var taxable = Math.max(sub - disc, 0);
-    var tax = Math.round(taxable * num($('tRate').value)) / 100;
+    /* Same arithmetic as the CRM's priceOf(): tax on the unrounded subtotal, rounded only for display */
+    var tax = taxable * (num($('tRate').value) / 100);
     var total = taxable + tax;
     var paid = num($('tPaid').value);
     var bal = Math.round((total - paid)*100)/100;
@@ -952,12 +960,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     function isRepair(o){ return (o.jobType != null ? o.jobType : o.type) === 'repair'; }
     function priceOf(o){
       if (isRepair(o)) return Math.round((o.items || []).reduce(function(s, i){ return s + num(i.amount); }, 0) * 100) / 100;
+      /* exactly like the CRM: no rounding here; margin left blank means 30% */
       var cost = num(o.materials) + num(o.labor) + num(o.other);
-      return Math.round(cost * (1 + num(o.margin)/100) * 100) / 100;
+      var margin = o.margin === '' || o.margin == null ? 30 : num(o.margin);
+      return cost + cost * (margin / 100);
     }
     var price = priceOf(c);
     var disc = num(c.discountAmount);
-    var rows = [{ t: 'Roofing services per proposal ' + (c.arcNum || ''), n: (c.scope || '').trim(), q: '1', p: price.toFixed(2) }];
+    var rows = [{ t: 'Roofing services per proposal ' + (c.arcNum || ''), n: (c.scope || '').trim(), q: '1', p: String(price) }];
     if (isRepair(c)) {
       /* Repair / maintenance: each priced line item becomes its own receipt line */
       rows = (c.items || []).filter(function(i){ return num(i.amount) !== 0; }).map(function(i, k){
@@ -967,17 +977,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     }
     /* Accepted additional quotes and approved change orders become their own lines */
     (c.quotes || []).filter(function(q){ return q.status === 'Accepted'; }).forEach(function(q){
-      rows.push({ t: 'Quote ' + q.num + (q.title ? ' \u2014 ' + q.title : ''), n: (q.scope || '').trim(), q: '1', p: priceOf(q).toFixed(2) });
+      rows.push({ t: 'Quote ' + q.num + (q.title ? ' \u2014 ' + q.title : ''), n: (q.scope || '').trim(), q: '1', p: String(priceOf(q)) });
       disc += num(q.discountAmount);
     });
     var cos = (c.changeOrders || []).filter(function(o){ return o.status === 'Approved'; });
     cos.forEach(function(o){
       var amt = priceOf(o) * (o.direction === 'deduct' ? -1 : 1);
-      rows.push({ t: 'Change order ' + o.num + (o.title ? ' \u2014 ' + o.title : '') + (amt < 0 ? ' (credit)' : ''), n: (o.description || '').trim(), q: '1', p: amt.toFixed(2) });
+      rows.push({ t: 'Change order ' + o.num + (o.title ? ' \u2014 ' + o.title : '') + (amt < 0 ? ' (credit)' : ''), n: (o.description || '').trim(), q: '1', p: String(amt) });
     });
     var sub = rows.reduce(function(s, r){ return s + num(r.p); }, 0);
     var taxable = Math.max(sub - disc, 0);
-    var total = Math.round((taxable + Math.round(taxable * rate * 100) / 100) * 100) / 100;
+    var total = taxable + taxable * rate;
     var name = [c.first, c.last].filter(Boolean).join(' ');
     /* "City, NM ZIP" — older records kept "NM 87120" in the ZIP box */
     var zip = String(c.zip || '').trim(), st = String(c.state || '').trim().toUpperCase();
@@ -1009,6 +1019,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (CUST_ID) CUST = crmRecord(CUST_ID);
     $('rDate').value = today();
     $('wStart').value = today();
+    $('tRate').value = CRM_TAX;   /* saved drafts keep the rate they were saved with */
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){}
     if (saved){ apply(saved); return; }
@@ -1046,7 +1057,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (CUST_ID && fromCRM()){ toast('Receipt refilled from the CRM record.'); return; }
     fields().forEach(function(el){ if(el.isContentEditable) el.innerText=''; else if(el.tagName!=='SELECT') el.value=''; });
     $('rDate').value = today(); $('wStart').value = today(); $('sDone').dataset.auto='1';
-    $('tDisc').value='0.00'; $('tRate').value='0.000'; $('tPaid').value='0.00';
+    $('tDisc').value='0.00'; $('tRate').value=CRM_TAX; $('tPaid').value='0.00';
     rowsEl.innerHTML=''; addRow();
         calc(); toast('Blank receipt ready.');
   });

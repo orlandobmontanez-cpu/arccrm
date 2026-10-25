@@ -681,6 +681,21 @@
   .set-help { font-size: 11px; line-height: 1.55; color: var(--ink-muted); background: var(--stone); border-radius: 6px; padding: 10px 12px; }
   .x-num .signed-mark { color: var(--copper); margin-left: 6px; }
 
+  /* ── TAX RATE ── */
+  .tax-note { font-size: 11px; color: var(--ink-muted); margin: 2px 0 4px; line-height: 1.45; }
+  .tax-note:empty { display: none; }
+  .tax-note.warn { color: var(--danger); font-weight: 600; }
+  .tr-row { display: grid; grid-template-columns: 1fr 104px 48px; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .tr-row input { min-height: 48px; }
+  .tr-row .tr-rate { text-align: right; }
+
+  /* ── BACKUP REMINDER ── */
+  #backup-banner { margin: 0 16px 10px; display: flex; background: var(--copper); border-radius: 6px; flex-shrink: 0; overflow: hidden; }
+  #backup-banner[hidden] { display: none; }
+  .bb-go { flex: 1; min-height: 48px; background: none; border: none; color: var(--white); text-align: left; padding: 8px 12px;
+    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; line-height: 1.35; cursor: pointer; }
+  .bb-x { min-width: 48px; min-height: 48px; background: rgba(28,26,24,0.18); border: none; color: var(--white); font-size: 20px; cursor: pointer; }
+
   /* ── PASTE-TO-SORT ── */
   .sort-box { margin-bottom: 14px; }
   .sort-toggle {
@@ -917,6 +932,11 @@
       <button class="btn-new" id="btn-new-customer">+ NEW CUSTOMER</button>
       <button class="btn-icon" id="btn-export-icon" title="Export backup">⬇</button>
       <label class="btn-icon" title="Import backup" style="cursor:pointer;">⬆<input type="file" accept=".json" id="import-file" style="display:none" onchange="importData(this)"></label>
+    </div>
+
+    <div id="backup-banner" hidden>
+      <button type="button" class="bb-go" id="bb-go"></button>
+      <button type="button" class="bb-x" id="bb-x" aria-label="Dismiss">&times;</button>
     </div>
 
     <div id="search-wrap">
@@ -1173,12 +1193,17 @@
               <input type="number" id="f-discount-amount" placeholder="0.00" step="0.01" min="0" oninput="calcTotals()" style="width:120px;text-align:right;">
             </div>
             <div style="font-size:9px;color:var(--ink-muted);margin-top:2px;letter-spacing:0.04em;font-style:italic;">Optional. Leave both blank to hide from proposal. Discount is applied pre-tax.</div>
+            <div class="price-row" style="background:transparent;border:none;border-top:1px dashed var(--stone-dark);padding-top:10px;margin-top:10px;">
+              <label class="price-label" for="f-taxrate" style="color:var(--copper);font-weight:600;text-transform:none;letter-spacing:0;font-size:12px;">Tax rate %</label>
+              <input type="number" id="f-taxrate" step="0.0001" min="0" max="20" inputmode="decimal" style="width:120px;text-align:right;">
+            </div>
+            <div class="tax-note" id="f-taxnote"></div>
             <div class="price-row" style="background:transparent;border:none;border-top:1px solid var(--stone-dark);padding-top:8px;margin-top:10px;">
               <span class="price-label" style="font-weight:600;color:var(--ink);">Customer Price</span>
               <span class="price-amount" id="calc-subtotal" style="margin-left:auto;font-weight:700;">$0.00</span>
             </div>
             <div class="price-row" style="background:transparent;border:none;">
-              <span class="price-label" style="color:var(--ink-muted);font-size:11px;">Tax (7.3125%)</span>
+              <span class="price-label" style="color:var(--ink-muted);font-size:11px;" id="calc-tax-label">Tax</span>
               <span class="price-amount" id="calc-tax" style="margin-left:auto;font-weight:400;font-size:12px;color:var(--ink-muted);">$0.00</span>
             </div>
             <div class="price-row" style="background:transparent;border:none;border-top:2px solid var(--ink);padding-top:8px;margin-top:4px;">
@@ -1611,7 +1636,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   function settings() {
-    var d = { payLink: '', showPay: true, autoCountersign: true };
+    var d = { payLink: '', showPay: true, autoCountersign: true, taxRates: [{ city: 'Albuquerque', rate: 7.3125 }] };
     try { var s = JSON.parse(localStorage.getItem('arc_settings') || '{}'); for (var k in s) d[k] = s[k]; } catch (e) {}
     return d;
   }
@@ -1619,8 +1644,20 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function ownerSig() { try { return JSON.parse(localStorage.getItem('arc_owner_sig') || 'null'); } catch (e) { return null; } }
   function saveOwnerSig(v) { try { if (v) localStorage.setItem('arc_owner_sig', JSON.stringify(v)); else localStorage.removeItem('arc_owner_sig'); } catch (e) {} }
 
+  // NM gross receipts tax by job city (Settings → Tax rates). Unknown city → Albuquerque's rate, known: false.
+  function cityKey(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, ' ').trim(); }
+  function taxRates() {
+    var t = settings().taxRates;
+    return Array.isArray(t) && t.length ? t : [{ city: 'Albuquerque', rate: 7.3125 }];
+  }
+  function cityRate(city) {
+    var t = taxRates(), k = cityKey(city), abq = 7.3125, hit = null;
+    t.forEach(function (r) { if (cityKey(r.city) === 'albuquerque' && isFinite(+r.rate)) abq = +r.rate; if (k && cityKey(r.city) === k && isFinite(+r.rate)) hit = +r.rate; });
+    return hit != null ? { rate: hit, known: true } : { rate: abq, known: !k };
+  }
+
   window.ARCSign = { open: open, done: done, close: close, docId: docId, stamp: stamp, day: day, qrSvg: qrSvg,
-    settings: settings, saveSettings: saveSettings, ownerSig: ownerSig, saveOwnerSig: saveOwnerSig, tz: tzName };
+    settings: settings, saveSettings: saveSettings, ownerSig: ownerSig, saveOwnerSig: saveOwnerSig, tz: tzName, taxRates: taxRates, cityRate: cityRate };
 })();
 </script>
 
@@ -1632,7 +1669,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
 const STORAGE_KEY = 'arc_v3';
 const STAGES = ['Lead','Inspected','Proposed','Signed','In Production','Closed','Declined'];
-const TAX_RATE = 0.073125;
+// NM gross receipts tax is per job (customer.taxRate, %), filled from the job city via Settings → Tax rates.
+// Signed documents keep the rate they were signed at (sig.taxRate). Every signature made before
+// per-job rates existed was at 7.3125%, and every existing customer keeps 7.3125%.
+const LEGACY_TAX = 7.3125;
 const ARC_EMAIL = 'agencyroofingco@gmail.com';
 const ARC_PHONE = '(505) 900-1711';
 
@@ -1641,6 +1681,8 @@ let currentId = null;
 // Quote type + repair line items being edited on the open customer (saved on SAVE)
 let formJobType = 'replace';
 let formItems = [];
+// Tax rate on the open customer: follows the job city until typed over (saved on SAVE)
+let formTaxAuto = false;
 
 // ── DATA ──────────────────────────────────────────────
 
@@ -1674,7 +1716,8 @@ function toStored(c) {
 }
 
 function extOf(c) {
-  const e = { state: c.state, jobType: c.jobType, items: c.items, completedAt: c.completedAt, nextInspection: c.nextInspection, lastInspected: c.lastInspected };
+  const e = { state: c.state, jobType: c.jobType, items: c.items, completedAt: c.completedAt, nextInspection: c.nextInspection, lastInspected: c.lastInspected,
+    taxRate: c.taxRate, taxAuto: c.taxAuto };
   if (isRepair(c)) { e.costs = pick(c, ['materials', 'labor', 'other', 'margin']); e.mirror = legacyPrice(c).materials; }
   const qs = {};
   c.quotes.forEach(q => {
@@ -1691,7 +1734,7 @@ function extOf(c) {
 function applyExt(r, e) {
   if (!e) return r;
   const c = Object.assign({}, r);
-  ['items', 'completedAt', 'nextInspection', 'lastInspected'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
+  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
   if (e.state && !/^[A-Za-z]{2}[\s,]/.test(String(r.zip || ''))) c.state = e.state;
   const mirrored = (o, x) => String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0';
   if (e.jobType === 'repair') {
@@ -1793,6 +1836,8 @@ function normalize(c) {
     sig: c.sig || null,
     payLink: c.payLink || '',
     jobType: c.jobType === 'repair' ? 'repair' : 'replace',
+    taxRate: isFinite(parseFloat(c.taxRate)) ? parseFloat(c.taxRate) : LEGACY_TAX,
+    taxAuto: c.taxAuto === true,
     items: normItems(c.items),
     completedAt: c.completedAt || '',
     nextInspection: c.nextInspection || '',
@@ -1823,6 +1868,7 @@ function getCurrent() {
 
 function renderList() {
   updateInsCount();
+  renderBackupBanner();
   const q = (document.getElementById('search').value || '').toLowerCase();
   const stageF = document.getElementById('stage-select').value;
 
@@ -1872,7 +1918,7 @@ function selectCustomer(id) {
 }
 
 function newCustomer() {
-  const c = normalize({ arcNum: genArcNum(), createdAt: Date.now(), updatedAt: Date.now() });
+  const c = normalize({ arcNum: genArcNum(), createdAt: Date.now(), updatedAt: Date.now(), taxAuto: true, taxRate: ARCSign.cityRate('Albuquerque').rate });
   customers.unshift(c);
   save();
   selectCustomer(c.id);
@@ -1924,6 +1970,8 @@ function loadDetail() {
   document.getElementById('f-paylink').value = c.payLink || '';
   document.getElementById('f-completed').value = c.completedAt || '';
   document.getElementById('f-nextinsp').value = c.nextInspection || '';
+  document.getElementById('f-taxrate').value = String(c.taxRate);
+  formTaxAuto = c.taxAuto;
   formJobType = c.jobType;
   formItems = c.items.length ? c.items.map(x => Object.assign({}, x)) : (c.jobType === 'repair' ? defaultItems() : []);
   renderJobType();
@@ -1936,6 +1984,7 @@ function loadDetail() {
   renderActivityLog();
   updateScheduledSection();
   updateMaintSection();
+  syncFormTax();
   renderExtras();
   renderSignStatus();
 }
@@ -2074,6 +2123,8 @@ function saveCustomer(toast = true) {
   c.payLink = document.getElementById('f-paylink').value.trim();
   c.jobType = formJobType;
   c.items = normItems(formItems);
+  c.taxRate = formTaxRate();
+  c.taxAuto = formTaxAuto;
   c.completedAt = document.getElementById('f-completed').value;
   c.nextInspection = document.getElementById('f-nextinsp').value;
   c.updatedAt = Date.now();
@@ -2086,8 +2137,30 @@ function saveCustomer(toast = true) {
 
 // ── TOTALS ─────────────────────────────────────────────
 
+function formTaxRate() {
+  const v = parseFloat(document.getElementById('f-taxrate').value);
+  if (isFinite(v) && v >= 0 && v <= 20) return v;
+  const c = getCurrent();
+  return c ? c.taxRate : LEGACY_TAX;
+}
+
+// Auto jobs take the rate for their city; an unknown city gets Albuquerque's rate and a reminder
+function syncFormTax() {
+  const city = document.getElementById('f-city').value.trim(), cr = ARCSign.cityRate(city);
+  if (formTaxAuto) document.getElementById('f-taxrate').value = String(cr.rate);
+  const note = document.getElementById('f-taxnote');
+  const warn = formTaxAuto && !cr.known;
+  note.textContent = warn ? 'Check tax rate for ' + city + ' (using the Albuquerque rate for now).' : '';
+  note.classList.toggle('warn', warn);
+  calcTotals();
+  refreshProposalSignStatus();
+}
+
 function calcTotals() {
+  const t = liveProposal(), r = t ? mainRate(t) : LEGACY_TAX;
   const p = liveMainPrice();
+  const locked = t && isLocked(t, x => proposalContent(t, x));
+  document.getElementById('calc-tax-label').textContent = taxLine(r, t ? taxCityFor(t, t, locked) : '', 'Tax');
   document.getElementById('calc-cost').textContent = fmt(p.cost);
   document.getElementById('calc-markup').textContent = fmt(p.markup);
   document.getElementById('calc-subtotal').textContent = fmt(p.sub);
@@ -2503,7 +2576,10 @@ function generateProposal(opts) {
   const repair = isRepair(c);
 
   // Customer-facing price only (internal cost and margin never print)
-  const p = priceOf(c);
+  const fp = r => q ? quoteContent(cust, q, r) : proposalContent(cust, r);
+  const rate = q ? quoteRate(cust, q) : mainRate(cust);
+  const taxCity = taxCityFor(q || cust, cust, isLocked(q || cust, fp));
+  const p = priceOf(c, rate);
 
   const fullName = [c.first, c.last].filter(Boolean).join(' ') || 'Valued Customer';
   const addrLine1 = c.address || 'TBD';
@@ -2552,7 +2628,7 @@ function generateProposal(opts) {
         <div class="pbox-rule"></div>
         <!-- Customers see Subtotal, tax and total only; line items and discount stay in the CRM -->
         <div class="pr pr-sub"><span>Subtotal</span><span>${fmt(p.sub)}</span></div>
-        <div class="pr pr-tax"><span>Gross Receipts Tax (7.3125%)</span><span>${fmt(p.tax)}</span></div>
+        <div class="pr pr-tax"><span>${esc(taxLine(rate, taxCity))}</span><span>${fmt(p.tax)}</span></div>
         <div class="pr pr-final"><span class="lbl">Final Investment</span><span class="amt">${fmt(p.total)}</span></div>
         ${payBlock(cust, p.total * 0.5, '50% deposit due', c.arcNum)}
       </div>
@@ -2629,9 +2705,17 @@ function deleteCustomer() {
 // ── EXPORT / IMPORT ────────────────────────────────────
 
 function exportData() {
-  // Same backward-compatible format as storage; arcExt carries the newer fields
+  // Same backward-compatible format as storage: a plain array of customers that
+  // any version can import. arcExt carries newer fields; the first record also
+  // carries arcBackup = { settings, ownerSig } (older versions ignore both).
   const data = customers.map(c => Object.assign(toStored(c), { arcExt: extOf(c) }));
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const st = ARCSign.settings();
+  st.lastBackupAt = Date.now();
+  ARCSign.saveSettings(st);
+  const extra = { version: 2, exportedAt: new Date(st.lastBackupAt).toISOString(), settings: st, ownerSig: ARCSign.ownerSig() };
+  if (data.length) data[0].arcBackup = extra;
+  // No customers yet: the object form still saves settings + signature
+  const blob = new Blob([JSON.stringify(data.length ? data : { customers: [], settings: extra.settings, ownerSig: extra.ownerSig }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const ts = new Date().toISOString().slice(0,10);
@@ -2642,6 +2726,57 @@ function exportData() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('BACKUP EXPORTED');
+  renderBackupBanner();
+}
+
+// Backups: plain array (any version), or { customers, settings, ownerSig }
+function readBackup(data) {
+  if (Array.isArray(data)) {
+    const meta = data.map(d => d && d.arcBackup).find(Boolean) || null;
+    return { customers: data.filter(d => d && typeof d === 'object'), settings: meta && meta.settings, ownerSig: meta && meta.ownerSig };
+  }
+  if (data && typeof data === 'object' && Array.isArray(data.customers)) {
+    return { customers: data.customers, settings: data.settings || null, ownerSig: data.ownerSig || null };
+  }
+  return null;
+}
+
+// Settings + saved signature come back only after a separate yes
+function offerRestoreExtras(b) {
+  const hasSet = b.settings && typeof b.settings === 'object', hasSig = b.ownerSig && b.ownerSig.img;
+  if (!hasSet && !hasSig) return;
+  const what = [hasSet ? 'Settings (payment link, city tax rates)' : '', hasSig ? 'your saved signature' : ''].filter(Boolean).join(' and ');
+  showModal('RESTORE SETTINGS TOO?',
+    `This backup also has ${what}. Restoring replaces what is on this phone now.`,
+    [{ label: 'KEEP CURRENT', cls: 'modal-btn modal-btn-cancel', fn: closeModal },
+     { label: 'RESTORE', cls: 'modal-btn modal-btn-confirm', fn: () => {
+       closeModal();
+       if (hasSet) {
+         const keep = ARCSign.settings().lastBackupAt;   // this phone's own backup date
+         const st = Object.assign({}, b.settings);
+         if (keep) st.lastBackupAt = keep; else delete st.lastBackupAt;
+         ARCSign.saveSettings(st);
+         applyTaxTable();
+       }
+       if (hasSig) ARCSign.saveOwnerSig({ name: b.ownerSig.name || 'Orlando Montanez', img: b.ownerSig.img, at: b.ownerSig.at || new Date().toISOString() });
+       renderBackupBanner();
+       showToast('SETTINGS RESTORED');
+     } }]);
+}
+
+function renderBackupBanner() {
+  const el = document.getElementById('backup-banner');
+  if (!el) return;
+  let dismissed = false;
+  try { dismissed = sessionStorage.getItem('arc_backup_dismissed') === '1'; } catch (e) {}
+  const last = ARCSign.settings().lastBackupAt;
+  const days = last ? Math.floor((Date.now() - last) / 864e5) : null;
+  const due = days === null || days > 7;
+  el.hidden = dismissed || !due || !customers.length;
+  if (el.hidden) return;
+  document.getElementById('bb-go').textContent = days === null
+    ? 'No backup yet — tap to back up.'
+    : `Last backup ${days} day${days === 1 ? '' : 's'} ago — tap to back up.`;
 }
 
 function importData(input) {
@@ -2650,8 +2785,9 @@ function importData(input) {
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const data = JSON.parse(e.target.result);
-      if (!Array.isArray(data)) throw new Error('Invalid format');
+      const backup = readBackup(JSON.parse(e.target.result));
+      if (!backup) throw new Error('Invalid format');
+      const data = backup.customers;
       showModal(
         'IMPORT BACKUP?',
         `This will merge ${data.length} customer records. Existing records with the same ID will be updated. Continue?`,
@@ -2661,7 +2797,7 @@ function importData(input) {
             closeModal();
             const existingIds = new Set(customers.map(c => c.id));
             data.forEach(d => {
-              const nd = normalize(applyExt(d, d && d.arcExt));
+              const nd = normalize(applyExt(d, d.arcExt));
               if (existingIds.has(nd.id)) {
                 const idx = customers.findIndex(c => c.id === nd.id);
                 customers[idx] = nd;
@@ -2672,6 +2808,7 @@ function importData(input) {
             save();
             renderList();
             showToast('IMPORT COMPLETE');
+            offerRestoreExtras(backup);
           }}
         ]
       );
@@ -3163,19 +3300,20 @@ function defaultItems() { return REPAIR_ITEMS.map(l => ({ label: l, amount: '' }
 function isRepair(o) { return !!o && (o.jobType != null ? o.jobType : o.type) === 'repair'; }
 function itemsTotal(items) { return Math.round((items || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0) * 100) / 100; }
 
-function priceOf(o) {
+function priceOf(o, ratePct) {
+  if (ratePct == null) ratePct = LEGACY_TAX;
   const repair = isRepair(o);
   const cost = repair ? 0 : (parseFloat(o.materials) || 0) + (parseFloat(o.labor) || 0) + (parseFloat(o.other) || 0);
   const markup = repair ? 0 : cost * ((parseFloat(o.margin) || 0) / 100);
   const base = repair ? itemsTotal(o.items) : cost + markup;
   const disc = parseFloat(o.discountAmount) || 0;
   const sub = Math.max(0, base - disc);
-  const tax = sub * TAX_RATE;
+  const tax = sub * (ratePct / 100);
   return { cost: cost, markup: markup, base: base, disc: disc, sub: sub, tax: tax, total: sub + tax };
 }
 
-function coPrice(o) {
-  const p = priceOf({ materials: o.materials, labor: o.labor, other: o.other, margin: o.margin });
+function coPrice(o, ratePct) {
+  const p = priceOf({ materials: o.materials, labor: o.labor, other: o.other, margin: o.margin }, ratePct);
   const s = o.direction === 'deduct' ? -1 : 1;
   return { cost: p.cost, markup: p.markup, sub: s * p.sub, tax: s * p.tax, total: s * p.total };
 }
@@ -3185,21 +3323,38 @@ function fmtSigned(n) {
   return (n < 0 ? '− ' : '+ ') + fmt(Math.abs(n));
 }
 
-function taxPctLabel() {
-  return (TAX_RATE * 100).toFixed(4).replace(/0+$/, '').replace(/\.$/, '') + '%';
+function taxPctLabel(ratePct) {
+  return (+ratePct).toFixed(4).replace(/0+$/, '').replace(/\.$/, '') + '%';
 }
+// "Gross Receipts Tax (Santa Fe, 8.4375%)"
+function taxLine(ratePct, city, word) {
+  return (word || 'Gross Receipts Tax') + ' (' + (city ? city + ', ' : '') + taxPctLabel(ratePct) + ')';
+}
+
+// The rate a document is priced at: the rate locked in at signing while the signature
+// still matches the document, otherwise the job's current rate.
+function sigTax(obj) { const g = obj && obj.sig; return g && isFinite(parseFloat(g.taxRate)) ? parseFloat(g.taxRate) : LEGACY_TAX; }
+function isLocked(obj, contentAt) {
+  const g = obj && obj.sig;
+  return !!(g && g.customer) && g.docId === ARCSign.docId(contentAt(sigTax(obj))) && (g.linesId || '') === linesId(obj);
+}
+function lockedOr(obj, jobRate, contentAt) { return isLocked(obj, contentAt) ? sigTax(obj) : jobRate; }
+function mainRate(c) { return lockedOr(c, c.taxRate, r => proposalContent(c, r)); }
+function quoteRate(c, q) { return lockedOr(q, c.taxRate, r => quoteContent(c, q, r)); }
+function coRate(c, o) { return lockedOr(o, c.taxRate, r => coContent(c, o, r)); }
+// City shown on the tax line: the one locked in with the signature, else the job city
+function taxCityFor(obj, c, locked) { return locked && obj.sig && obj.sig.taxCity != null ? obj.sig.taxCity : (c.city || ''); }
 
 // Original contract = the main proposal, read live from the form when it's open
 function liveMainPrice() {
-  const g = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-  return priceOf({ jobType: formJobType, items: formItems, materials: g('f-materials'), labor: g('f-labor'), other: g('f-other'),
-    margin: g('f-margin'), discountAmount: g('f-discount-amount') });
+  const t = liveProposal();
+  return t ? priceOf(t, mainRate(t)) : priceOf({}, LEGACY_TAX);
 }
 
 function contractSummary(c, excludeId, useLive) {
-  const original = useLive ? liveMainPrice().total : priceOf(c).total;
+  const original = useLive ? liveMainPrice().total : priceOf(c, mainRate(c)).total;
   const approved = (c.changeOrders || []).filter(x => x.status === 'Approved' && x.id !== excludeId);
-  const approvedSum = approved.reduce((s, x) => s + coPrice(x).total, 0);
+  const approvedSum = approved.reduce((s, x) => s + coPrice(x, coRate(c, x)).total, 0);
   return { original: original, approvedCount: approved.length, approvedSum: approvedSum, current: original + approvedSum };
 }
 
@@ -3220,7 +3375,7 @@ function renderExtras() {
   if (!ql || !cl) return;
 
   ql.innerHTML = c.quotes.length ? c.quotes.map(q => {
-    const p = priceOf(q);
+    const p = priceOf(q, quoteRate(c, q));
     return `<button class="x-row" type="button" data-kind="quote" data-id="${q.id}">
       <span><span class="x-num">${esc(q.num)}${validSig(q, quoteContent(c, q)) ? '<span class="signed-mark">✍ SIGNED</span>' : ''}</span><span class="x-title">${esc(q.title || 'Untitled quote')}</span></span>
       <span class="x-right"><span class="st-pill ${q.status.toLowerCase()}">${esc(q.status)}</span><span class="x-amt">${fmt(p.total)}</span></span>
@@ -3228,7 +3383,7 @@ function renderExtras() {
   }).join('') : '<div class="x-empty">No additional quotes for this customer.</div>';
 
   cl.innerHTML = c.changeOrders.length ? c.changeOrders.map(o => {
-    const p = coPrice(o);
+    const p = coPrice(o, coRate(c, o));
     return `<button class="x-row" type="button" data-kind="co" data-id="${o.id}">
       <span><span class="x-num">${esc(o.num)}${validSig(o, coContent(c, o)) ? '<span class="signed-mark">✍ SIGNED</span>' : ''}</span><span class="x-title">${esc(o.title || 'Untitled change order')}</span></span>
       <span class="x-right"><span class="st-pill ${o.status.toLowerCase()}">${esc(o.status)}</span><span class="x-amt${p.total < 0 ? ' credit' : ''}">${fmtSigned(p.total)}</span></span>
@@ -3398,19 +3553,20 @@ function xeCalc() {
   if (!it || !box) return;
   const line = (k, v, cls) => `<div class="xe-line${cls ? ' ' + cls : ''}"><span>${k}</span><span>${v}</span></div>`;
   if (xe.kind === 'quote') {
-    const p = priceOf(it);
+    const c = getCurrent(), r = quoteRate(c, it);
+    const p = priceOf(it, r);
     box.innerHTML = (isRepair(it) ? line('Line items', fmt(p.base), 'strong') :
       line('Cost total', fmt(p.cost)) + line('Markup', fmt(p.markup)) + line('Customer price', fmt(p.base), 'strong')) +
       (p.disc > 0 ? line(esc(it.discountLabel || 'Discount'), '− ' + fmt(p.disc)) : '') +
-      line('Gross receipts tax (' + taxPctLabel() + ')', fmt(p.tax)) +
+      line(esc(taxLine(r, c.city, 'Gross receipts tax')), fmt(p.tax)) +
       line('Total investment', fmt(p.total), 'total');
   } else {
-    const c = getCurrent();
-    const p = coPrice(it);
+    const c = getCurrent(), r = coRate(c, it);
+    const p = coPrice(it, r);
     const s = contractSummary(c, it.id, true);
     box.innerHTML = line('Cost total', fmt(p.cost)) + line('Markup', fmt(p.markup)) +
       line(it.direction === 'deduct' ? 'Credit to customer' : 'Added work price', fmtSigned(p.sub), 'strong') +
-      line('Gross receipts tax (' + taxPctLabel() + ')', fmtSigned(p.tax)) +
+      line(esc(taxLine(r, c.city, 'Gross receipts tax')), fmtSigned(p.tax)) +
       line('Change order total', fmtSigned(p.total), 'total') +
       `<div style="height:10px"></div>` +
       line('Contract before this change', fmt(s.current)) +
@@ -3448,7 +3604,9 @@ function touchItem() {
 function generateChangeOrder(o) {
   const c = getCurrent();
   if (!c) return;
-  const p = coPrice(o);
+  const rate = coRate(c, o);
+  const taxCity = taxCityFor(o, c, isLocked(o, r => coContent(c, o, r)));
+  const p = coPrice(o, rate);
   const credit = o.direction === 'deduct';
   const fullName = [c.first, c.last].filter(Boolean).join(' ') || 'Valued Customer';
   const cityZip = cityLine(c);
@@ -3506,7 +3664,7 @@ function generateChangeOrder(o) {
         <div class="pbox-title">Contract Adjustment</div>
         <div class="pbox-rule"></div>
         <div class="pr pr-sub${credit ? ' pr-credit' : ''}"><span>Subtotal</span><span>${fmtSigned(p.sub)}</span></div>
-        <div class="pr pr-tax"><span>Gross Receipts Tax (${taxPctLabel()})</span><span>${fmtSigned(p.tax)}</span></div>
+        <div class="pr pr-tax"><span>${esc(taxLine(rate, taxCity))}</span><span>${fmtSigned(p.tax)}</span></div>
         <div class="pr pr-final"><span class="lbl">Final Investment</span><span class="amt">${fmtSigned(p.total)}</span></div>
         ${credit ? '' : payBlock(c, p.total, 'Change order amount', o.num)}
       </div>
@@ -3664,14 +3822,17 @@ function generateChangeOrder(o) {
 function linesId(o) {
   return isRepair(o) ? ARCSign.docId('R|' + (o.items || []).map(i => i.label + '=' + (parseFloat(i.amount) || 0).toFixed(2)).join(';')) : '';
 }
-function proposalContent(c) {
-  return ['P', c.arcNum, c.first, c.last, c.address, c.scope, c.requests, priceOf(c).total.toFixed(2)].join('|');
+function proposalContent(c, r) {
+  if (r == null) r = mainRate(c);
+  return ['P', c.arcNum, c.first, c.last, c.address, c.scope, c.requests, priceOf(c, r).total.toFixed(2)].join('|');
 }
-function quoteContent(c, q) {
-  return ['Q', q.num, c.first, c.last, c.address, q.title, q.scope, q.requests, priceOf(q).total.toFixed(2)].join('|');
+function quoteContent(c, q, r) {
+  if (r == null) r = quoteRate(c, q);
+  return ['Q', q.num, c.first, c.last, c.address, q.title, q.scope, q.requests, priceOf(q, r).total.toFixed(2)].join('|');
 }
-function coContent(c, o) {
-  return ['CO', o.num, c.first, c.last, c.address, o.title, o.direction, o.reason, o.description, o.days, coPrice(o).total.toFixed(2)].join('|');
+function coContent(c, o, r) {
+  if (r == null) r = coRate(c, o);
+  return ['CO', o.num, c.first, c.last, c.address, o.title, o.direction, o.reason, o.description, o.days, coPrice(o, r).total.toFixed(2)].join('|');
 }
 
 function sigState(obj, content) {
@@ -3695,9 +3856,9 @@ function repairSignExtras(o) {
 function signTarget(c, t) {
   const name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer';
   if (t.kind === 'proposal') {
-    const p = priceOf(c);
+    const p = priceOf(c, c.taxRate);
     return {
-      obj: c, word: 'Proposal', num: c.arcNum, content: proposalContent(c),
+      obj: c, word: 'Proposal', num: c.arcNum, content: proposalContent(c, c.taxRate),
       title: `Proposal for <span>${esc(name)}</span>`, summary: bullets(c.scope),
       amountLabel: 'Final investment', amount: fmt(p.total), extras: repairSignExtras(c),
       apply() {
@@ -3712,17 +3873,17 @@ function signTarget(c, t) {
   if (!it) return null;
   if (t.kind === 'quote') {
     return {
-      obj: it, word: 'Quote', num: it.num, content: quoteContent(c, it),
+      obj: it, word: 'Quote', num: it.num, content: quoteContent(c, it, c.taxRate),
       title: `${esc(it.title || 'Additional work')} <span>for ${esc(name)}</span>`, summary: bullets(it.scope),
-      amountLabel: 'Total investment', amount: fmt(priceOf(it).total), extras: repairSignExtras(it),
+      amountLabel: 'Total investment', amount: fmt(priceOf(it, c.taxRate).total), extras: repairSignExtras(it),
       apply() { it.status = 'Accepted'; },
       openPdf() { generateProposal({ quote: it }); },
     };
   }
-  const p = coPrice(it);
+  const p = coPrice(it, c.taxRate);
   const s = contractSummary(c, it.id, false);
   return {
-    obj: it, word: 'Change order', num: it.num, content: coContent(c, it),
+    obj: it, word: 'Change order', num: it.num, content: coContent(c, it, c.taxRate),
     title: `${esc(it.title || 'Change to contracted work')} <span>for ${esc(name)}</span>`, summary: bullets(it.description),
     amountLabel: 'Revised contract', amount: fmt(s.current + p.total) + '  (' + fmtSigned(p.total) + ')',
     apply() { it.status = 'Approved'; it.approvedAt = Date.now(); },
@@ -3746,7 +3907,7 @@ function startSigning(t) {
     confirmLabel: 'SIGN ' + info.word.toUpperCase(),
     onSign(cust) {
       const finish = contractor => {
-        info.obj.sig = { customer: cust, contractor: contractor || null, docId: ARCSign.docId(info.content) };
+        info.obj.sig = { customer: cust, contractor: contractor || null, docId: ARCSign.docId(info.content), taxRate: c.taxRate, taxCity: c.city || '' };
         if (linesId(info.obj)) info.obj.sig.linesId = linesId(info.obj);
         info.apply();
         logActivity(info.word + ' ' + info.num + ' signed by ' + cust.name + (contractor ? ', countersigned' : ''));
@@ -3911,6 +4072,12 @@ function openSettings() {
   const body = document.getElementById('set-inner');
   body.innerHTML = `
     <div class="form-section">
+      <div class="form-section-title">Tax Rates by City</div>
+      <p class="xsec-note">New jobs get the rate for their city. A city not on this list gets the Albuquerque rate and a reminder to check it. Signed documents keep the rate they were signed at.</p>
+      <div id="set-rates">${ARCSign.taxRates().map(taxRateRow).join('')}</div>
+      <button type="button" class="ri-add" id="set-rate-add">+ ADD CITY</button>
+    </div>
+    <div class="form-section">
       <div class="form-section-title">Pay Online</div>
       <p class="xsec-note">Paste your Stripe payment link. Proposals and quotes show a QR code for the 50% deposit, change orders for their amount, and receipts for any balance due.</p>
       <div class="form-grid cols-1">
@@ -3943,7 +4110,38 @@ function readSettingsForm() {
   if (g('set-paylink')) st.payLink = g('set-paylink').value.trim();
   if (g('set-showpay')) st.showPay = g('set-showpay').checked;
   if (g('set-auto')) st.autoCountersign = g('set-auto').checked;
+  const rows = document.querySelectorAll('#set-rates .tr-row');
+  if (rows.length) {
+    const t = [];
+    rows.forEach(r => {
+      const city = r.querySelector('.tr-city').value.trim(), rate = parseFloat(r.querySelector('.tr-rate').value);
+      if (city && isFinite(rate) && rate >= 0 && rate <= 20 && !t.some(x => x.city.toLowerCase() === city.toLowerCase())) t.push({ city: city, rate: rate });
+    });
+    if (!t.some(x => x.city.toLowerCase() === 'albuquerque')) t.unshift({ city: 'Albuquerque', rate: LEGACY_TAX });
+    st.taxRates = t;
+  }
   return st;
+}
+
+function taxRateRow(r) {
+  const abq = String(r.city).toLowerCase() === 'albuquerque';
+  return `<div class="tr-row">
+    <input type="text" class="tr-city" value="${esc(r.city)}" placeholder="City" aria-label="City"${abq ? ' readonly' : ''}>
+    <input type="number" class="tr-rate" value="${esc(String(r.rate))}" step="0.0001" min="0" max="20" inputmode="decimal" placeholder="0.0000" aria-label="Rate %">
+    ${abq ? '<span></span>' : '<button type="button" class="ri-rm" data-rate-rm aria-label="Remove city">&times;</button>'}
+  </div>`;
+}
+
+// Jobs whose rate still follows their city pick up table changes (signed documents keep theirs)
+function applyTaxTable() {
+  let changed = false;
+  customers.forEach(c => {
+    if (!c.taxAuto || c.id === currentId) return;
+    const r = ARCSign.cityRate(c.city).rate;
+    if (r !== c.taxRate) { c.taxRate = r; changed = true; }
+  });
+  if (changed) save();
+  if (getCurrent()) syncFormTax(true);
 }
 
 function renderSettingsQR() {
@@ -3956,6 +4154,7 @@ function renderSettingsQR() {
 
 function closeSettings() {
   ARCSign.saveSettings(readSettingsForm());
+  applyTaxTable();
   document.getElementById('set-sheet').classList.remove('active');
   showToast('SETTINGS SAVED');
 }
@@ -4019,10 +4218,10 @@ function closeSettings() {
   });
 })();
 
-function refreshProposalSignStatus() {
-  const c = getCurrent(); if (!c || !c.sig) return;
-  // compare against the unsaved form values
-  const tmp = Object.assign({}, c, {
+// The open customer's proposal as it stands in the form (unsaved values)
+function liveProposal() {
+  const c = getCurrent(); if (!c) return null;
+  return Object.assign({}, c, {
     scope: document.getElementById('f-scope').value.trim(), requests: document.getElementById('f-requests').value.trim(),
     materials: document.getElementById('f-materials').value, labor: document.getElementById('f-labor').value,
     other: document.getElementById('f-other').value, margin: document.getElementById('f-margin').value,
@@ -4030,7 +4229,14 @@ function refreshProposalSignStatus() {
     first: document.getElementById('f-first').value.trim(), last: document.getElementById('f-last').value.trim(),
     address: document.getElementById('f-address').value.trim(),
     jobType: formJobType, items: normItems(formItems),
+    city: document.getElementById('f-city').value.trim(), taxRate: formTaxRate(),
   });
+}
+
+function refreshProposalSignStatus() {
+  const c = getCurrent(); if (!c || !c.sig) return;
+  // compare against the unsaved form values
+  const tmp = liveProposal();
   const el2 = document.getElementById('sign-status-proposal');
   if (el2) el2.innerHTML = signStatusHTML(tmp, proposalContent(tmp), { kind: 'proposal' });
 }
@@ -4506,6 +4712,33 @@ function restoreReturn() {
 
 load();
 renderList();
+renderBackupBanner();
+// Ask the browser not to clear this site's storage under pressure (silent; ignore failures)
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
+(function wireTax() {
+  document.getElementById('f-city').addEventListener('input', syncFormTax);
+  // Typing a rate overrides the city rate for this job
+  document.getElementById('f-taxrate').addEventListener('input', () => { formTaxAuto = false; syncFormTax(); });
+  const setInner = document.getElementById('set-inner');
+  setInner.addEventListener('click', e => {
+    const rm = e.target.closest('[data-rate-rm]');
+    if (rm) { e.preventDefault(); rm.closest('.tr-row').remove(); return; }
+    if (e.target.closest('#set-rate-add')) {
+      e.preventDefault();
+      const box = document.getElementById('set-rates');
+      box.insertAdjacentHTML('beforeend', taxRateRow({ city: '', rate: '' }));
+      box.lastElementChild.querySelector('.tr-city').focus();
+    }
+  });
+})();
+(function wireBackupBanner() {
+  document.getElementById('bb-go').addEventListener('click', e => { e.preventDefault(); exportData(); });
+  document.getElementById('bb-x').addEventListener('click', e => {
+    e.preventDefault();
+    try { sessionStorage.setItem('arc_backup_dismissed', '1'); } catch (x) {}
+    document.getElementById('backup-banner').hidden = true;
+  });
+})();
 
 document.getElementById('btn-new-customer').addEventListener('click', function(e) {
   e.preventDefault();
@@ -4524,7 +4757,9 @@ if (_rb) _rb.addEventListener('click', function(e) {
   logActivity('Receipt opened for ' + c.arcNum);
   saveCustomer(false);
   try { sessionStorage.setItem('arc_return', c.id); } catch (err) {}
-  location.href = 'receipt.html?id=' + encodeURIComponent(c.id);
+  // The receipt uses the job's rate: the signed proposal's locked rate when it has one
+  const locked = isLocked(c, r => proposalContent(c, r));
+  location.href = 'receipt.html?id=' + encodeURIComponent(c.id) + '&rate=' + encodeURIComponent(mainRate(c)) + '&tcity=' + encodeURIComponent(taxCityFor(c, c, locked));
 });
 
 restoreReturn();

@@ -420,6 +420,7 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
       <div class="k grand ed">Total</div><div class="v grand ed" id="tTotal">$0.00</div>
       <div class="k out">Subtotal</div><div class="v out" id="oSub">$0.00</div>
       <div class="k out" id="oTaxL">Gross Receipts Tax</div><div class="v out" id="oTax">$0.00</div>
+      <input type="hidden" id="tCity" data-k="tCity" value="">
       <div class="k grand out">Final Investment</div><div class="v grand out" id="oTotal">$0.00</div>
       <div class="k paid">Amount Paid</div>
       <div class="v paid"><input class="f" id="tPaid" data-k="tPaid" inputmode="decimal" value="9,850.00"></div>
@@ -743,7 +744,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   function settings() {
-    var d = { payLink: '', showPay: true, autoCountersign: true };
+    var d = { payLink: '', showPay: true, autoCountersign: true, taxRates: [{ city: 'Albuquerque', rate: 7.3125 }] };
     try { var s = JSON.parse(localStorage.getItem('arc_settings') || '{}'); for (var k in s) d[k] = s[k]; } catch (e) {}
     return d;
   }
@@ -751,8 +752,20 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function ownerSig() { try { return JSON.parse(localStorage.getItem('arc_owner_sig') || 'null'); } catch (e) { return null; } }
   function saveOwnerSig(v) { try { if (v) localStorage.setItem('arc_owner_sig', JSON.stringify(v)); else localStorage.removeItem('arc_owner_sig'); } catch (e) {} }
 
+  // NM gross receipts tax by job city (Settings → Tax rates). Unknown city → Albuquerque's rate, known: false.
+  function cityKey(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, ' ').trim(); }
+  function taxRates() {
+    var t = settings().taxRates;
+    return Array.isArray(t) && t.length ? t : [{ city: 'Albuquerque', rate: 7.3125 }];
+  }
+  function cityRate(city) {
+    var t = taxRates(), k = cityKey(city), abq = 7.3125, hit = null;
+    t.forEach(function (r) { if (cityKey(r.city) === 'albuquerque' && isFinite(+r.rate)) abq = +r.rate; if (k && cityKey(r.city) === k && isFinite(+r.rate)) hit = +r.rate; });
+    return hit != null ? { rate: hit, known: true } : { rate: abq, known: !k };
+  }
+
   window.ARCSign = { open: open, done: done, close: close, docId: docId, stamp: stamp, day: day, qrSvg: qrSvg,
-    settings: settings, saveSettings: saveSettings, ownerSig: ownerSig, saveOwnerSig: saveOwnerSig, tz: tzName };
+    settings: settings, saveSettings: saveSettings, ownerSig: ownerSig, saveOwnerSig: saveOwnerSig, tz: tzName, taxRates: taxRates, cityRate: cityRate };
 })();
 </script>
 <script>
@@ -761,7 +774,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   var CUST_ID = null;
   try { CUST_ID = new URLSearchParams(location.search).get('id'); } catch(e){}
   if (CUST_ID) KEY = 'arc_receipt_' + CUST_ID;
-  var CRM_TAX = '7.3125'; /* matches TAX_RATE in the CRM */
+  /* The job's tax rate (%) and city, handed over by the CRM: the signed proposal's locked rate,
+     else the job's own rate. Opened without them: the customer's saved rate, else 7.3125 */
+  var URLQ = (function(){ try { return new URLSearchParams(location.search); } catch(e){ return null; } })();
+  function jobTax(c){
+    var r = URLQ && parseFloat(URLQ.get('rate'));
+    if (!isFinite(r)) r = c && isFinite(parseFloat(c.taxRate)) ? parseFloat(c.taxRate) : 7.3125;
+    var city = URLQ && URLQ.get('tcity') != null ? URLQ.get('tcity') : (c && c.city) || '';
+    return { rate: String(r), city: city };
+  }
   var rowsEl = document.getElementById('rows');
   var $ = function(id){ return document.getElementById(id); };
 
@@ -829,7 +850,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     $('tTax').textContent = money(tax);
     $('tTotal').textContent = money(total);
     $('oSub').textContent = money(taxable);
-    $('oTaxL').textContent = 'Gross Receipts Tax (' + (num($('tRate').value) ? String(num($('tRate').value)) + '%' : '0%') + ')';
+    var tc = $('tCity').value.trim();
+    $('oTaxL').textContent = 'Gross Receipts Tax (' + (tc ? tc + ', ' : '') + (num($('tRate').value) ? String(num($('tRate').value)) + '%' : '0%') + ')';
     $('oTax').textContent = money(tax);
     $('oTotal').textContent = money(total);
     $('tBal').textContent = money(Math.max(bal,0));
@@ -868,6 +890,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     function mirrored(o, x){ return String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0'; }
     if (e) {
       if (e.state && !c.state) c.state = e.state;
+      if (e.taxRate != null && c.taxRate == null) c.taxRate = e.taxRate;
       if (e.items && !c.items) c.items = e.items;
       if (e.jobType === 'repair' && mirrored(r, e)) c.jobType = 'repair';
       if (e.quotes) (c.quotes || []).forEach(function(q){ var x = e.quotes[q.id]; if (x && x.type === 'repair' && mirrored(q, x)) { q.type = 'repair'; q.items = x.items; } });
@@ -948,7 +971,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var c = crmRecord(CUST_ID);
     if (!c) return false;
     SIG = null;
-    var rate = num(CRM_TAX) / 100;
+    var jt = jobTax(c), rate = num(jt.rate) / 100;
     function isRepair(o){ return (o.jobType != null ? o.jobType : o.type) === 'repair'; }
     function priceOf(o){
       if (isRepair(o)) return Math.round((o.items || []).reduce(function(s, i){ return s + num(i.amount); }, 0) * 100) / 100;
@@ -994,7 +1017,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       sAddr1: 'Same as billing', sAddr2: '', sRoof: c.rooftype || '',
       sSq: sq ? sq.toLocaleString('en-US') + ' sq ft (' + (Math.round(sq/10)/10) + ' squares)' : '',
       sDone: '', wStart: done,
-      tDisc: fx(disc), tRate: CRM_TAX, tPaid: fx(total),
+      tDisc: fx(disc), tRate: jt.rate, tCity: jt.city, tPaid: fx(total),
       pRef: '',
       agree: 'Work performed per signed proposal ' + (c.arcNum || '') + (extras.length ? ' and ' + extras.join(', ') : '') + '. Customer and Agency Roofing Co. agreed to a total contract price of ' + money(total) + (num(c.discountAmount) > 0 && c.discountLabel ? ' (includes ' + c.discountLabel + ')' : '') + '. This receipt confirms payment received against that agreement.',
       rows: rows,

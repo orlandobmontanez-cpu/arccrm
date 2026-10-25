@@ -5,7 +5,10 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 - Live site: https://orlandobmontanez-cpu.github.io/arccrm/ (GitHub Pages, deploys from `main` in about 60 seconds)
 - The live app is `index.html` (must keep that exact name). `receipt.html` is the receipt page.
-- `ARC CRM · Agency Roofing Co..html`, `ARC_CRM_LATEST.html`, `arc_crm_v4_index_1.html`, `current_arc_crm_v4_index.html` are old copies. Do not edit or delete them unless asked.
+- Never add copies of the app to this repo (old ones were deleted): any page on this site shares `localStorage` with the live app
+  and an old copy would overwrite `arc_v3` in an old format if opened.
+- `manifest.webmanifest` **must keep `"display": "browser"`. Never change it to `"standalone"`**: on iOS a standalone home-screen app
+  gets its own separate storage, so the CRM would open empty.
 - `orlandomontanez-create/ARCCRM` is an older, abandoned copy. Never work there.
 
 ## How Orlando wants work done
@@ -24,7 +27,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   and, for PDFs only, html2canvas 1.4.1 + jsPDF 2.5.1 from cdnjs (Orlando asked for this; loaded on demand when a preview or receipt opens).
 - Data lives in the phone's browser `localStorage` (per device, same origin as the site):
   - `arc_v3` — array of customer records (the whole CRM)
-  - `arc_settings` — `{ payLink, showPay, autoCountersign, lastQuoteType }`
+  - `arc_settings` — `{ payLink, showPay, autoCountersign, lastQuoteType, taxRates, lastBackupAt }`
+    (`taxRates` = `[{ city, rate }]` in percent, starts with Albuquerque 7.3125; `lastBackupAt` ms timestamp of the last Export Backup)
   - `arc_owner_sig` — Orlando's saved signature `{ name, img (PNG data URL), at }`
   - `arc_receipt_<customerId>` — receipt drafts
 - `normalize(c)` whitelists customer fields. **Any new field must be added there**, or it is silently dropped on load. Same for `normQuote` / `normCO`.
@@ -32,16 +36,26 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
     Documents always print "City, NM ZIP" via `cityLine(c)`.
   - Quote type: customer `jobType` / quote `type` = `'replace'` (cost + margin) or `'repair'` (`items: [{label, amount}]`, customer prices).
   - Inspections: `completedAt`, `nextInspection`, `lastInspected` (YYYY-MM-DD).
-- Never break existing records: old data must load unchanged. Import/Export backups are a JSON array of customers.
+  - Tax: `taxRate` (percent, per job) and `taxAuto` (rate follows the job city via Settings → Tax rates until typed over).
+    Existing customers keep 7.3125. Stored in `arc_ext` like the other newer fields.
+- Never break existing records: old data must load unchanged. Import/Export backups are a JSON array of customers
+  (importable by every version). The first record carries `arcBackup: { settings, ownerSig }`; import restores those only after a
+  second confirm. Import also accepts `{ customers, settings, ownerSig }`. A banner on the customer list asks for a backup after 7 days.
+- On load the app calls `navigator.storage.persist()` (silent) so the browser is less likely to clear storage.
 - **Revert-safe storage:** `arc_v3` is always written in the previous version's format (`toStored`): repair work is priced there as
   Materials = line-item total, margin 0, and ZIP keeps the way it was typed. Newer fields live in `arc_ext` (`extOf` / `applyExt`),
   which older versions never touch; backups carry them as `arcExt`. Signature `docId` keeps the old formula; repair line items are
   checked by `sig.linesId`. Keep this when adding fields, so reverting `index.html` never loses or misprices a record.
 - Pipeline stages: Lead → Inspected → Proposed → Signed → In Production → Closed (+ Declined).
 - Numbering: customers `ARC-00007`; additional quotes `ARC-00007-Q2…` (Q1 = main proposal); change orders `ARC-00007-CO1…`; receipts `ARC-00007-R`.
-- Pricing: materials + labor + other, plus margin % = customer price; discount applied pre-tax; NM gross receipts tax `TAX_RATE = 0.073125`.
+- Pricing: materials + labor + other, plus margin % = customer price; discount applied pre-tax; NM gross receipts tax is **per job**
+  (`customer.taxRate`), filled from the job city with `ARCSign.cityRate(city)`; an unknown city gets the Albuquerque rate and a
+  "Check tax rate for [city]" note. Never hard-code a rate. Signing locks the rate into the signature (`sig.taxRate`, `sig.taxCity`);
+  a document is priced at its locked rate while its signature matches (`mainRate` / `quoteRate` / `coRate`), so table changes never
+  alter a signed total. Signatures without `taxRate` were made at 7.3125%. The receipt gets the rate from the CRM (`?rate=&tcity=`)
+  and saves it in the draft, so a saved or signed receipt keeps its rate.
 - **Internal cost, labor, and margin are never shown on anything customer-facing.** Every customer-facing price card (proposal, quotes,
-  change orders, repair quotes, receipt print/PDF) shows only: Subtotal, Gross Receipts Tax (7.3125%), Final Investment. No line items,
+  change orders, repair quotes, receipt print/PDF) shows only: Subtotal, Gross Receipts Tax (City, rate%), Final Investment. No line items,
   no "Base Proposal", no discount line. Receipts also keep Amount Paid / Balance Due. Line items stay visible inside the CRM.
 - `save()` catches storage-full errors and warns. Signatures are images (~17 KB each); keep them small.
 
@@ -72,7 +86,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 ## iPhone Safari rules (learned the hard way)
 
 - Use `addEventListener`, not new inline `onclick` handlers.
-- Do not depend on `window.open` — use `openDoc`.
+- Do not depend on `window.open` — documents open in the inline preview (`openPreview`).
 - Use `100dvh` for full-height screens; `env(safe-area-inset-*)` on fixed bars.
 - No `alert` / `confirm` / `prompt`; use in-page modals or two-tap confirm buttons.
 

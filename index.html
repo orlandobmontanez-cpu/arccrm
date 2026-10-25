@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#EAE4DA">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
 <style>
   :root {
     --stone: #EAE4DA;
@@ -681,6 +681,86 @@
   .set-help { font-size: 11px; line-height: 1.55; color: var(--ink-muted); background: var(--stone); border-radius: 6px; padding: 10px 12px; }
   .x-num .signed-mark { color: var(--copper); margin-left: 6px; }
 
+  /* ── PASTE-TO-SORT ── */
+  .sort-box { margin-bottom: 14px; }
+  .sort-toggle {
+    width: 100%; min-height: 48px; border: 1px dashed var(--copper-mid); background: var(--white); color: var(--copper);
+    border-radius: 6px; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.12em; cursor: pointer;
+  }
+  .sort-box.open .sort-toggle { display: none; }
+  .sort-panel { display: none; background: var(--stone); border-radius: 8px; padding: 12px; }
+  .sort-box.open .sort-panel { display: flex; flex-direction: column; gap: 8px; }
+  #sort-text { min-height: 150px; font-size: 16px; line-height: 1.45; }
+  .sort-actions { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
+  .sort-actions .proposal-btn { justify-content: center; min-height: 48px; }
+  .sort-clear { background: var(--white); color: var(--ink-soft); border: 1px solid var(--stone-dark) !important; }
+  .sort-msg { font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
+  .sort-msg:empty { display: none; }
+  .sort-msg b { color: var(--copper); }
+  input.needs, textarea.needs { background: var(--copper-light); border-color: var(--copper-mid); }
+  .sz-row { display: grid; grid-template-columns: 76px 1fr; gap: 12px; }
+
+  /* ── QUOTE TYPE + REPAIR LINE ITEMS ── */
+  .jt-seg button { font-size: 13px; padding: 0 6px; }
+  .ri-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .ri-row { display: grid; grid-template-columns: 1fr 104px 48px; gap: 6px; align-items: center; }
+  .ri-row input { min-height: 48px; }
+  .ri-row .ri-amt { text-align: right; }
+  .ri-rm {
+    min-width: 48px; min-height: 48px; border: 1px solid var(--stone-dark); background: var(--white); border-radius: 5px;
+    color: var(--ink-muted); font-size: 20px; cursor: pointer;
+  }
+  .ri-add {
+    width: 100%; min-height: 48px; border: 1px dashed var(--copper-mid); background: transparent; color: var(--copper);
+    border-radius: 5px; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; cursor: pointer; margin-bottom: 10px;
+  }
+  .xe-cust { background: var(--stone); border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
+  .xe-cust b { display: block; font-size: 14px; color: var(--ink); }
+
+  /* ── MAINTENANCE & INSPECTIONS ── */
+  .maint-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .maint-actions .proposal-btn { flex: 1 1 200px; justify-content: center; min-height: 48px; text-decoration: none; }
+  .maint-actions [hidden] { display: none; }
+  #ins-wrap { padding: 0 16px 10px; flex-shrink: 0; }
+  .btn-ins {
+    width: 100%; min-height: 48px; background: rgba(234,228,218,0.07); border: 1px solid rgba(234,228,218,0.1); border-radius: 6px;
+    color: var(--stone); font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.12em; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .ins-count { background: var(--copper); color: var(--white); border-radius: 10px; padding: 1px 8px 0; font-size: 12px; }
+  .ins-count:empty { display: none; }
+  .ins-list { display: flex; flex-direction: column; gap: 10px; }
+  .ins-card { background: var(--white); border: 1px solid var(--stone-dark); border-radius: 8px; overflow: hidden; }
+  .ins-open {
+    display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; width: 100%; text-align: left; background: none; border: none;
+    padding: 12px 14px; min-height: 56px; cursor: pointer; font-family: 'Inter', sans-serif; color: var(--ink);
+  }
+  .ins-name { font-size: 14px; font-weight: 600; }
+  .ins-addr, .ins-due { font-size: 12px; color: var(--ink-muted); grid-column: 1; }
+  .ins-due { color: var(--ink-soft); }
+  .ins-badge {
+    grid-column: 2; grid-row: 1 / span 2; align-self: start; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.12em;
+    font-size: 12px; padding: 3px 8px 2px; border-radius: 3px; white-space: nowrap;
+  }
+  .ins-badge.overdue { background: var(--danger); color: var(--white); }
+  .ins-badge.soon { background: var(--copper); color: var(--white); }
+  .ins-badge.upcoming { background: var(--stone); color: var(--ink-soft); }
+  .ins-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--stone-dark); border-top: 1px solid var(--stone-dark); }
+  .ins-acts > * {
+    min-height: 48px; display: flex; align-items: center; justify-content: center; background: var(--stone-light);
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--ink); text-decoration: none; border: none; cursor: pointer;
+  }
+  .ins-acts .armed { background: var(--copper); color: var(--white); }
+
+  /* ── DOCUMENT PREVIEW ── */
+  #pv-sheet { z-index: 950; }
+  .pv-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; background: #4A4541; padding: 14px; }
+  .pv-stage { margin: 0 auto; position: relative; overflow: hidden; }
+  .pv-stage iframe { border: 0; display: block; transform-origin: 0 0; background: #4A4541; position: absolute; top: 0; left: 0; }
+  .pv-status { max-width: 640px; margin: 0 auto 8px; font-size: 12px; color: var(--ink-muted); text-align: center; min-height: 16px; }
+  .pv-status.bad { color: var(--danger); }
+  .xe-foot-in.pv-foot-in { grid-template-columns: 1fr 1fr; }
+
   /* ── PROPOSAL PRINT STYLES ── */
   .proposal-wrap { font-family: 'Inter', sans-serif; }
 
@@ -856,6 +936,10 @@
       </select>
     </div>
 
+    <div id="ins-wrap">
+      <button class="btn-ins" id="btn-inspections" type="button">INSPECTIONS <span class="ins-count" id="ins-count"></span></button>
+    </div>
+
     <div id="customer-list"></div>
 
     <div id="sidebar-footer">
@@ -943,6 +1027,18 @@
         <!-- CONTACT INFO -->
         <div class="form-section">
           <div class="form-section-title">Contact Information</div>
+          <div class="sort-box" id="sort-box">
+            <button type="button" class="sort-toggle" id="sort-toggle" aria-expanded="false" aria-controls="sort-panel">📋 PASTE CUSTOMER TEXT</button>
+            <div class="sort-panel" id="sort-panel">
+              <label for="sort-text">Paste customer text</label>
+              <textarea id="sort-text" rows="6" autocomplete="off" placeholder="Paste a text message, email or web form. Sort It finds the name, phone, email and address."></textarea>
+              <div class="sort-actions">
+                <button type="button" class="proposal-btn proposal-btn-primary" id="sort-go">SORT IT</button>
+                <button type="button" class="proposal-btn sort-clear" id="sort-clear">CLEAR</button>
+              </div>
+              <div class="sort-msg" id="sort-msg" role="status" aria-live="polite"></div>
+            </div>
+          </div>
           <div class="form-grid">
             <div class="form-group">
               <label>First Name</label>
@@ -976,8 +1072,16 @@
               <input type="text" id="f-city" placeholder="Albuquerque" value="Albuquerque">
             </div>
             <div class="form-group">
-              <label>State / ZIP</label>
-              <input type="text" id="f-zip" placeholder="NM 87120">
+              <div class="sz-row">
+                <div class="form-group">
+                  <label for="f-state">State</label>
+                  <input type="text" id="f-state" value="NM" placeholder="NM" maxlength="2" autocapitalize="characters" autocomplete="address-level1">
+                </div>
+                <div class="form-group">
+                  <label for="f-zip">ZIP</label>
+                  <input type="text" id="f-zip" placeholder="87120" inputmode="numeric" maxlength="10" autocomplete="postal-code">
+                </div>
+              </div>
             </div>
             <div class="form-group">
               <label>Roof Type</label>
@@ -1017,8 +1121,21 @@
 
         <!-- PRICING -->
         <div class="form-section">
-          <div class="form-section-title">Pricing — Your Cost Breakdown</div>
+          <div class="form-section-title" id="pricing-title">Pricing — Your Cost Breakdown</div>
           <div style="max-width:500px;">
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>Quote type</label>
+              <div class="xe-seg jt-seg" id="f-jobtype">
+                <button type="button" data-jt="replace">REPLACEMENT / COATING</button>
+                <button type="button" data-jt="repair">REPAIR / MAINTENANCE</button>
+              </div>
+            </div>
+            <div id="price-repair" style="display:none;">
+              <div class="xe-hint">Customer prices. Every line with an amount prints on the proposal. No 5-year warranty on repair work.</div>
+              <div class="ri-list" id="f-items"></div>
+              <button type="button" class="ri-add" id="f-items-add">+ ADD LINE</button>
+            </div>
+            <div id="price-replace">
             <div style="font-size:10px;color:var(--ink-muted);margin-bottom:10px;letter-spacing:0.04em;">Enter your actual costs. Customer only sees the Total Investment — not the breakdown.</div>
             <div class="price-row">
               <span class="price-label">Materials</span>
@@ -1043,6 +1160,7 @@
             <div class="price-row" style="background:transparent;border:none;">
               <span class="price-label" style="color:var(--ink-muted);font-size:11px;">Markup Amount</span>
               <span class="price-amount" id="calc-markup" style="margin-left:auto;font-size:12px;color:var(--ink-muted);">$0.00</span>
+            </div>
             </div>
             <div class="price-row" style="background:transparent;border:none;border-top:1px dashed var(--stone-dark);padding-top:10px;margin-top:8px;">
               <span class="price-label" style="color:var(--copper);font-weight:600;">Discount Label</span>
@@ -1079,27 +1197,38 @@
           </div>
         </div>
 
+        <!-- MAINTENANCE (repair jobs) -->
+        <div class="form-section" id="section-maint" style="display:none;">
+          <div class="form-section-title">Maintenance &amp; Inspections</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="f-completed">Job completed</label>
+              <input type="date" id="f-completed">
+            </div>
+            <div class="form-group">
+              <label for="f-nextinsp">Next inspection</label>
+              <input type="date" id="f-nextinsp">
+            </div>
+          </div>
+          <div class="maint-actions">
+            <a class="proposal-btn proposal-btn-secondary gcal-link" id="f-gcal" href="#" target="_blank" rel="noopener">📅 ADD TO GOOGLE CALENDAR</a>
+            <button type="button" class="proposal-btn proposal-btn-primary" id="f-inspected">✓ MARK INSPECTED</button>
+          </div>
+          <p class="xsec-note" style="margin-top:8px;">Closing a repair job sets the next inspection 12 months after it was completed. Mark inspected rolls it forward one year.</p>
+        </div>
+
         <!-- PROPOSAL & EMAIL -->
         <div class="form-section">
           <div class="form-section-title">Proposal</div>
           <div class="proposal-section">
-            <div class="proposal-step-title">STEP 1 — GENERATE PROPOSAL PDF</div>
-            <button class="proposal-btn proposal-btn-primary" id="btn-generate" onclick="generateProposal()">
-              📄 OPEN PROPOSAL PREVIEW
-            </button>
-            <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens a new tab. Uncheck <em>Headers and Footers</em> in the print dialog, then save as PDF.</p>
+            <div class="proposal-step-title">PREVIEW &amp; SEND</div>
+            <button class="proposal-btn proposal-btn-primary" id="btn-generate" type="button">📄 PREVIEW PROPOSAL</button>
+            <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens the proposal on this screen and builds the PDF. Tap Send to email it, or Save PDF to keep a copy in Files.</p>
           </div>
           <div class="proposal-section">
             <div class="proposal-step-title">SIGN IN PERSON</div>
             <div id="sign-status-proposal"></div>
             <button class="proposal-btn proposal-btn-primary" id="btn-sign-proposal" type="button">✍ SIGN PROPOSAL</button>
-          </div>
-          <div class="proposal-section">
-            <div class="proposal-step-title">STEP 2 — SEND EMAIL</div>
-            <button class="proposal-btn proposal-btn-secondary" id="btn-email" onclick="sendEmail()" disabled>
-              ✉ OPEN EMAIL
-            </button>
-            <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens Mail app pre-filled. Attach the PDF you just saved.</p>
           </div>
         </div>
 
@@ -1124,11 +1253,11 @@
         <div class="form-section">
           <div class="form-section-title">Receipt</div>
           <div class="proposal-section">
-            <div class="proposal-step-title">PAYMENT RECEIPT + 5-YR WARRANTY</div>
+            <div class="proposal-step-title" id="receipt-title">PAYMENT RECEIPT + 5-YR WARRANTY</div>
             <button class="proposal-btn proposal-btn-primary" id="btn-receipt" type="button">
               🧾 CREATE RECEIPT
             </button>
-            <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens this customer&#39;s receipt with name, address, scope and price filled in. Edit the lines, then tap Print / Save PDF.</p>
+            <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens this customer&#39;s receipt with name, address, scope and price filled in. Edit the lines, then tap Send Receipt or Save PDF.</p>
             <div class="form-group" style="margin-top:12px;">
               <label for="f-paylink">Payment link for this job (optional)</label>
               <input type="text" id="f-paylink" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Leave blank to use your link from Settings">
@@ -1165,7 +1294,7 @@
   <div class="xe-foot"><div class="xe-foot-in">
     <button class="proposal-btn xe-del" id="xe-del" type="button">DELETE</button>
     <button class="proposal-btn proposal-btn-secondary" id="xe-close2" type="button">SAVE &amp; CLOSE</button>
-    <button class="proposal-btn proposal-btn-primary" id="xe-pdf" type="button">OPEN PDF</button>
+    <button class="proposal-btn proposal-btn-primary" id="xe-pdf" type="button">PREVIEW</button>
   </div></div>
 </div>
 
@@ -1179,6 +1308,31 @@
   <div class="xe-foot"><div class="xe-foot-in" style="grid-template-columns:1fr;">
     <button class="proposal-btn proposal-btn-primary" id="set-close2" type="button">SAVE &amp; CLOSE</button>
   </div></div>
+</div>
+
+<!-- INSPECTIONS -->
+<div class="x-sheet" id="ins-sheet" role="dialog" aria-modal="true" aria-labelledby="ins-title">
+  <div class="xe-head">
+    <div><span class="xe-kind">REPAIR &amp; MAINTENANCE</span><span class="xe-num" id="ins-title">Inspections</span></div>
+    <button class="xe-close" id="ins-close" type="button" aria-label="Close">&times;</button>
+  </div>
+  <div class="xe-body"><div class="xe-inner" id="ins-inner"></div></div>
+</div>
+
+<!-- DOCUMENT PREVIEW + PDF -->
+<div class="x-sheet" id="pv-sheet" role="dialog" aria-modal="true" aria-labelledby="pv-num">
+  <div class="xe-head">
+    <div><span class="xe-kind" id="pv-kind">PREVIEW</span><span class="xe-num" id="pv-num">—</span></div>
+    <button class="xe-close" id="pv-close" type="button" aria-label="Close preview">&times;</button>
+  </div>
+  <div class="pv-body" id="pv-body"><div class="pv-stage" id="pv-stage"></div></div>
+  <div class="xe-foot">
+    <div class="pv-status" id="pv-status" role="status" aria-live="polite"></div>
+    <div class="xe-foot-in pv-foot-in">
+      <button class="proposal-btn proposal-btn-secondary" id="pv-save" type="button" disabled>SAVE PDF</button>
+      <button class="proposal-btn proposal-btn-primary" id="pv-send" type="button" disabled>SEND QUOTE</button>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -1243,6 +1397,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     '.sg-done p{font-size:14px;line-height:1.55;color:' + C.ink2 + ';max-width:30em;margin:0}',
     '.sg-done img{max-width:260px;max-height:80px;margin-top:6px}',
     '.sg-acts{display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;margin-top:8px}',
+    '.sg-notice{font-size:12.5px;line-height:1.55;color:' + C.ink2 + '}',
+    '.sg-notice b{display:block;font-family:"Bebas Neue",Oswald,sans-serif;font-weight:400;font-size:15px;letter-spacing:.16em;color:' + C.copper + ';margin-bottom:6px}',
+    '.sg-notice p{margin:0 0 8px}',
+    '.sg-notice p:last-child{margin:0}',
     '@media (min-width:700px){.sg-body{padding:24px}}'
   ].join('\n');
 
@@ -1327,10 +1485,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!root) return;
     var btn = root.querySelector('#sg-ok'); if (!btn) return;
     var name = root.querySelector('#sg-name'), chk = root.querySelector('#sg-consent');
-    var ok = hasInk() && name && name.value.trim().length > 1 && chk && chk.checked;
+    var ack = root.querySelector('#sg-ack');
+    var ok = hasInk() && name && name.value.trim().length > 1 && chk && chk.checked && (!ack || ack.checked);
     btn.disabled = !ok;
     var hint = root.querySelector('#sg-hint');
-    if (hint) hint.textContent = ok ? '' : (!hasInk() ? 'Sign in the box above.' : (!name.value.trim() ? 'Enter the signer’s full name.' : 'Check the box to agree to sign electronically.'));
+    if (hint) hint.textContent = ok ? '' : (ack && !ack.checked ? 'Check the box: ' + opts.ack : !hasInk() ? 'Sign in the box above.' : (!name.value.trim() ? 'Enter the signer’s full name.' : 'Check the box to agree to sign electronically.'));
   }
 
   // ── Public API ──
@@ -1345,6 +1504,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           (list.length ? '<ul class="sg-list">' + list.slice(0, 4).map(function (l) { return '<li>' + escH(l) + '</li>'; }).join('') + (more ? '<li>…and ' + (list.length - 4) + ' more</li>' : '') + '</ul>' : '') +
           (opts.amount ? '<div class="sg-amt"><span class="sg-amt-l">' + escH(opts.amountLabel || 'Total') + '</span><span class="sg-amt-v">' + escH(opts.amount) + '</span></div>' : '') +
         '</div>' : '') +
+        (opts.notice ? '<div class="sg-card sg-notice">' + opts.notice + '</div>' : '') +
+        (opts.ack ? '<label class="sg-check"><input type="checkbox" id="sg-ack"><span>' + escH(opts.ack) + '</span></label>' : '') +
         '<div class="sg-lbl"><span>' + escH(opts.role || 'Signature') + '</span><button type="button" class="sg-clear" id="sg-clear">CLEAR</button></div>' +
         '<div class="sg-pad" id="sg-pad"><div class="sg-ph">Sign here with your finger</div><div class="sg-base"></div><div class="sg-x">✕</div><canvas id="sg-canvas" aria-label="Signature area"></canvas></div>' +
         '<label class="sg-lbl" for="sg-name" style="margin-top:2px"><span>Printed name</span></label>' +
@@ -1368,6 +1529,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     root.querySelector('#sg-clear').addEventListener('click', function () { strokes = []; redraw(); });
     root.querySelector('#sg-name').addEventListener('input', validate);
     root.querySelector('#sg-consent').addEventListener('change', validate);
+    if (opts.ack) root.querySelector('#sg-ack').addEventListener('change', validate);
     root.querySelector('#sg-cancel').addEventListener('click', function () {
       if (opts.onSkip) { var f = opts.onSkip; f(); } else close();
     });
@@ -1381,6 +1543,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         consent: true,
         method: 'Signed on screen in person'
       };
+      if (opts.ack) res.ackRead = opts.ack;
       if (opts.offerSave) res.saveAsMine = !!(root.querySelector('#sg-save') || {}).checked;
       if (opts.onSign) opts.onSign(res);
     });
@@ -1473,7 +1636,9 @@ const ARC_PHONE = '(505) 900-1711';
 
 let customers = [];
 let currentId = null;
-let proposalDone = false;
+// Quote type + repair line items being edited on the open customer (saved on SAVE)
+let formJobType = 'replace';
+let formItems = [];
 
 // ── DATA ──────────────────────────────────────────────
 
@@ -1516,6 +1681,14 @@ function normalize(c) {
   if (STAGE_MAP[stage]) stage = STAGE_MAP[stage];
   if (STAGES.indexOf(stage) === -1) stage = 'Lead';
 
+  // Older records kept "NM 87120" in the ZIP box — split it into State + ZIP
+  let zip = String(c.zip || '').trim(), state = String(c.state || '').trim().toUpperCase();
+  if (!state) {
+    const m = zip.match(/^([A-Za-z]{2}|new mexico)[\s,]+(\d{5}(?:-\d{4})?)$/i);
+    if (m) { state = /^new mexico$/i.test(m[1]) ? 'NM' : m[1].toUpperCase(); zip = m[2]; }
+    else if (/^[A-Za-z]{2}$/.test(zip)) { state = zip.toUpperCase(); zip = ''; }
+  }
+
   return {
     id: c.id || genId(),
     arcNum: c.arcNum || genArcNum(),
@@ -1528,7 +1701,8 @@ function normalize(c) {
     email: c.email || '',
     address: c.address || '',
     city: c.city || 'Albuquerque',
-    zip: c.zip || '',
+    state: state || 'NM',
+    zip: zip,
     rooftype: c.rooftype || '',
     roofsize: c.roofsize || '',
     scope: c.scope || '',
@@ -1544,6 +1718,11 @@ function normalize(c) {
     proposalSent: c.proposalSent || false,
     sig: c.sig || null,
     payLink: c.payLink || '',
+    jobType: c.jobType === 'repair' ? 'repair' : 'replace',
+    items: normItems(c.items),
+    completedAt: c.completedAt || '',
+    nextInspection: c.nextInspection || '',
+    lastInspected: c.lastInspected || '',
     quotes: Array.isArray(c.quotes) ? c.quotes.map(normQuote) : [],
     changeOrders: Array.isArray(c.changeOrders) ? c.changeOrders.map(normCO) : [],
   };
@@ -1569,6 +1748,7 @@ function getCurrent() {
 // ── RENDER LIST ────────────────────────────────────────
 
 function renderList() {
+  updateInsCount();
   const q = (document.getElementById('search').value || '').toLowerCase();
   const stageF = document.getElementById('stage-select').value;
 
@@ -1612,7 +1792,6 @@ function renderList() {
 
 function selectCustomer(id) {
   currentId = id;
-  proposalDone = false;
   renderList();
   loadDetail();
   showDetail();
@@ -1652,6 +1831,7 @@ function loadDetail() {
   document.getElementById('f-email').value = c.email;
   document.getElementById('f-address').value = c.address;
   document.getElementById('f-city').value = c.city || 'Albuquerque';
+  document.getElementById('f-state').value = c.state || 'NM';
   document.getElementById('f-zip').value = c.zip;
   document.getElementById('f-rooftype').value = c.rooftype;
   document.getElementById('f-roofsize').value = c.roofsize;
@@ -1665,13 +1845,20 @@ function loadDetail() {
   document.getElementById('f-discount-amount').value = c.discountAmount || '';
   document.getElementById('f-scheddate').value = c.scheddate;
   document.getElementById('f-paylink').value = c.payLink || '';
+  document.getElementById('f-completed').value = c.completedAt || '';
+  document.getElementById('f-nextinsp').value = c.nextInspection || '';
+  formJobType = c.jobType;
+  formItems = c.items.length ? c.items.map(x => Object.assign({}, x)) : (c.jobType === 'repair' ? defaultItems() : []);
+  renderJobType();
+  renderFormItems();
+  resetSortBox(c);
 
   syncHeader();
   calcTotals();
   renderPipeline();
   renderActivityLog();
   updateScheduledSection();
-  updateEmailBtn();
+  updateMaintSection();
   renderExtras();
   renderSignStatus();
 }
@@ -1734,6 +1921,7 @@ function stageNext() {
     const next = STAGES[si + 1];
     logActivity('Stage moved to ' + next);
     c.stage = next;
+    if (next === 'Closed') markJobComplete(c);
     saveCustomer(false);
     renderPipeline();
     renderList();
@@ -1793,6 +1981,7 @@ function saveCustomer(toast = true) {
   c.email = document.getElementById('f-email').value.trim();
   c.address = document.getElementById('f-address').value.trim();
   c.city = document.getElementById('f-city').value.trim();
+  c.state = document.getElementById('f-state').value.trim().toUpperCase() || 'NM';
   c.zip = document.getElementById('f-zip').value.trim();
   c.rooftype = document.getElementById('f-rooftype').value;
   c.roofsize = document.getElementById('f-roofsize').value;
@@ -1806,6 +1995,10 @@ function saveCustomer(toast = true) {
   c.discountAmount = document.getElementById('f-discount-amount').value;
   c.scheddate = document.getElementById('f-scheddate').value;
   c.payLink = document.getElementById('f-paylink').value.trim();
+  c.jobType = formJobType;
+  c.items = normItems(formItems);
+  c.completedAt = document.getElementById('f-completed').value;
+  c.nextInspection = document.getElementById('f-nextinsp').value;
   c.updatedAt = Date.now();
 
   save();
@@ -1817,23 +2010,12 @@ function saveCustomer(toast = true) {
 // ── TOTALS ─────────────────────────────────────────────
 
 function calcTotals() {
-  const mat = parseFloat(document.getElementById('f-materials').value) || 0;
-  const lab = parseFloat(document.getElementById('f-labor').value) || 0;
-  const oth = parseFloat(document.getElementById('f-other').value) || 0;
-  const cost = mat + lab + oth;
-  const margin = parseFloat(document.getElementById('f-margin').value) || 0;
-  const markup = cost * (margin / 100);
-  const base = cost + markup;
-  const discount = parseFloat(document.getElementById('f-discount-amount').value) || 0;
-  const sub = Math.max(0, base - discount);
-  const tax = sub * TAX_RATE;
-  const total = sub + tax;
-
-  document.getElementById('calc-cost').textContent = fmt(cost);
-  document.getElementById('calc-markup').textContent = fmt(markup);
-  document.getElementById('calc-subtotal').textContent = fmt(sub);
-  document.getElementById('calc-tax').textContent = fmt(tax);
-  document.getElementById('calc-total').textContent = fmt(total);
+  const p = liveMainPrice();
+  document.getElementById('calc-cost').textContent = fmt(p.cost);
+  document.getElementById('calc-markup').textContent = fmt(p.markup);
+  document.getElementById('calc-subtotal').textContent = fmt(p.sub);
+  document.getElementById('calc-tax').textContent = fmt(p.tax);
+  document.getElementById('calc-total').textContent = fmt(p.total);
   renderContractStrip();
 }
 
@@ -1873,17 +2055,31 @@ const ARC_DOC_CSS = `<style>
   html, body { background: #EAE4DA; }
   body { font-family: 'Inter', sans-serif; color: #1C1A18; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
+  /* One fixed US Letter sheet per .page: stone edge to edge, double rule
+     border, content 0.6in in, signatures + footer pinned to the bottom. */
   .page {
     width: 8.5in;
-    min-height: 11in;
+    height: 11in;
     background: #EAE4DA;
-    padding: 0.5in 0.55in 0.9in;
     position: relative;
-    page-break-after: avoid;
+    overflow: hidden;
+    break-after: page;
+    page-break-after: always;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
-  @media print {
-    html, body { height: auto !important; }
-    .page { min-height: 0; height: auto; padding-bottom: 0.72in; overflow: visible; }
+  .page:last-child { break-after: auto; page-break-after: auto; }
+  .page::before, .page::after { content: ''; position: absolute; pointer-events: none; }
+  .page::before { top: 0.25in; right: 0.25in; bottom: 0.25in; left: 0.25in; border: 1.2pt solid #1C1A18; }
+  .page::after { top: calc(0.25in + 5.2pt); right: calc(0.25in + 5.2pt); bottom: calc(0.25in + 5.2pt); left: calc(0.25in + 5.2pt); border: 0.6pt solid #C97E78; }
+  .pg-in { position: absolute; top: 0.6in; right: 0.6in; bottom: 0.6in; left: 0.6in; display: flex; flex-direction: column; }
+  .flow { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+  .tail { flex: none; display: flex; align-items: flex-end; gap: 0.22in; padding-top: 8px; }
+  .tail-sig { flex: 1 1 auto; min-width: 0; }
+  .poppy { flex: none; width: 0.33in; height: 0.55in; display: block; }
+  @media screen {
+    html, body { background: #4A4541; }
+    .page { margin: 0 auto; }
+    .page + .page { margin-top: 0.25in; }
   }
 
   /* ─── HEADER ─── */
@@ -2013,11 +2209,9 @@ const ARC_DOC_CSS = `<style>
 
   /* ─── FOOTER ─── */
   .pfoot {
-    position: absolute;
-    left: 0.55in;
-    right: 0.55in;
-    bottom: 0.42in;
-    padding-top: 10px;
+    flex: none;
+    margin-top: 6px;
+    padding-top: 9px;
     border-top: 1px solid rgba(151,73,48,0.25);
     display: flex;
     justify-content: space-between;
@@ -2048,7 +2242,125 @@ const ARC_DOC_CSS = `<style>
   .pay-line b { color: #974930; font-weight: 700; }
   .pay-note { font-size: 8.5px; line-height: 1.45; color: #3A3734; }
   .pay-url { font-size: 8px; color: #974930; margin-top: 3px; word-break: break-all; }
+  /* scope bold, repair line items, About This Repair */
+  .b-list li b { font-weight: 600; }
+  .pr-item { padding: 4px 0; }
+  .pr-item span:first-child { padding-right: 10px; }
+  .about { margin-bottom: 4px; }
+  .about-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .about-cols p { font-size: 9.5px; line-height: 1.55; color: #1C1A18; }
+  .about.in-col { margin: 0; }
+  .about.in-col .about-cols { grid-template-columns: 1fr; gap: 6px; }
+  .pbox, .pr, .sig-row, .b-list li, .bottom-row, .about { break-inside: avoid; page-break-inside: avoid; }
 </style>`;
+
+// Poppy mark: bottom-right of every page, just above the footer rule
+const POPPY_SVG = `<svg class="poppy" viewBox="0 0 60 100" aria-hidden="true"><g fill="none" stroke="#1C1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M30 30 C31 50 27 70 32 98"/><path d="M30.5 62 C38 57 43 51 45 43"/><path d="M45 43 C41 39 42 32 46 30 C50 32 50 39 45 43 Z"/><path d="M30 30 C20 31 11 25 12 16 C13 9 21 8 25 13 C26 7 34 5 37 11 C42 8 49 12 48 19 C47 27 39 31 30 30 Z"/><path d="M25 13 C27 18 28 23 30 27"/><path d="M37 11 C35 17 33 22 31 27"/></g><circle cx="30" cy="26.5" r="2.6" fill="#1C1A18"/></svg>`;
+
+const ARC_DOC_FOOT = `<div class="pfoot">
+    <div class="pfoot-left">Built with agency.&nbsp;&nbsp;Driven by obligation.</div>
+    <div class="pfoot-right">Flat Roof Specialists <span class="sep">&bull;</span> Albuquerque, New Mexico</div>
+  </div>`;
+
+// Runs inside each document. If the content doesn't fit one sheet, it moves
+// whole blocks (and whole scope bullets) to page 2 — a line item, the pricing
+// card or the signature block is never split. Signatures go on the last page.
+const ARC_DOC_PAGINATE = `(function () {
+  function fits(f) { return f.scrollHeight <= f.clientHeight + 1; }
+  function done() {
+    document.documentElement.setAttribute('data-pages', document.querySelectorAll('.page').length);
+    window.arcDocReady = true;
+    try { if (window.parent && window.parent !== window && window.parent.arcDocLoaded) window.parent.arcDocLoaded(window); } catch (e) {}
+  }
+  function paginate() {
+    var p1 = document.querySelector('.page'), f1 = p1.querySelector('.flow');
+    if (fits(f1)) return done();
+    // First try a block marked data-alt in the free space under the scope column
+    var alt = f1.querySelector('[data-alt]'), col = f1.querySelector('.body-main');
+    if (alt && col) {
+      var home = alt.nextSibling, parent = alt.parentNode;
+      alt.classList.add('in-col'); col.appendChild(alt);
+      if (fits(f1)) return done();
+      alt.classList.remove('in-col'); parent.insertBefore(alt, home);
+    }
+    var p2 = p1.cloneNode(true), f2 = p2.querySelector('.flow');
+    f2.innerHTML = '';
+    p1.querySelector('.tail-sig').innerHTML = '';
+    p1.parentNode.insertBefore(p2, p1.nextSibling);
+    for (var guard = 0; !fits(f1) && guard < 300; guard++) {
+      var last = f1.lastElementChild;
+      if (!last || last.hasAttribute('data-keep')) break;
+      if (!last.classList.contains('body')) { f2.insertBefore(last, f2.firstChild); continue; }
+      var lists = last.querySelectorAll('.body-main ul.b-list'), ul = lists[lists.length - 1];
+      if (!ul || !ul.children.length) break;
+      var sec = ul.parentNode, key = sec.getAttribute('data-sec');
+      var cont = f2.querySelector('[data-cont="' + key + '"]');
+      if (!cont) {
+        cont = document.createElement('div');
+        cont.className = 'section-block'; cont.setAttribute('data-cont', key);
+        cont.innerHTML = '<div class="sh">' + sec.querySelector('.sh').textContent + ' (continued)</div><div class="sh-rule"></div><ul class="b-list"></ul>';
+        f2.insertBefore(cont, f2.firstChild);
+      }
+      var cul = cont.querySelector('ul');
+      cul.insertBefore(ul.lastElementChild, cul.firstChild);
+      if (!ul.children.length) { cont.querySelector('.sh').textContent = sec.querySelector('.sh').textContent; sec.parentNode.removeChild(sec); }
+    }
+    done();
+  }
+  var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+  ready.then(function () { setTimeout(paginate, 30); });
+})();`;
+
+// Full document page around a flow of content blocks
+function docShell(o) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=816">
+<title>${esc(o.title)}</title>
+${ARC_DOC_ICONS}
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+${ARC_DOC_CSS}
+${o.css || ''}
+</head>
+<body>
+<div class="page"><div class="pg-in">
+  <div class="flow">
+  ${o.flow}
+  </div>
+  <div class="tail"><div class="tail-sig">${o.tail}</div>${POPPY_SVG}</div>
+  ${ARC_DOC_FOOT}
+</div></div>
+<script>${ARC_DOC_PAGINATE}<\/script>
+</body>
+</html>`;
+}
+
+// Scope / notes text → safe HTML: **bold**, markdown escapes ("\.") and stray "**" removed
+function richLine(s) {
+  const t = String(s || '').trim().replace(/^[-*•·]\s+/, '').replace(/\\([\\`*_{}\[\]()#+\-.!>~|])/g, '$1');
+  return esc(t).replace(/\*\*([^*]*?\S)\s*\*\*/g, (m, x) => x.trim() ? '<b>' + x.trim() + '</b>' : '').replace(/\*\*/g, '').trim();
+}
+function plainLine(s) {
+  return String(s || '').trim().replace(/^[-*•·]\s+/, '').replace(/\\([\\`*_{}\[\]()#+\-.!>~|])/g, '$1').replace(/\*\*/g, '').trim();
+}
+function richBullets(text) {
+  return String(text || '').split('\n').map(richLine).filter(Boolean).map(l => `<li>${l}</li>`).join('');
+}
+
+// "City, NM ZIP" — the address line on every document
+function cityLine(c) {
+  const zip = String(c.zip || '').trim();
+  if (!c.city && !zip) return '';
+  return [c.city, [(c.state || 'NM').trim().toUpperCase(), zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+}
+
+const ABOUT_REPAIR = [
+  "Flat-roof leaks rarely come from just one place. Water can travel under the membrane and show up far from where it got in. Based on our inspection and years on flat roofs, we've identified the most likely source and will repair it the right way, with the right materials. We'll always tell you what we found, what we fixed, and anything else we noticed while we were up there.",
+  "Because a leak's true source can be hidden, repair and maintenance work does not include a workmanship warranty, and we can't guarantee it will stop every leak. Any manufacturer material warranty passes through to you. This doesn't limit our responsibility for damage caused by our own negligence. If a larger issue turns up, we'll walk you through your options honestly, with no pressure.",
+];
+const ABOUT_ACK = "I've read About This Repair.";
 
 // Site icon for document tabs (they open as about:blank / blob pages, so links must be absolute)
 const ARC_DOC_ICONS = (() => {
@@ -2059,7 +2371,7 @@ const ARC_DOC_ICONS = (() => {
 })();
 
 const ARC_DOC_HEAD = `<!-- Header -->
-  <div class="ph">
+  <div class="ph" data-keep>
     <div class="ph-left">
       <svg width="74" height="74" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg" style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="1.8" opacity="0.85"/>
@@ -2104,61 +2416,37 @@ function generateProposal(opts) {
     arcNum: q.num, scope: q.scope, requests: q.requests,
     materials: q.materials, labor: q.labor, other: q.other, margin: q.margin,
     discountLabel: q.discountLabel, discountAmount: q.discountAmount,
+    jobType: q.type, items: q.items,
   }) : cust;
   const docWord = q ? 'Quote' : 'Proposal';
+  const repair = isRepair(c);
 
-  // Internal cost breakdown
-  const mat = parseFloat(c.materials) || 0;
-  const lab = parseFloat(c.labor) || 0;
-  const oth = parseFloat(c.other) || 0;
-  const cost = mat + lab + oth;
-  const margin = parseFloat(c.margin) || 0;
-  const markup = cost * (margin / 100);
-  // Customer-facing
-  const baseProposal = cost + markup;
-  const discountAmount = parseFloat(c.discountAmount) || 0;
+  // Customer-facing price only (internal cost and margin never print)
+  const p = priceOf(c);
   const discountLabel = (c.discountLabel || '').trim();
-  const hasDiscount = discountAmount > 0;
-  const subtotal = Math.max(0, baseProposal - discountAmount);
-  const tax = subtotal * TAX_RATE;
-  const total = subtotal + tax;
+  const hasDiscount = p.disc > 0;
 
   const fullName = [c.first, c.last].filter(Boolean).join(' ') || 'Valued Customer';
-  const cityZip = [c.city, c.zip].filter(Boolean).join(', ');
   const addrLine1 = c.address || 'TBD';
-  const addrLine2 = cityZip ? `${cityZip}` : '';
+  const addrLine2 = cityLine(c);
   const today = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
 
-  function toBullets(text) {
-    if (!text) return '';
-    return text.split('\n').filter(l => l.trim()).map(l =>
-      `<li>${esc(l.trim())}</li>`
-    ).join('');
-  }
+  const priceRows = repair
+    ? (c.items || []).filter(i => (parseFloat(i.amount) || 0) !== 0)
+        .map(i => `<div class="pr pr-item"><span>${esc(plainLine(i.label) || 'Repair work')}</span><span>${fmt(parseFloat(i.amount) || 0)}</span></div>`).join('')
+    : `<div class="pr pr-base"><span>Base Proposal</span><span>${fmt(p.base)}</span></div>`;
 
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>${docWord} ${c.arcNum} \u2014 ${fullName}</title>
-${ARC_DOC_ICONS}
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-${ARC_DOC_CSS}
-</head>
-<body>
-
-<div class="page">
-
+  const flow = `
   ${ARC_DOC_HEAD}
 
-  <hr class="div-thin">
+  <hr class="div-thin" data-keep>
 
   <!-- Hero -->
-  <div class="hero-title">${docWord} for <span class="name">${esc(fullName)}</span></div>
-  ${q ? `<div class="hero-sub"><b>${esc(q.title || 'Additional work')}</b> &middot; Additional to proposal ${esc(cust.arcNum)}</div>` : ''}
+  <div class="hero-title" data-keep>${docWord} for <span class="name">${esc(fullName)}</span></div>
+  ${q ? `<div class="hero-sub" data-keep><b>${esc(q.title || (repair ? 'Repair / maintenance' : 'Additional work'))}</b> &middot; Additional to proposal ${esc(cust.arcNum)}</div>` : ''}
 
   <!-- Meta -->
-  <div class="meta">
+  <div class="meta" data-keep>
     <div class="meta-cell">
       <span class="meta-label">${docWord} No.</span>
       <span class="meta-value">${esc(c.arcNum)}</span>
@@ -2179,21 +2467,21 @@ ${ARC_DOC_CSS}
 
   <!-- Body: scope left, pricing right -->
   <div class="body">
-    <div>
-      ${c.scope ? `<div class="section-block"><div class="sh">Scope of Work</div><div class="sh-rule"></div><ul class="b-list">${toBullets(c.scope)}</ul></div>` : '<div class="section-block"><div class="sh">Scope of Work</div><div class="sh-rule"></div><p style="font-size:10.5px;color:#3A3734;line-height:1.6;">Details to be confirmed. Please contact Agency Roofing Co. for a full written scope prior to signing.</p></div>'}
-      ${c.requests ? `<div class="section-block"><div class="sh">Customer Notes</div><div class="sh-rule"></div><ul class="b-list">${toBullets(c.requests)}</ul></div>` : ''}
+    <div class="body-main">
+      ${richBullets(c.scope) ? `<div class="section-block" data-sec="scope"><div class="sh">Scope of Work</div><div class="sh-rule"></div><ul class="b-list">${richBullets(c.scope)}</ul></div>` : '<div class="section-block"><div class="sh">Scope of Work</div><div class="sh-rule"></div><p style="font-size:10.5px;color:#3A3734;line-height:1.6;">Details to be confirmed. Please contact Agency Roofing Co. for a full written scope prior to signing.</p></div>'}
+      ${richBullets(c.requests) ? `<div class="section-block" data-sec="notes"><div class="sh">Customer Notes</div><div class="sh-rule"></div><ul class="b-list">${richBullets(c.requests)}</ul></div>` : ''}
     </div>
     <div>
       <div class="pbox">
         <div class="pbox-title">Pricing Summary</div>
         <div class="pbox-rule"></div>
-        <div class="pr pr-base"><span>Base Proposal</span><span>${fmt(baseProposal)}</span></div>
-        ${hasDiscount ? `<div class="pr pr-discount"><span>${esc(discountLabel || 'Discount')}</span><span>&minus;&nbsp;${fmt(discountAmount)}</span></div>` : ''}
+        ${priceRows}
+        ${hasDiscount ? `<div class="pr pr-discount"><span>${esc(discountLabel || 'Discount')}</span><span>&minus;&nbsp;${fmt(p.disc)}</span></div>` : ''}
         <div class="pr-divider"></div>
-        <div class="pr pr-sub"><span>Subtotal</span><span>${fmt(subtotal)}</span></div>
-        <div class="pr pr-tax"><span>Gross Receipts Tax (7.3125%)</span><span>${fmt(tax)}</span></div>
-        <div class="pr pr-final"><span class="lbl">Final Investment</span><span class="amt">${fmt(total)}</span></div>
-        ${payBlock(cust, total * 0.5, '50% deposit due', c.arcNum)}
+        <div class="pr pr-sub"><span>Subtotal</span><span>${fmt(p.sub)}</span></div>
+        <div class="pr pr-tax"><span>Gross Receipts Tax (7.3125%)</span><span>${fmt(p.tax)}</span></div>
+        <div class="pr pr-final"><span class="lbl">Final Investment</span><span class="amt">${fmt(p.total)}</span></div>
+        ${payBlock(cust, p.total * 0.5, '50% deposit due', c.arcNum)}
       </div>
     </div>
   </div>
@@ -2211,89 +2499,27 @@ ${ARC_DOC_CSS}
       <ul class="b-list">
         <li>${docWord} valid for 30 days from date above.</li>
         <li>50% deposit due upon acceptance; remaining balance due upon completion.</li>
-        <li>Includes standard manufacturer warranty; details provided upon request.</li>
+        ${repair ? '' : '<li>Includes standard manufacturer warranty; details provided upon request.</li>'}
       </ul>
     </div>
   </div>
+  ${repair ? aboutRepairBlock() : ''}`;
 
-  <!-- Signature -->
-  ${docSigSection(q ? validSig(q, quoteContent(cust, q)) : validSig(cust, proposalContent(cust)), false)}
+  const tail = docSigSection(q ? validSig(q, quoteContent(cust, q)) : validSig(cust, proposalContent(cust)), false);
+  const html = docShell({ title: `${docWord} ${c.arcNum} — ${fullName}`, flow, tail });
 
-  <!-- Footer -->
-  <div class="pfoot">
-    <div class="pfoot-left">Built with agency.&nbsp;&nbsp;Driven by obligation.</div>
-    <div class="pfoot-right">Flat Roof Specialists <span class="sep">&bull;</span> Albuquerque, New Mexico</div>
-  </div>
-</div>
-
-<script>
-  window.onload = function() {
-    ${q ? '' : 'if (window.opener && window.opener.arcPDFReady) window.opener.arcPDFReady();'}
-    window.print();
-  };
-<\/script>
-</body>
-</html>`;
-
-
-  if (q) {
-    logActivity('Quote ' + q.num + ' opened');
-    save();
-    renderActivityLog();
-    openDoc(html);
-    return;
-  }
-  proposalDone = true;
-  logActivity('Proposal opened for ' + c.arcNum);
-  saveCustomer(false);
+  logActivity(docWord + ' ' + c.arcNum + ' previewed');
+  save();
   renderActivityLog();
-  updateEmailBtn();
-  openDoc(html);
+  openPreview({ html, word: docWord, num: c.arcNum, cust });
 }
 
-// Mark PDF done from child window callback
-window.arcPDFReady = function() {
-  proposalDone = true;
-  updateEmailBtn();
-};
-
-function updateEmailBtn() {
-  document.getElementById('btn-email').disabled = !proposalDone;
-}
-
-function sendEmail() {
-  const c = getCurrent();
-  if (!c) return;
-  const name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer';
-  const addr = c.address || 'Address on file';
-  const subject = encodeURIComponent(`${name}, here\'s your Agency Roofing proposal. ${c.arcNum}`);
-  const body = encodeURIComponent(
-`Hi ${c.first || name},
-
-Thank you for the opportunity to put together a proposal for your property at ${addr}.
-
-I've attached your proposal (${c.arcNum}) for your review. Please take your time — if you have any questions about the scope, materials, or pricing, don't hesitate to call me directly.
-
-When you're ready to move forward, let me know and we'll get you on the schedule.
-
-Built with agency. Driven by obligation.
-
-Orlando
-Agency Roofing Co.
-${ARC_PHONE}`
-  );
-
-  const to = c.email || '';
-  const link = document.createElement('a');
-  link.href = `mailto:${to}?subject=${subject}&body=${body}`;
-  document.body.appendChild(link);
-  setTimeout(() => {
-    link.click();
-    document.body.removeChild(link);
-    logActivity('Email opened for ' + c.arcNum + (to ? ' to ' + to : ''));
-    saveCustomer(false);
-    renderActivityLog();
-  }, 200);
+function aboutRepairBlock() {
+  return `<div class="section-block about" data-alt>
+    <div class="sh">About This Repair</div>
+    <div class="sh-rule"></div>
+    <div class="about-cols">${ABOUT_REPAIR.map(t => `<p>${esc(t)}</p>`).join('')}</div>
+  </div>`;
 }
 
 // ── DELETE CUSTOMER ────────────────────────────────────
@@ -2318,7 +2544,6 @@ function deleteCustomer() {
   customers = customers.filter(x => x.id !== currentId);
   save();
   currentId = null;
-  proposalDone = false;
   renderList();
   document.getElementById('detail').style.display = 'none';
   document.getElementById('empty-state').style.display = 'flex';
@@ -2424,6 +2649,388 @@ function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+// ── PASTE-TO-SORT ──────────────────────────────────────
+// Pulls name, phone, email and address out of a pasted text, email or web
+// form. Pure function: no AI, no network, no DOM. Tests: tests/sort-it.test.js
+/* SORT-IT:BEGIN */
+const SortIt = (function () {
+  const STATES = 'AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY'.split(' ');
+  const CITIES = ['Albuquerque', 'Rio Rancho', 'Santa Fe', 'Los Lunas', 'Belen', 'Bernalillo', 'Corrales', 'Placitas', 'Tijeras',
+    'Edgewood', 'Moriarty', 'Bosque Farms', 'Peralta', 'Los Ranchos de Albuquerque', 'Los Ranchos', 'Isleta', 'Meadow Lake', 'Tome',
+    'Jarales', 'Veguita', 'Algodones', 'Sandia Park', 'Cedar Crest', 'Estancia', 'Mountainair', 'Socorro', 'Grants', 'Gallup',
+    'Farmington', 'Las Cruces', 'Roswell', 'Taos', 'Española', 'Los Alamos', 'White Rock', 'Clovis', 'Hobbs', 'Alamogordo',
+    'Carlsbad', 'Silver City', 'Las Vegas', 'Raton', 'Truth or Consequences', 'Deming', 'Lovington', 'Portales', 'Artesia',
+    'Aztec', 'Bloomfield', 'Kirtland', 'Ruidoso', 'Tucumcari', 'Santa Rosa', 'Laguna', 'Peña Blanca', 'Cochiti', 'Sandia Heights'];
+  const CITY_ALIAS = { abq: 'Albuquerque', albq: 'Albuquerque', burque: 'Albuquerque', 'rio rancho nm': 'Rio Rancho', espanola: 'Española', 'pena blanca': 'Peña Blanca' };
+  const SUFFIX = new Set(('st street ave avenue av rd road dr drive blvd boulevard bl ln lane ct court cir circle way pl place pkwy parkway ' +
+    'hwy highway loop ter terrace trl trail tr run path pass row sq square plz xing crossing cv cove pt point aly alley walk ' +
+    'expy freeway fwy bnd bend crk creek grn green hts holw hollow knl knoll lndg mdw mdws pike rdg ridge spur sta trce ' +
+    'tpke vw view vis ests estates').split(' '));
+  const QUAD = new Set(['ne', 'nw', 'se', 'sw']);
+  const DIR1 = new Set(['n', 's', 'e', 'w']);
+  const SPANISH = new Set('calle camino avenida paseo via placita plaza corte callejon vereda sendero entrada privada circulo rancho loma cerro arroyo cañada canada'.split(' '));
+  const LOWER_PARTICLES = new Set(['de', 'del', 'la', 'las', 'los', 'el', 'y', 'of', 'or']);
+  const UNIT_RE = /(?:^|[\s,])(apt|apartment|unit|ste|suite|bldg|building|spc|space|lot|trlr|rm|room|fl|floor)\.?\s*#?\s*([A-Za-z0-9][A-Za-z0-9-]*)\b|(?:^|[\s,])#\s*([A-Za-z0-9][A-Za-z0-9-]*)\b/i;
+  const NOT_STREET = new Set(('years yrs year yr sq sqft ft feet foot square squares sf days day weeks week months month am pm story stories ' +
+    'leaks leak spots spot minutes mins min hours hrs hour dollars bucks percent x by times inches in units people kids dogs cats ' +
+    'cars windows doors rooms bedrooms bed bath baths of or and to more less layers layer coats coat gallons gal pieces').split(' '));
+  const ABBR = new Set([...SUFFIX, ...QUAD, ...DIR1, 'apt', 'ste', 'bldg', 'spc', 'rm', 'fl', 'n.m', 'mt', 'ft', 'jr', 'sr', 'dr', 'mr', 'mrs', 'ms']);
+  const STOP = new Set(('a about above after again all also am an any are around as asap at away back be because been before being best ' +
+    'both but by call called calling can cant could day dear did do does doing done dont down during each email emailed estimate ' +
+    'evening morning afternoon night tonight noon for free from get getting give go going good got great had has have having hello ' +
+    'help her here hers hey hi him his home hope house how i if im in info inspection inspect interested into is it its just know ' +
+    'leak leaking leaks let lets like look looking mail me message mobile more most my need needed needs new next no nope not now number of ' +
+    'off office ok okay on once only or other our out over own phone please pls property quote quotes re really regards repair repairs ' +
+    'replace replacement reply roof roofer roofing roofs same see sent service should sincerely so some someone soon still storm sure ' +
+    'text texted than thank thanks thx that the their them then there these they this those through time to today tomorrow too ' +
+    'up us very via want wanted was water we week well were what when where which while who why will with work would yes yet you your ' +
+    'yours iphone ipad android samsung galaxy yahoo gmail outlook hotmail icloud facebook google nextdoor yelp angi angie website ' +
+    'form lead customer client contact name address street city state zip flat commercial residential coating coat tpo epdm owner ' +
+    'manager landlord tenant cheers kind warm respectfully cordially orlando montanez agency co company llc inc corp damage damaged ' +
+    'ceiling kitchen bedroom garage living room bathroom patio carport skylight gutter gutters drain drains parapet stucco membrane ' +
+    'ponding hail wind rain monsoon insurance claim adjuster warranty price cost budget cash check card monday tuesday wednesday ' +
+    'thursday friday saturday sunday january february march april may june july august september october november december ' +
+    'urgent emergency appointment schedule available availability anytime weekend weekday asap thank-you regarding re fwd fw ' +
+    'subject date message sender cell tel telephone home work number numbers best reach reached reaching').split(/\s+/));
+  const HONORIFIC = /^(mr|mrs|ms|miss|mx|dr)\.?$/i;
+  const NAME_SUFFIX = /^(jr|sr|ii|iii|iv)\.?$/i;
+  const NAME_PARTICLE = new Set(['de', 'del', 'la', 'van', 'von', 'der', 'da', 'di', 'le', 'st', 'st.']);
+  const LETTERS = 'A-Za-zÀ-ÖØ-öø-ÿ';
+  const NAME_TOKEN = new RegExp('^[' + LETTERS + "][" + LETTERS + "'.-]*$");
+
+  const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const cityKeys = CITIES.map(c => ({ key: fold(c), name: c })).sort((a, b) => b.key.length - a.key.length);
+  function knownCity(s) {
+    const k = fold(s).replace(/[.,]/g, '').replace(/\s+/g, ' ').trim();
+    if (CITY_ALIAS[k]) return CITY_ALIAS[k];
+    const hit = cityKeys.find(c => c.key === k);
+    return hit ? hit.name : '';
+  }
+  // Known city at the very end of a string → { name, index }
+  function cityAtEnd(s) {
+    const f = fold(s);
+    for (const c of cityKeys.concat(Object.keys(CITY_ALIAS).map(k => ({ key: k, name: CITY_ALIAS[k] })))) {
+      const i = f.length - c.key.length;
+      if (i >= 0 && f.slice(i) === c.key && (i === 0 || /[\s,]/.test(f[i - 1]))) return { name: c.name, index: i };
+    }
+    return null;
+  }
+
+  function clean(text) {
+    return String(text || '')
+      .replace(/\r\n?/g, '\n')
+      .replace(/[​-‍⁠﻿­]/g, '')
+      .replace(/[‘’ʼ`´]/g, "'").replace(/[“”]/g, '"')
+      .replace(/[‐-―−]/g, '-')
+      .replace(/\p{Extended_Pictographic}|\p{Emoji_Modifier}|[︎️⃣]/gu, ' ')
+      .replace(/[  -   　\t]/g, ' ')
+      .replace(/ {2,}/g, ' ');
+  }
+
+  // Word casing: leave Mixed-Case as typed (McMahon, DeVargas); fix ALL CAPS and lowercase
+  function tcWord(w) {
+    if (!w) return w;
+    if (/\d/.test(w)) return /^\d+(st|nd|rd|th)$/i.test(w) ? w.toLowerCase() : w.toUpperCase();
+    if (w !== w.toLowerCase() && w !== w.toUpperCase()) return w;
+    return w.toLowerCase()
+      .replace(/(^|[-'])([a-zà-öø-ÿ])/g, (m, p, ch) => p + ch.toUpperCase())
+      .replace(/^Mc([a-z])/, (m, ch) => 'Mc' + ch.toUpperCase());
+  }
+  function tcPlace(s, isStreet) {
+    const words = s.trim().split(/\s+/);
+    return words.map((w, i) => {
+      const lw = w.toLowerCase().replace(/[.,]$/, '');
+      if (isStreet && i > 0 && ABBR.has(lw)) w = w.replace(/\.$/, '');
+      if (isStreet && QUAD.has(lw)) return lw.toUpperCase();
+      if (isStreet && DIR1.has(lw) && (i === 1 || i === words.length - 1)) return lw.toUpperCase();
+      if (i > 0 && LOWER_PARTICLES.has(lw) && (w === lw || w === w.toUpperCase())) return lw;
+      return tcWord(w);
+    }).join(' ');
+  }
+
+  function fmtPhone(a, b, c) { return '(' + a + ') ' + b + '-' + c; }
+
+  function findPhone(s) {
+    const re = /(^|[^\d])(?:\+?1[\s.\-]*)?(?:\(\s*([2-9]\d{2})\s*\)|([2-9]\d{2}))[\s.\-]*([2-9]\d{2})[\s.\-]*(\d{4})(?!\d)/;
+    let m = s.match(re);
+    if (m) return { value: fmtPhone(m[2] || m[3], m[4], m[5]), start: m.index + m[1].length, end: m.index + m[0].length };
+    // 7-digit local number with a separator → assume Albuquerque's 505
+    m = s.match(/(^|[^\d$#.\-])([2-9]\d{2})[.\-](\d{4})(?![\d\-])/);
+    if (m) return { value: fmtPhone('505', m[2], m[3]), start: m.index + m[1].length, end: m.index + m[0].length };
+    return null;
+  }
+
+  function findEmail(s) {
+    const m = s.match(/(?:mailto:)?([A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})/);
+    return m ? { value: m[1].toLowerCase().replace(/^[.']+|[.']+$/g, ''), start: m.index, end: m.index + m[0].length } : null;
+  }
+
+  const wordsOf = s => s.split(/[\s,]+/).map(w => w.toLowerCase().replace(/[.,;:!?)]+$/, '')).filter(Boolean);
+
+  // Cut an address tail at the end of its sentence ("... NE 87110. We have 2 leaks")
+  function cutSentence(s) {
+    const z = s.match(/\b\d{5}(?:-\d{4})?\b/g);
+    if (z) {
+      const zr = /\b\d{5}(?:-\d{4})?\b/g; let m, last = null, first = true;
+      while ((m = zr.exec(s))) { if (!(first && m.index === 0)) last = m; first = false; }
+      if (last) return s.slice(0, last.index + last[0].length);
+    }
+    const bang = s.search(/[!?;]/);
+    if (bang > -1) s = s.slice(0, bang);
+    const re = /([A-Za-z0-9]+)\.(\s+|$)/g; let m;
+    while ((m = re.exec(s))) {
+      if (!ABBR.has(m[1].toLowerCase()) && !/^[A-Za-z]$/.test(m[1])) return s.slice(0, m.index + m[1].length);
+    }
+    return s;
+  }
+
+  function parseTail(tail) {
+    let s = tail.replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim().replace(/[,.\s]+$/, '');
+    const out = { street: '', city: '', state: '', zip: '' };
+    // ZIP: last 5-digit group that isn't the house number
+    const zr = /\b(\d{5})(?:-\d{4})?\b/g; let m, zipM = null;
+    while ((m = zr.exec(s))) if (m.index > 0) zipM = m;
+    if (zipM) { out.zip = zipM[1]; s = s.slice(0, zipM.index).replace(/[,\s]+$/, ''); }
+    // State right before the ZIP (or at the end)
+    const sm = s.match(/(?:^|[\s,])(new mexico|n\.\s?m\.?|[A-Za-z]{2})\.?$/i);
+    if (sm) {
+      const raw = sm[1], up = raw.replace(/[.\s]/g, '').toUpperCase();
+      let st = '';
+      if (/^new mexico$/i.test(raw) || up === 'NM') st = 'NM';
+      else if (STATES.indexOf(up) > -1 && raw === raw.toUpperCase() && !(up === 'NE' && !/^6[89]/.test(out.zip))) st = up;
+      if (st) { out.state = st; s = s.slice(0, sm.index).replace(/[,\s]+$/, ''); }
+    }
+    if (!out.state && /^8[78]\d{3}$/.test(out.zip) && +out.zip <= 88499) out.state = 'NM';
+    // Unit (Apt 5, Ste 200, #4B)
+    let unit = '';
+    const um = s.match(UNIT_RE);
+    if (um) {
+      const kind = um[1] ? um[1].toLowerCase() : '#';
+      const id = (um[2] || um[3] || '').toUpperCase();
+      const label = { apt: 'Apt', apartment: 'Apt', unit: 'Unit', ste: 'Ste', suite: 'Ste', bldg: 'Bldg', building: 'Bldg', spc: 'Spc', space: 'Spc', lot: 'Lot', trlr: 'Trlr', rm: 'Rm', room: 'Rm', fl: 'Fl', floor: 'Fl' }[kind];
+      unit = label ? label + ' ' + id : '#' + id;
+      const lead = um[0].match(/^[\s,]*/)[0].length;
+      s = (s.slice(0, um.index + lead) + ' , ' + s.slice(um.index + um[0].length)).replace(/\s+/g, ' ');
+    }
+    // City: after the last comma, a known city at the end, or words after the street type
+    let parts = s.split(',').map(x => x.trim()).filter(Boolean);
+    let street = parts.shift() || '';
+    let rest = parts.join(' ').trim();
+    if (!rest) {
+      const ce = cityAtEnd(street);
+      if (ce && ce.index > 0) { rest = street.slice(ce.index); street = street.slice(0, ce.index); }
+      else {
+        const toks = street.split(/\s+/);
+        let cut = -1;
+        for (let i = 1; i < toks.length; i++) {
+          const t = toks[i].toLowerCase().replace(/\.$/, '');
+          if (SUFFIX.has(t) || QUAD.has(t)) cut = i;
+          if (QUAD.has(t)) break;
+        }
+        if (cut > 0 && cut < toks.length - 1) { rest = toks.slice(cut + 1).join(' '); street = toks.slice(0, cut + 1).join(' '); }
+      }
+    }
+    rest = rest.replace(/^(in|at)\s+/i, '').trim();
+    if (rest) {
+      const kc = knownCity(rest);
+      const ok = kc || (!/\d/.test(rest) && rest.split(/\s+/).length <= 3 && !wordsOf(rest).some(w => STOP.has(w)));
+      if (ok) out.city = kc || tcPlace(rest, false);
+    }
+    street = street.trim().replace(/\s+(in|at)$/i, '').replace(/[,.\s]+$/, '');
+    out.street = street ? tcPlace(street, true) + (unit ? ' ' + unit : '') : '';
+    return out;
+  }
+
+  // Find the street address: a house number followed by a street
+  function findAddress(lines) {
+    let best = null;
+    lines.forEach((line, i) => {
+      const re = /(^|[\s,(:])(\d{1,6}(?:-?[A-Za-z](?![A-Za-z]))?)(?=\s+(?:[A-Za-zÀ-ÿ]|\d{1,3}(?:st|nd|rd|th)\b))/g; let m;
+      while ((m = re.exec(line))) {
+        const start = m.index + m[1].length;
+        const rest = line.slice(start);
+        const toks = wordsOf(rest);
+        if (toks.length < 2 || NOT_STREET.has(toks[1])) continue;
+        const pre = line.slice(0, start);
+        if (/[$#]\s*$/.test(pre)) continue;
+        let score = 0;
+        const look = toks.slice(1, 8);
+        if (look.some(t => SUFFIX.has(t))) score += 3;
+        if (look.some(t => QUAD.has(t))) score += 3;
+        if (SPANISH.has(toks[1]) || (DIR1.has(toks[1]) && toks[2] && SPANISH.has(toks[2]))) score += 3;
+        // continuation lines: unit / city / state / zip
+        const tailParts = [rest]; const used = [i];
+        for (let j = i + 1; j < Math.min(lines.length, i + 3); j++) {
+          const ln = lines[j];
+          if (/\d{5}/.test(tailParts.join(' '))) break;
+          if (/@/.test(ln)) break;
+          const isUnit = /^\s*(apt|apartment|unit|ste|suite|bldg|spc|space|lot|#)\b/i.test(ln) || /^\s*#/.test(ln);
+          const hasZip = /\b\d{5}(?:-\d{4})?\s*$/.test(ln);
+          const isCity = !!knownCity(ln.split(',')[0]) || /,\s*(nm|new mexico|[A-Z]{2})\b/i.test(ln);
+          if (isUnit || hasZip || isCity) { tailParts.push(ln); used.push(j); } else break;
+        }
+        const tail = tailParts.join(', ');
+        const cut = cutSentence(tail);
+        if (/\b\d{5}\b/.test(cut.slice(m[2].length))) score += 2;
+        if (/(?:^|[\s,])(nm|new mexico)\b/i.test(cut)) score += 2;
+        if (cityAtEnd(cut.replace(/[\s,]*\d{5}(?:-\d{4})?$/, '').replace(/[\s,]+(nm|new mexico)$/i, ''))) score += 2;
+        if (/^\s*(address|addr|property|location|job ?site|site|street)\b/i.test(pre)) score += 3;
+        if (score >= 3 && (!best || score > best.score)) {
+          best = { score, line: i, start, used, consumed: Math.min(rest.length, cut.length), tail: cut };
+        }
+      }
+    });
+    return best;
+  }
+
+  function nameTokens(str, max) {
+    const toks = str.trim().replace(/\b([A-Za-z])\.(?=\s|$)/g, '$1').split(/\s+/).filter(Boolean);
+    const out = [];
+    while (toks.length && HONORIFIC.test(toks[0])) toks.shift();
+    for (const t0 of toks) {
+      const t = t0.replace(/^[("']+|[)"',.;:!?]+$/g, '');
+      const lt = t.toLowerCase().replace(/'/g, '');
+      if (t === '&' || lt === 'and') { if (out.length) { out.push('&'); continue; } break; }
+      if (!NAME_TOKEN.test(t) || STOP.has(lt) || knownCity(t) && out.length === 0 && toks.length === 1) break;
+      out.push(t);
+      if (out.length >= (max || 4) || /[.,;:!?]$/.test(t0) && t.length > 1) break;
+    }
+    while (out.length && out[out.length - 1] === '&') out.pop();
+    return out;
+  }
+
+  function splitName(toks) {
+    const mixed = toks.some(isCap) && toks.some(x => x === x.toLowerCase() && x !== '&');
+    const t = toks.map((x, i) => i > 0 && NAME_PARTICLE.has(x.toLowerCase()) && (x === x.toLowerCase() && mixed || i > 1 && NAME_PARTICLE.has(toks[i - 1].toLowerCase())) ? x.toLowerCase() : tcWord(x));
+    const amp = t.indexOf('&');
+    if (amp > 0 && amp < t.length - 1) {
+      // "Maria & Daniel Sandoval" → first "Maria & Daniel", last "Sandoval"
+      const after = t.slice(amp + 1);
+      if (after.length >= 2) return { first: t.slice(0, amp).join(' ') + ' & ' + after[0], last: after.slice(1).join(' ') };
+      return { first: t.slice(0, amp).join(' ') + ' & ' + after[0], last: '' };
+    }
+    if (t.length === 1) return { first: t[0], last: '' };
+    let lastStart = t.length - 1;
+    if (NAME_SUFFIX.test(t[lastStart]) && lastStart > 1) lastStart--;
+    for (let i = 1; i < lastStart; i++) if (NAME_PARTICLE.has(t[i].toLowerCase())) { lastStart = i; break; }
+    return { first: t[0], last: t.slice(lastStart).join(' ') };
+  }
+
+  const isCap = s => /^[A-ZÀ-ÖØ-Þ]/.test(s);
+
+  function findName(lines, fullText) {
+    const cands = [];
+    const add = (toks, score, idx) => { if (toks.length) cands.push({ toks, score, idx }); };
+    lines.forEach((ln, i) => {
+      let m = ln.match(/^\s*(?:full |customer |client |contact |your )?name\s*[:\-]\s*(.+)$/i);
+      if (m) {
+        const cm = m[1].match(/^\s*([A-Za-zÀ-ÿ'-]+)\s*,\s*([A-Za-zÀ-ÿ'-]+)\s*$/);
+        add(cm ? [cm[2], cm[1]] : nameTokens(m[1]), 100, i);
+      }
+      // "Serna, Jeanette"
+      m = ln.match(/^\s*([A-Za-zÀ-ÿ'-]{2,}),\s*([A-Za-zÀ-ÿ'-]{2,})(?:\s+([A-Za-z])\.?)?\s*$/);
+      if (m && !STOP.has(m[1].toLowerCase()) && !STOP.has(m[2].toLowerCase()) && !knownCity(m[1]) && !knownCity(m[2]) &&
+          STATES.indexOf(m[2].toUpperCase()) === -1 && !/^new mexico$/i.test(m[2])) add([m[2], m[1]], 70, i);
+    });
+    const flat = fullText.replace(/\n/g, ' . ');
+    let m = flat.match(/\b(?:my name is|my name's|my names|name is|names)\s+(.+)/i);
+    if (m) add(nameTokens(m[1], 4), 90, -1);
+    const weakRe = /\b(?:this is|i am|i'm|im|it's|its)\s+(.+)/ig;
+    while ((m = weakRe.exec(flat))) {
+      const toks = nameTokens(m[1], 3);
+      const caps = toks.every(isCap), initial = toks.some(t => t.length === 1);
+      if (toks.length >= 2 || (toks.length === 1 && isCap(toks[0]))) add(toks, caps && !initial ? (toks.length >= 2 ? 56 : 55) : 40, -1);
+    }
+    // Sign-offs: "Thanks,\nJeanette"
+    lines.forEach((ln, i) => {
+      const sm = ln.match(/^\s*(?:thanks|thank you|thx|ty|regards|best regards|best|sincerely|cheers|respectfully|warm regards|kind regards|-{1,2}|—)\s*[,!.:-]*\s*(.*)$/i);
+      if (!sm) return;
+      const own = nameTokens(sm[1] || '', 3);
+      if (own.length && (sm[1] || '').trim().split(/\s+/).length === own.length) add(own, 50, i);
+      else if (!sm[1] && lines[i + 1]) {
+        const nx = nameTokens(lines[i + 1], 3);
+        if (nx.length && lines[i + 1].trim().split(/\s+/).length === nx.length) add(nx, 52, i + 1);
+      }
+    });
+    // Standalone name-like chunks
+    const chunks = [];
+    lines.forEach((ln, i) => ln.replace(/\b([A-Za-z])\.\s/g, '$1 ').split(/[!?;:,]|\.\s|\.$/).forEach(ch => chunks.push({ ch: ch.trim(), i })));
+    chunks.forEach(({ ch, i }, k) => {
+      let s = ch.replace(/^(hi|hello|hey|dear|good (morning|afternoon|evening)|greetings)\b[\s,]*/i, '').replace(/\s+here$/i, '').trim();
+      if (!s || /\d|@/.test(s)) return;
+      const raw = s.split(/\s+/).filter(w => !HONORIFIC.test(w));
+      const toks = nameTokens(s, 5);
+      if (toks.length !== raw.length) return;
+      const words = toks.filter(t => t !== '&');
+      if (knownCity(s) || (words.length === 1 && knownCity(words[0]))) return;
+      if (words.length >= 2 && words.length <= 4) add(toks, words.every(isCap) ? 60 : 45, i);
+      else if (words.length === 1 && k === 0 && isCap(words[0]) && raw.length === 1) add(toks, 30, i);
+    });
+    if (!cands.length) return null;
+    cands.sort((a, b) => b.score - a.score || a.idx - b.idx);
+    return splitName(cands[0].toks);
+  }
+
+  function parse(text) {
+    const res = { first: '', last: '', phone: '', email: '', street: '', city: '', state: '', zip: '' };
+    let lines = clean(text).split('\n').map(l => l.trim()).filter(Boolean);
+    const labelled = {};
+    // Pull out email + phone first so their digits never look like an address
+    lines = lines.map(ln => {
+      let e;
+      while ((e = findEmail(ln))) { if (!res.email) res.email = e.value; ln = (ln.slice(0, e.start) + ' ' + ln.slice(e.end)).trim(); }
+      let p;
+      while ((p = findPhone(ln))) { if (!res.phone) res.phone = p.value; ln = (ln.slice(0, p.start) + ' ' + ln.slice(p.end)).trim(); }
+      ln = ln.replace(/\b(?:ext|x)\.?\s*\d{1,5}\b/i, ' ');
+      const lm = ln.match(/^(city|town|state|zip|zip code|zipcode|postal code)\s*[:\-]\s*(.+)$/i);
+      if (lm) { labelled[lm[1].toLowerCase().replace(/ ?code$/, '')] = lm[2].trim(); return ''; }
+      return ln.replace(/^(phone|cell|mobile|tel|telephone|email|e-mail|number)\s*[:\-#]?\s*$/i, '').replace(/\s{2,}/g, ' ').trim();
+    }).filter(Boolean);
+
+    const addr = findAddress(lines);
+    if (addr) {
+      const a = parseTail(addr.tail);
+      Object.assign(res, { street: a.street, city: a.city, state: a.state, zip: a.zip });
+      // Remove the address from the text before looking for a name
+      lines = lines.map((ln, i) => {
+        if (i === addr.line) return (ln.slice(0, addr.start) + ' ' + ln.slice(addr.start + addr.consumed)).trim();
+        return addr.used.indexOf(i) > -1 ? '' : ln;
+      }).filter(Boolean);
+    }
+    // City / state / ZIP given on their own
+    if (labelled.city) res.city = knownCity(labelled.city) || tcPlace(labelled.city, false);
+    if (labelled.zip) { const z = labelled.zip.match(/\d{5}/); if (z) res.zip = z[0]; }
+    if (labelled.state) { const st = /^new mexico$/i.test(labelled.state) ? 'NM' : labelled.state.replace(/[.\s]/g, '').toUpperCase(); if (STATES.indexOf(st) > -1) res.state = st; }
+    if (!res.city || !res.zip) {
+      const flat = lines.join(' , ');
+      const m = flat.match(/([A-Za-zÀ-ÿ .']{3,40}?)[\s,]+(nm|new mexico)[\s,]+(\d{5})(?:-\d{4})?\b/i);
+      if (m) {
+        const kc = cityAtEnd(m[1].trim());
+        if (!res.city && kc) res.city = kc.name;
+        if (!res.zip) res.zip = m[3];
+        if (!res.state) res.state = 'NM';
+        lines = lines.map(ln => ln.replace(m[0], ' ').trim()).filter(Boolean);
+      }
+    }
+    if (!res.city && !res.street) {
+      // "I'm over in Rio Rancho" — a known city mentioned anywhere
+      const f = ' ' + fold(lines.join(' ')).replace(/[^a-z ]/g, ' ') + ' ';
+      const hit = cityKeys.find(c => f.indexOf(' ' + c.key + ' ') > -1) ||
+        (/ abq /.test(f) ? { name: 'Albuquerque' } : null);
+      if (hit) res.city = hit.name;
+    }
+    if (!res.state && /^8[78]\d{3}$/.test(res.zip)) res.state = 'NM';
+    if (!res.state && res.city && knownCity(res.city)) res.state = 'NM';
+
+    const nm = findName(lines, lines.join('\n'));
+    if (nm) { res.first = nm.first; res.last = nm.last; }
+    return res;
+  }
+
+  return { parse: parse, fmtPhone: fmtPhone, titleCase: s => tcPlace(s, true) };
+})();
+/* SORT-IT:END */
+
 // ── QUOTES & CHANGE ORDERS ─────────────────────────────
 // Additional quotes: extra proposals for the same customer (ARC-00007-Q2, Q3…)
 // Change orders: priced changes to the signed contract (ARC-00007-CO1, CO2…)
@@ -2442,6 +3049,8 @@ function normQuote(q) {
     margin: (q.margin != null && q.margin !== '') ? q.margin : '30',
     discountLabel: q.discountLabel || '', discountAmount: q.discountAmount || '',
     status: Q_STATUSES.indexOf(q.status) > -1 ? q.status : 'Draft',
+    type: q.type === 'repair' ? 'repair' : 'replace',
+    items: normItems(q.items),
     sig: q.sig || null,
     createdAt: q.createdAt || Date.now(), updatedAt: q.updatedAt || Date.now(),
   };
@@ -2468,10 +3077,21 @@ function localISODate() {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
+// Repair / maintenance quotes: editable customer-price line items instead of cost + margin
+const REPAIR_ITEMS = ['Leak investigation', 'Repair', 'Materials', 'Sealant/flashing', 'Debris removal', 'Maintenance inspection'];
+function normItems(a) {
+  return Array.isArray(a) ? a.filter(Boolean).map(x => ({ label: String(x.label || ''), amount: x.amount != null ? String(x.amount) : '' })) : [];
+}
+function defaultItems() { return REPAIR_ITEMS.map(l => ({ label: l, amount: '' })); }
+// Customers carry jobType, quotes carry type
+function isRepair(o) { return !!o && (o.jobType != null ? o.jobType : o.type) === 'repair'; }
+function itemsTotal(items) { return (items || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0); }
+
 function priceOf(o) {
-  const cost = (parseFloat(o.materials) || 0) + (parseFloat(o.labor) || 0) + (parseFloat(o.other) || 0);
-  const markup = cost * ((parseFloat(o.margin) || 0) / 100);
-  const base = cost + markup;
+  const repair = isRepair(o);
+  const cost = repair ? 0 : (parseFloat(o.materials) || 0) + (parseFloat(o.labor) || 0) + (parseFloat(o.other) || 0);
+  const markup = repair ? 0 : cost * ((parseFloat(o.margin) || 0) / 100);
+  const base = repair ? itemsTotal(o.items) : cost + markup;
   const disc = parseFloat(o.discountAmount) || 0;
   const sub = Math.max(0, base - disc);
   const tax = sub * TAX_RATE;
@@ -2496,7 +3116,7 @@ function taxPctLabel() {
 // Original contract = the main proposal, read live from the form when it's open
 function liveMainPrice() {
   const g = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-  return priceOf({ materials: g('f-materials'), labor: g('f-labor'), other: g('f-other'),
+  return priceOf({ jobType: formJobType, items: formItems, materials: g('f-materials'), labor: g('f-labor'), other: g('f-other'),
     margin: g('f-margin'), discountAmount: g('f-discount-amount') });
 }
 
@@ -2567,8 +3187,10 @@ function newExtra(kind) {
   const c = getCurrent();
   if (!c) return;
   saveCustomer(false);
+  // New quotes start with the type used last
+  const qType = ARCSign.settings().lastQuoteType === 'repair' ? 'repair' : 'replace';
   const item = kind === 'quote'
-    ? normQuote({ num: nextDocNum(c, 'quote') })
+    ? normQuote({ num: nextDocNum(c, 'quote'), type: qType, items: qType === 'repair' ? defaultItems() : [] })
     : normCO({ num: nextDocNum(c, 'co') });
   (kind === 'quote' ? c.quotes : c.changeOrders).push(item);
   save();
@@ -2582,7 +3204,7 @@ function openEditor(kind, id, isNew) {
   if (!it) { xe = null; return; }
   document.getElementById('xe-kind').textContent = kind === 'quote' ? 'ADDITIONAL QUOTE' : 'CHANGE ORDER';
   document.getElementById('xe-num').textContent = it.num;
-  document.getElementById('xe-pdf').textContent = kind === 'quote' ? 'OPEN QUOTE PDF' : 'OPEN CHANGE ORDER PDF';
+  document.getElementById('xe-pdf').textContent = 'PREVIEW';
   const del = document.getElementById('xe-del');
   del.classList.remove('armed'); del.textContent = 'DELETE';
   document.getElementById('xe-inner').innerHTML = (kind === 'quote' ? quoteForm(it) : coForm(it)) + editorSignSection();
@@ -2607,9 +3229,17 @@ function costFields(it) {
     <div class="price-row"><span class="price-label" style="color:var(--copper);font-weight:600;">Margin %</span><input type="number" data-f="margin" value="${v('margin')}" placeholder="0" step="1" min="0" inputmode="decimal"></div>`;
 }
 
+function custCard(c) {
+  const name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer';
+  return `<div class="xe-cust"><b>${esc(name)}</b>${esc([c.address, cityLine(c)].filter(Boolean).join(', ') || 'No address entered')}` +
+    `${c.email || c.phone ? '<br>' + esc([c.email, c.phone].filter(Boolean).join(' · ')) : ''}</div>`;
+}
+
 function quoteForm(q) {
   const v = k => esc(q[k] || '');
+  const repair = q.type === 'repair';
   return `
+    ${custCard(getCurrent())}
     <div class="form-section">
       <div class="form-section-title">Quote</div>
       <div class="form-grid cols-1">
@@ -2628,9 +3258,19 @@ function quoteForm(q) {
       </div>
     </div>
     <div class="form-section">
-      <div class="form-section-title">Pricing — Your Cost Breakdown</div>
+      <div class="form-section-title">Pricing</div>
       <div style="max-width:500px;">
-        ${costFields(q)}
+        <div class="form-group" style="margin-bottom:14px;"><label>Quote type</label>
+          <div class="xe-seg jt-seg">
+            <button type="button" data-qt="replace" class="${repair ? '' : 'on'}">REPLACEMENT / COATING</button>
+            <button type="button" data-qt="repair" class="${repair ? 'on' : ''}">REPAIR / MAINTENANCE</button>
+          </div></div>
+        <div id="xe-repair" style="${repair ? '' : 'display:none;'}">
+          <div class="xe-hint">Customer prices. Every line with an amount prints on the quote. No 5-year warranty on repair work.</div>
+          <div class="ri-list" id="xe-items">${itemRowsHTML(q.items)}</div>
+          <button type="button" class="ri-add" data-ri-add>+ ADD LINE</button>
+        </div>
+        <div id="xe-replace" style="${repair ? 'display:none;' : ''}">${costFields(q)}</div>
         <div class="price-row" style="margin-top:10px;"><span class="price-label" style="color:var(--copper);font-weight:600;">Discount</span><input type="text" data-f="discountLabel" value="${v('discountLabel')}" placeholder="Label, e.g. Veteran" style="font-size:12px;"></div>
         <div class="price-row"><span class="price-label" style="color:var(--copper);font-weight:600;">Amount</span><input type="number" data-f="discountAmount" value="${v('discountAmount')}" placeholder="0.00" step="0.01" min="0" inputmode="decimal"></div>
         <div class="xe-calc" id="xe-calc" style="margin-top:12px;"></div>
@@ -2683,8 +3323,8 @@ function xeCalc() {
   const line = (k, v, cls) => `<div class="xe-line${cls ? ' ' + cls : ''}"><span>${k}</span><span>${v}</span></div>`;
   if (xe.kind === 'quote') {
     const p = priceOf(it);
-    box.innerHTML = line('Cost total', fmt(p.cost)) + line('Markup', fmt(p.markup)) +
-      line('Customer price', fmt(p.base), 'strong') +
+    box.innerHTML = (isRepair(it) ? line('Line items', fmt(p.base), 'strong') :
+      line('Cost total', fmt(p.cost)) + line('Markup', fmt(p.markup)) + line('Customer price', fmt(p.base), 'strong')) +
       (p.disc > 0 ? line(esc(it.discountLabel || 'Discount'), '− ' + fmt(p.disc)) : '') +
       line('Gross receipts tax (' + taxPctLabel() + ')', fmt(p.tax)) +
       line('Total investment', fmt(p.total), 'total');
@@ -2736,24 +3376,15 @@ function generateChangeOrder(o) {
   const s = contractSummary(c, o.id, false);
   const credit = o.direction === 'deduct';
   const fullName = [c.first, c.last].filter(Boolean).join(' ') || 'Valued Customer';
-  const cityZip = [c.city, c.zip].filter(Boolean).join(', ');
+  const cityZip = cityLine(c);
   const d = o.date ? new Date(o.date + 'T12:00:00') : new Date();
   const dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const days = parseInt(o.days, 10) || 0;
-  const bullets = t => (t || '').split('\n').filter(l => l.trim()).map(l => `<li>${esc(l.trim())}</li>`).join('');
   const schedule = days > 0
     ? `Adds ${days} working day${days === 1 ? '' : 's'} to the project schedule.`
     : 'No change to the project schedule.';
 
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Change Order ${esc(o.num)} — ${esc(fullName)}</title>
-${ARC_DOC_ICONS}
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-${ARC_DOC_CSS}
-<style>
+  const css = `<style>
   .pr-credit { color: #2A5C3A; }
   .pr-change { font-weight: 600; padding-top: 8px; }
   .pr-prior { color: #3A3734; }
@@ -2764,22 +3395,20 @@ ${ARC_DOC_CSS}
   .esig-audit { margin-top: 8px; }
   .sig-row + .sig-row { margin-top: 10px; }
   .bottom-row .b-list li { padding: 2px 0 2px 14px; }
-  @media print { .page { padding-bottom: 0.66in; } }
   .hero-title { margin-bottom: 18px; }
   .meta { margin-bottom: 20px; }
   .co-type.credit { border-color: #2A5C3A; color: #2A5C3A; }
   .para { font-size: 10.5px; line-height: 1.6; color: #1C1A18; }
-</style>
-</head>
-<body>
-<div class="page">
+</style>`;
+
+  const flow = `
   ${ARC_DOC_HEAD}
-  <hr class="div-thin">
+  <hr class="div-thin" data-keep>
 
-  <div class="hero-title">Change Order for <span class="name">${esc(fullName)}</span></div>
-  <div class="hero-sub"><b>${esc(o.title || 'Change to contracted work')}</b> &middot; Amends proposal ${esc(c.arcNum)}</div>
+  <div class="hero-title" data-keep>Change Order for <span class="name">${esc(fullName)}</span></div>
+  <div class="hero-sub" data-keep><b>${esc(o.title || 'Change to contracted work')}</b> &middot; Amends proposal ${esc(c.arcNum)}</div>
 
-  <div class="meta">
+  <div class="meta" data-keep>
     <div class="meta-cell"><span class="meta-label">Change Order No.</span><span class="meta-value">${esc(o.num)}</span></div>
     <div class="meta-cell"><span class="meta-label">Date</span><span class="meta-value">${dateStr}</span></div>
     <div class="meta-cell"><span class="meta-label">Project Address</span><span class="meta-value">${esc(c.address || 'TBD')}${cityZip ? '<br>' + esc(cityZip) : ''}</span></div>
@@ -2787,12 +3416,13 @@ ${ARC_DOC_CSS}
   </div>
 
   <div class="body">
-    <div>
+    <div class="body-main">
       <span class="co-type${credit ? ' credit' : ''}">${credit ? 'Credit to Customer' : 'Added Work'}</span>
       <div class="section-block"><div class="sh">Reason for Change</div><div class="sh-rule"></div>
         <p class="para">${esc(o.reason)}.</p></div>
-      <div class="section-block"><div class="sh">Description of Change</div><div class="sh-rule"></div>
-        ${o.description ? `<ul class="b-list">${bullets(o.description)}</ul>` : '<p class="para">As discussed on site with the customer.</p>'}</div>
+      ${richBullets(o.description)
+        ? `<div class="section-block" data-sec="desc"><div class="sh">Description of Change</div><div class="sh-rule"></div><ul class="b-list">${richBullets(o.description)}</ul></div>`
+        : '<div class="section-block"><div class="sh">Description of Change</div><div class="sh-rule"></div><p class="para">As discussed on site with the customer.</p></div>'}
       <div class="section-block"><div class="sh">Schedule Impact</div><div class="sh-rule"></div>
         <p class="para">${schedule}</p></div>
     </div>
@@ -2823,40 +3453,18 @@ ${ARC_DOC_CSS}
         <li>All other terms of the original agreement remain in effect.</li>
         <li>${credit ? 'Credit is applied to the final payment.' : 'Change order amount is due with the final payment unless agreed otherwise in writing.'}</li>
         <li>Pricing valid for 15 days from the date above.</li>
-        ${credit ? '' : '<li>Work in this change order is covered by our 5-year workmanship warranty.</li>'}
+        ${credit || isRepair(c) ? '' : '<li>Work in this change order is covered by our 5-year workmanship warranty.</li>'}
       </ul>
     </div>
-  </div>
+  </div>`;
 
-  ${docSigSection(validSig(o, coContent(c, o)), true, 'Orlando Montanez, Owner')}
+  const tail = docSigSection(validSig(o, coContent(c, o)), true, 'Orlando Montanez, Owner');
+  const html = docShell({ title: `Change Order ${o.num} — ${fullName}`, css, flow, tail });
 
-  <div class="pfoot">
-    <div class="pfoot-left">Built with agency.&nbsp;&nbsp;Driven by obligation.</div>
-    <div class="pfoot-right">Flat Roof Specialists <span class="sep">&bull;</span> Albuquerque, New Mexico</div>
-  </div>
-</div>
-<script>window.onload = function() { window.print(); };<\/script>
-</body>
-</html>`;
-
-  logActivity('Change order ' + o.num + ' opened');
+  logActivity('Change order ' + o.num + ' previewed');
   save();
   renderActivityLog();
-  openDoc(html);
-}
-
-// Open a generated document. New tab where allowed; iPhone Safari blocks that,
-// so fall back to opening it in this tab (Back returns to the same customer).
-function openDoc(html) {
-  let win = null;
-  try { win = window.open('', '_blank'); } catch (e) { win = null; }
-  if (win) {
-    win.document.write(html);
-    win.document.close();
-    return;
-  }
-  try { sessionStorage.setItem('arc_return', currentId || ''); } catch (e) {}
-  location.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+  openPreview({ html, word: 'Change Order', num: o.num, cust: c });
 }
 
 // ── Events (addEventListener — iOS Safari safe) ──
@@ -2903,17 +3511,50 @@ function openDoc(html) {
       it.direction = db.dataset.dir;
       inner.querySelectorAll('[data-dir]').forEach(b => b.classList.toggle('on', b === db));
       touchItem(); xeCalc();
+      return;
+    }
+    const tb = e.target.closest('[data-qt]');
+    if (tb) {
+      it.type = tb.dataset.qt;
+      if (it.type === 'repair' && !it.items.length) it.items = defaultItems();
+      rememberQuoteType(it.type);
+      inner.querySelectorAll('[data-qt]').forEach(b => b.classList.toggle('on', b === tb));
+      document.getElementById('xe-repair').style.display = it.type === 'repair' ? '' : 'none';
+      document.getElementById('xe-replace').style.display = it.type === 'repair' ? 'none' : '';
+      document.getElementById('xe-items').innerHTML = itemRowsHTML(it.items);
+      touchItem(); xeCalc(); renderEditorSign();
+      return;
+    }
+    const rm = e.target.closest('[data-ri-rm]');
+    if (rm) {
+      it.items.splice(+rm.dataset.riRm, 1);
+      document.getElementById('xe-items').innerHTML = itemRowsHTML(it.items);
+      touchItem(); xeCalc(); renderEditorSign();
+      return;
+    }
+    if (e.target.closest('[data-ri-add]')) {
+      it.items.push({ label: '', amount: '' });
+      const list = document.getElementById('xe-items');
+      list.innerHTML = itemRowsHTML(it.items);
+      list.lastElementChild.querySelector('input').focus();
+      touchItem();
     }
   });
+  inner.addEventListener('input', e => {
+    const k = e.target.dataset && e.target.dataset.ri;
+    const it = xeItem();
+    if (!k || !it) return;
+    it.items[+e.target.closest('.ri-row').dataset.i][k] = e.target.value;
+    touchItem(); xeCalc();
+  });
 
+  // Preview opens on top of the editor; closing it comes back here
   on('xe-pdf', e => {
     e.preventDefault();
     const it = xeItem();
     if (!it) return;
-    xe.touched = true;
-    const kind = xe.kind;
-    closeEditor();
-    if (kind === 'quote') generateProposal({ quote: it });
+    touchItem();
+    if (xe.kind === 'quote') generateProposal({ quote: it });
     else generateChangeOrder(it);
   });
 
@@ -2947,11 +3588,15 @@ function openDoc(html) {
 // and price at signing — if either changes later, the signature no longer
 // prints and the CRM asks for a new one.
 
+// Replacement fingerprints are unchanged, so existing signatures stay valid
+function repairContent(o) {
+  return isRepair(o) ? '|R|' + (o.items || []).map(i => i.label + '=' + (parseFloat(i.amount) || 0).toFixed(2)).join(';') : '';
+}
 function proposalContent(c) {
-  return ['P', c.arcNum, c.first, c.last, c.address, c.scope, c.requests, priceOf(c).total.toFixed(2)].join('|');
+  return ['P', c.arcNum, c.first, c.last, c.address, c.scope, c.requests, priceOf(c).total.toFixed(2)].join('|') + repairContent(c);
 }
 function quoteContent(c, q) {
-  return ['Q', q.num, c.first, c.last, c.address, q.title, q.scope, q.requests, priceOf(q).total.toFixed(2)].join('|');
+  return ['Q', q.num, c.first, c.last, c.address, q.title, q.scope, q.requests, priceOf(q).total.toFixed(2)].join('|') + repairContent(q);
 }
 function coContent(c, o) {
   return ['CO', o.num, c.first, c.last, c.address, o.title, o.direction, o.reason, o.description, o.days, coPrice(o).total.toFixed(2)].join('|');
@@ -2963,7 +3608,15 @@ function sigState(obj, content) {
 }
 function validSig(obj, content) { return sigState(obj, content) === 'valid' ? obj.sig : null; }
 
-function bullets(t) { return (t || '').split('\n').map(l => l.trim()).filter(Boolean); }
+function bullets(t) { return (t || '').split('\n').map(plainLine).filter(Boolean); }
+
+// Repair / maintenance work: customer reads About This Repair and must tick the box to sign
+function repairSignExtras(o) {
+  return isRepair(o) ? {
+    notice: '<b>About This Repair</b>' + ABOUT_REPAIR.map(t => '<p>' + esc(t) + '</p>').join(''),
+    ack: ABOUT_ACK,
+  } : {};
+}
 
 // What's being signed, for the signing screen and the documents
 function signTarget(c, t) {
@@ -2973,7 +3626,7 @@ function signTarget(c, t) {
     return {
       obj: c, word: 'Proposal', num: c.arcNum, content: proposalContent(c),
       title: `Proposal for <span>${esc(name)}</span>`, summary: bullets(c.scope),
-      amountLabel: 'Final investment', amount: fmt(p.total),
+      amountLabel: 'Final investment', amount: fmt(p.total), extras: repairSignExtras(c),
       apply() {
         const i = STAGES.indexOf(c.stage);
         if (c.stage !== 'Declined' && i > -1 && i < STAGES.indexOf('Signed')) { c.stage = 'Signed'; logActivity('Stage → Signed'); }
@@ -2988,7 +3641,7 @@ function signTarget(c, t) {
     return {
       obj: it, word: 'Quote', num: it.num, content: quoteContent(c, it),
       title: `${esc(it.title || 'Additional work')} <span>for ${esc(name)}</span>`, summary: bullets(it.scope),
-      amountLabel: 'Total investment', amount: fmt(priceOf(it).total),
+      amountLabel: 'Total investment', amount: fmt(priceOf(it).total), extras: repairSignExtras(it),
       apply() { it.status = 'Accepted'; },
       openPdf() { generateProposal({ quote: it }); },
     };
@@ -3015,6 +3668,7 @@ function startSigning(t) {
   ARCSign.open({
     kicker: 'SIGN · ' + info.word.toUpperCase(), num: info.num,
     title: info.title, summary: info.summary, amountLabel: info.amountLabel, amount: info.amount,
+    notice: info.extras && info.extras.notice, ack: info.extras && info.extras.ack,
     role: 'Customer signature', name: custName,
     confirmLabel: 'SIGN ' + info.word.toUpperCase(),
     onSign(cust) {
@@ -3147,7 +3801,7 @@ function docSigSection(sig, contractorAlways, contractorPrinted) {
   if (contractorAlways || os) html += row('Agency Roofing Co.', os, contractorPrinted);
   html += '</div>';
   if (cs) {
-    html += `<div class="esig-audit"><b>Electronically signed.</b> Customer: ${esc(cs.name)}, ${esc(ARCSign.stamp(cs.at))}, signed on screen in person with consent to sign electronically.` +
+    html += `<div class="esig-audit"><b>Electronically signed.</b> Customer: ${esc(cs.name)}, ${esc(ARCSign.stamp(cs.at))}, signed on screen in person with consent to sign electronically${cs.ackRead ? ` and confirmed “${esc(cs.ackRead)}”` : ''}.` +
       (os ? ` Agency Roofing Co.: ${esc(os.name)}, ${esc(ARCSign.stamp(os.at))}.` : '') +
       ` Document ID ${esc(sig.docId)}.</div>`;
   }
@@ -3286,21 +3940,476 @@ function closeSettings() {
   // Proposal status updates live as scope or price is edited
   ['f-scope', 'f-requests', 'f-materials', 'f-labor', 'f-other', 'f-margin', 'f-discount-amount', 'f-first', 'f-last', 'f-address'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('input', () => {
-      const c = getCurrent(); if (!c || !c.sig) return;
-      // compare against the unsaved form values
-      const tmp = Object.assign({}, c, {
-        scope: document.getElementById('f-scope').value.trim(), requests: document.getElementById('f-requests').value.trim(),
-        materials: document.getElementById('f-materials').value, labor: document.getElementById('f-labor').value,
-        other: document.getElementById('f-other').value, margin: document.getElementById('f-margin').value,
-        discountAmount: document.getElementById('f-discount-amount').value,
-        first: document.getElementById('f-first').value.trim(), last: document.getElementById('f-last').value.trim(),
-        address: document.getElementById('f-address').value.trim(),
-      });
-      const el2 = document.getElementById('sign-status-proposal');
-      if (el2) el2.innerHTML = signStatusHTML(c, proposalContent(tmp), { kind: 'proposal' });
-    });
+    if (el) el.addEventListener('input', refreshProposalSignStatus);
   });
+})();
+
+function refreshProposalSignStatus() {
+  const c = getCurrent(); if (!c || !c.sig) return;
+  // compare against the unsaved form values
+  const tmp = Object.assign({}, c, {
+    scope: document.getElementById('f-scope').value.trim(), requests: document.getElementById('f-requests').value.trim(),
+    materials: document.getElementById('f-materials').value, labor: document.getElementById('f-labor').value,
+    other: document.getElementById('f-other').value, margin: document.getElementById('f-margin').value,
+    discountAmount: document.getElementById('f-discount-amount').value,
+    first: document.getElementById('f-first').value.trim(), last: document.getElementById('f-last').value.trim(),
+    address: document.getElementById('f-address').value.trim(),
+    jobType: formJobType, items: normItems(formItems),
+  });
+  const el2 = document.getElementById('sign-status-proposal');
+  if (el2) el2.innerHTML = signStatusHTML(c, proposalContent(tmp), { kind: 'proposal' });
+}
+
+// ── QUOTE TYPE + REPAIR LINE ITEMS ─────────────────────
+function itemRowsHTML(items) {
+  return items.map((it, i) => `<div class="ri-row" data-i="${i}">
+      <input type="text" data-ri="label" value="${esc(it.label)}" placeholder="Line item" aria-label="Line item ${i + 1}">
+      <input type="number" class="ri-amt" data-ri="amount" value="${esc(it.amount)}" placeholder="0.00" step="0.01" min="0" inputmode="decimal" aria-label="Amount for line ${i + 1}">
+      <button type="button" class="ri-rm" data-ri-rm="${i}" aria-label="Remove line ${i + 1}">&times;</button>
+    </div>`).join('');
+}
+
+function rememberQuoteType(t) {
+  const st = ARCSign.settings();
+  if (st.lastQuoteType !== t) { st.lastQuoteType = t; ARCSign.saveSettings(st); }
+}
+
+function renderJobType() {
+  const repair = formJobType === 'repair';
+  document.querySelectorAll('#f-jobtype [data-jt]').forEach(b => b.classList.toggle('on', b.dataset.jt === formJobType));
+  document.getElementById('price-repair').style.display = repair ? '' : 'none';
+  document.getElementById('price-replace').style.display = repair ? 'none' : '';
+  document.getElementById('pricing-title').textContent = repair ? 'Pricing — Repair Line Items' : 'Pricing — Your Cost Breakdown';
+  document.getElementById('receipt-title').textContent = repair ? 'PAYMENT RECEIPT' : 'PAYMENT RECEIPT + 5-YR WARRANTY';
+}
+
+function renderFormItems() {
+  document.getElementById('f-items').innerHTML = itemRowsHTML(formItems);
+}
+
+function setFormJobType(t) {
+  formJobType = t === 'repair' ? 'repair' : 'replace';
+  if (formJobType === 'repair' && !formItems.length) formItems = defaultItems();
+  rememberQuoteType(formJobType);
+  renderJobType();
+  renderFormItems();
+  calcTotals();
+  updateMaintSection();
+  refreshProposalSignStatus();
+}
+
+(function wireJobType() {
+  document.getElementById('f-jobtype').addEventListener('click', e => {
+    const b = e.target.closest('[data-jt]');
+    if (b) setFormJobType(b.dataset.jt);
+  });
+  const list = document.getElementById('f-items');
+  list.addEventListener('input', e => {
+    const k = e.target.dataset.ri;
+    if (!k) return;
+    formItems[+e.target.closest('.ri-row').dataset.i][k] = e.target.value;
+    calcTotals();
+    refreshProposalSignStatus();
+  });
+  list.addEventListener('click', e => {
+    const b = e.target.closest('[data-ri-rm]');
+    if (!b) return;
+    formItems.splice(+b.dataset.riRm, 1);
+    renderFormItems(); calcTotals(); refreshProposalSignStatus();
+  });
+  document.getElementById('f-items-add').addEventListener('click', () => {
+    formItems.push({ label: '', amount: '' });
+    renderFormItems();
+    const rows = list.querySelectorAll('.ri-row');
+    rows[rows.length - 1].querySelector('input').focus();
+  });
+})();
+
+// ── MAINTENANCE & INSPECTION REMINDERS ─────────────────
+function isoOf(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function dateOf(iso) { const p = String(iso || '').split('-').map(Number); return new Date(p[0], (p[1] || 1) - 1, p[2] || 1); }
+function addYears(iso, n) {
+  if (!iso) return '';
+  const d0 = dateOf(iso), d = new Date(d0.getFullYear() + n, d0.getMonth(), d0.getDate());
+  if (d.getMonth() !== d0.getMonth()) d.setDate(0);   // Feb 29 → Feb 28
+  return isoOf(d);
+}
+function addDays(iso, n) { const d = dateOf(iso); d.setDate(d.getDate() + n); return isoOf(d); }
+function longDate(iso) { return iso ? dateOf(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; }
+
+function hasRepairWork(c) {
+  return formJobType === 'repair' && c.id === currentId || isRepair(c) ||
+    (c.quotes || []).some(q => q.type === 'repair' && q.status === 'Accepted');
+}
+
+// Closing a repair / maintenance job → next inspection 12 months after completion
+function markJobComplete(c) {
+  if (!hasRepairWork(c)) return;
+  const done = document.getElementById('f-completed'), next = document.getElementById('f-nextinsp');
+  if (!done.value) done.value = localISODate();
+  if (!next.value) {
+    next.value = addYears(done.value, 1);
+    logActivity('Next inspection set for ' + longDate(next.value));
+  }
+  done.dataset.prev = done.value;
+  updateMaintSection();
+}
+
+function gcalUrl(c, iso) {
+  const name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer';
+  const loc = [c.address, cityLine(c)].filter(Boolean).join(', ');
+  const details = [c.phone ? 'Phone: ' + c.phone : '', c.arcNum ? 'Customer ' + c.arcNum : ''].filter(Boolean).join('\n');
+  const q = (k, v) => '&' + k + '=' + encodeURIComponent(v);
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+    q('text', 'Annual roof inspection – ' + name) +
+    q('dates', iso.replace(/-/g, '') + '/' + addDays(iso, 1).replace(/-/g, '')) +
+    q('location', loc) + q('details', details) + q('recur', 'RRULE:FREQ=YEARLY');
+}
+
+// Customer values as they stand in the form (for links built before SAVE)
+function liveCustomer() {
+  const c = getCurrent();
+  const g = id => document.getElementById(id).value.trim();
+  return Object.assign({}, c, { first: g('f-first'), last: g('f-last'), phone: g('f-phone'), address: g('f-address'), city: g('f-city'), state: g('f-state'), zip: g('f-zip') });
+}
+
+function updateMaintSection() {
+  const c = getCurrent();
+  if (!c) return;
+  const done = document.getElementById('f-completed').value, next = document.getElementById('f-nextinsp').value;
+  document.getElementById('section-maint').style.display = formJobType === 'repair' || done || next ? 'block' : 'none';
+  const link = document.getElementById('f-gcal');
+  link.hidden = !next;
+  if (next) link.href = gcalUrl(liveCustomer(), next);
+  document.getElementById('f-inspected').hidden = !next;
+}
+
+function inspectionStatus(iso) {
+  const days = Math.round((dateOf(iso) - dateOf(localISODate())) / 864e5);
+  if (days < 0) return { cls: 'overdue', label: 'OVERDUE', days: days };
+  if (days <= 30) return { cls: 'soon', label: 'DUE IN 30 DAYS', days: days };
+  return { cls: 'upcoming', label: 'UPCOMING', days: days };
+}
+
+function updateInsCount() {
+  const n = customers.filter(c => c.nextInspection && inspectionStatus(c.nextInspection).days <= 30).length;
+  const el = document.getElementById('ins-count');
+  if (el) el.textContent = n ? String(n) : '';
+}
+
+// Inspected today → next one a year from today
+function markInspected(c) {
+  const today = localISODate(), next = addYears(today, 1);
+  if (c.id === currentId) {
+    document.getElementById('f-nextinsp').value = next;
+    logActivity('Inspected — next inspection ' + longDate(next));
+    saveCustomer(false);
+    c.lastInspected = today;
+    save();
+    updateMaintSection();
+  } else {
+    c.lastInspected = today;
+    c.nextInspection = next;
+    c.activityLog = c.activityLog || [];
+    c.activityLog.unshift({ ts: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }), msg: 'Inspected — next inspection ' + longDate(next) });
+    c.updatedAt = Date.now();
+    save();
+  }
+  renderActivityLog();
+  updateInsCount();
+  showToast('NEXT INSPECTION ' + longDate(next).toUpperCase());
+}
+
+function renderInspections() {
+  const list = customers.filter(c => c.nextInspection).sort((a, b) => a.nextInspection < b.nextInspection ? -1 : a.nextInspection > b.nextInspection ? 1 : 0);
+  const el = document.getElementById('ins-inner');
+  if (!list.length) {
+    el.innerHTML = '<p class="xsec-note" style="margin:0;">No inspections scheduled yet. When you close a repair or maintenance job, its yearly inspection shows up here.</p>';
+    return;
+  }
+  el.innerHTML = '<div class="ins-list">' + list.map(c => {
+    const st = inspectionStatus(c.nextInspection);
+    const name = [c.first, c.last].filter(Boolean).join(' ') || 'Unnamed';
+    const when = st.days < 0 ? Math.abs(st.days) + ' day' + (st.days === -1 ? '' : 's') + ' overdue' : st.days === 0 ? 'today' : 'in ' + st.days + ' day' + (st.days === 1 ? '' : 's');
+    return `<div class="ins-card">
+      <button type="button" class="ins-open" data-open="${c.id}">
+        <span class="ins-name">${esc(name)}</span>
+        <span class="ins-badge ${st.cls}">${st.label}</span>
+        <span class="ins-addr">${esc([c.address, cityLine(c)].filter(Boolean).join(', ') || c.arcNum)}</span>
+        <span class="ins-due">Due ${esc(longDate(c.nextInspection))} · ${when}</span>
+      </button>
+      <div class="ins-acts">
+        <a href="${esc(gcalUrl(c, c.nextInspection))}" target="_blank" rel="noopener">📅 GOOGLE CALENDAR</a>
+        <button type="button" data-inspected="${c.id}">✓ MARK INSPECTED</button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+(function wireInspections() {
+  const sheet = document.getElementById('ins-sheet');
+  document.getElementById('btn-inspections').addEventListener('click', e => {
+    e.preventDefault();
+    if (currentId) saveCustomer(false);
+    renderInspections();
+    sheet.classList.add('active');
+  });
+  document.getElementById('ins-close').addEventListener('click', () => sheet.classList.remove('active'));
+  document.getElementById('ins-inner').addEventListener('click', e => {
+    const open = e.target.closest('[data-open]');
+    if (open) { sheet.classList.remove('active'); selectCustomer(open.dataset.open); return; }
+    const b = e.target.closest('[data-inspected]');
+    if (!b) return;
+    if (!b.classList.contains('armed')) {
+      b.classList.add('armed'); b.textContent = 'TAP TO CONFIRM';
+      setTimeout(() => { if (b.isConnected) { b.classList.remove('armed'); b.textContent = '✓ MARK INSPECTED'; } }, 3000);
+      return;
+    }
+    const c = customers.find(x => x.id === b.dataset.inspected);
+    if (c) { markInspected(c); renderInspections(); }
+  });
+
+  const done = document.getElementById('f-completed'), next = document.getElementById('f-nextinsp');
+  done.addEventListener('focus', () => { done.dataset.prev = done.value; });
+  done.addEventListener('change', () => {
+    // Keep next inspection = completion + 12 months unless it was set by hand
+    if (!next.value || next.value === addYears(done.dataset.prev || '', 1)) next.value = addYears(done.value, 1);
+    done.dataset.prev = done.value;
+    updateMaintSection();
+  });
+  next.addEventListener('change', updateMaintSection);
+  ['f-first', 'f-last', 'f-phone', 'f-address', 'f-city', 'f-state', 'f-zip'].forEach(id =>
+    document.getElementById(id).addEventListener('input', () => { if (next.value) updateMaintSection(); }));
+  document.getElementById('f-inspected').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if (!b.classList.contains('armed')) {
+      b.classList.add('armed'); b.textContent = 'TAP TO CONFIRM';
+      setTimeout(() => { b.classList.remove('armed'); b.textContent = '✓ MARK INSPECTED'; }, 3000);
+      return;
+    }
+    b.classList.remove('armed'); b.textContent = '✓ MARK INSPECTED';
+    const c = getCurrent();
+    if (c) markInspected(c);
+  });
+})();
+
+// ── PASTE-TO-SORT (form) ───────────────────────────────
+const SORT_FIELDS = [
+  ['first', 'f-first', 'first name'], ['last', 'f-last', 'last name'], ['phone', 'f-phone', 'phone'], ['email', 'f-email', 'email'],
+  ['street', 'f-address', 'street'], ['city', 'f-city', 'city'], ['state', 'f-state', 'state'], ['zip', 'f-zip', 'ZIP'],
+];
+
+function clearNeeds() {
+  document.querySelectorAll('#form-area .needs').forEach(el => el.classList.remove('needs'));
+}
+
+function resetSortBox(c) {
+  const blank = !(c.first || c.last || c.phone || c.email || c.address);
+  const box = document.getElementById('sort-box');
+  box.classList.toggle('open', blank);
+  document.getElementById('sort-toggle').setAttribute('aria-expanded', blank ? 'true' : 'false');
+  document.getElementById('sort-text').value = '';
+  document.getElementById('sort-msg').textContent = '';
+  clearNeeds();
+}
+
+(function wireSortIt() {
+  const box = document.getElementById('sort-box'), ta = document.getElementById('sort-text'), msg = document.getElementById('sort-msg');
+  document.getElementById('sort-toggle').addEventListener('click', () => {
+    box.classList.add('open');
+    document.getElementById('sort-toggle').setAttribute('aria-expanded', 'true');
+    ta.focus();
+  });
+  document.getElementById('sort-clear').addEventListener('click', () => { ta.value = ''; msg.textContent = ''; clearNeeds(); ta.focus(); });
+  // Fills the form only — nothing is saved until SAVE
+  document.getElementById('sort-go').addEventListener('click', () => {
+    if (!ta.value.trim()) { msg.textContent = 'Paste a text, email or web form first.'; ta.focus(); return; }
+    const r = SortIt.parse(ta.value);
+    clearNeeds();
+    const missed = [];
+    SORT_FIELDS.forEach(([k, id, label]) => {
+      const el = document.getElementById(id);
+      if (r[k]) { el.value = r[k]; el.dispatchEvent(new Event('input', { bubbles: true })); }
+      else { el.classList.add('needs'); missed.push(label); }
+    });
+    const n = SORT_FIELDS.length - missed.length;
+    msg.innerHTML = n
+      ? `<b>Filled ${n} of ${SORT_FIELDS.length}.</b> ` + (missed.length ? `Couldn’t find ${esc(missed.join(', '))} — highlighted below. ` : '') + 'Check the fields, then tap SAVE.'
+      : 'Couldn’t find a name, phone, email or address in that text. Nothing was changed.';
+    syncHeader();
+  });
+  document.getElementById('form-area').addEventListener('input', e => {
+    if (e.target.classList && e.target.classList.contains('needs') && e.isTrusted) e.target.classList.remove('needs');
+  });
+})();
+
+// ── DOCUMENT PREVIEW + PDF ─────────────────────────────
+// Documents open inline. A real US Letter PDF is built in the background as
+// soon as the preview opens, so Send and Save PDF can open the iPhone share
+// sheet in the same tap. html2canvas + jsPDF load from cdnjs on first use.
+const PDF_LIBS = [
+  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+];
+let pdfLibsP = null;
+function loadPdfLibs() {
+  if (window.html2canvas && window.jspdf) return Promise.resolve();
+  if (!pdfLibsP) {
+    pdfLibsP = Promise.all(PDF_LIBS.map(src => new Promise((res, rej) => {
+      const sc = document.createElement('script');
+      sc.src = src; sc.crossOrigin = 'anonymous';
+      sc.onload = res; sc.onerror = () => rej(new Error('load'));
+      document.head.appendChild(sc);
+    }))).catch(e => { pdfLibsP = null; throw e; });
+  }
+  return pdfLibsP;
+}
+
+let pv = null; // { word, num, cust, file, token }
+
+function setPvStatus(t, bad) {
+  const el = document.getElementById('pv-status');
+  el.textContent = t;
+  el.classList.toggle('bad', !!bad);
+}
+
+function openPreview(o) {
+  pv = { word: o.word, num: o.num, cust: o.cust, file: null, token: Date.now() + Math.random() };
+  document.getElementById('pv-kind').textContent = o.word.toUpperCase() + ' PREVIEW';
+  document.getElementById('pv-num').textContent = o.num;
+  const send = document.getElementById('pv-send'), saveB = document.getElementById('pv-save');
+  send.textContent = 'SEND ' + o.word.toUpperCase();
+  send.disabled = true; saveB.disabled = true;
+  setPvStatus('Building PDF…');
+  const stage = document.getElementById('pv-stage');
+  stage.innerHTML = '';
+  const fr = document.createElement('iframe');
+  fr.title = o.word + ' ' + o.num;
+  fr.setAttribute('scrolling', 'no');
+  fr.style.width = '816px'; fr.style.height = '1056px';
+  stage.appendChild(fr);
+  document.getElementById('pv-sheet').classList.add('active');
+  document.getElementById('pv-body').scrollTop = 0;
+  fitPreview();
+  fr.srcdoc = o.html;
+}
+
+function fitPreview() {
+  const fr = document.querySelector('#pv-stage iframe');
+  if (!fr) return;
+  const body = document.getElementById('pv-body'), stage = document.getElementById('pv-stage');
+  const scale = Math.min(1, (body.clientWidth - 28) / 816);
+  fr.style.transform = 'scale(' + scale + ')';
+  stage.style.width = (816 * scale) + 'px';
+  stage.style.height = (parseFloat(fr.style.height) * scale) + 'px';
+}
+window.addEventListener('resize', () => { if (pv) fitPreview(); });
+
+// Called by the document once fonts are in and pages are laid out
+window.arcDocLoaded = function (win) {
+  const fr = document.querySelector('#pv-stage iframe');
+  if (!pv || !fr || fr.contentWindow !== win) return;
+  fr.style.height = win.document.documentElement.scrollHeight + 'px';
+  fitPreview();
+  buildPdf(pv.token, win);
+};
+
+function pdfFileName(o) {
+  const who = String((o.cust && (o.cust.last || o.cust.first)) || 'Customer').replace(/[\\/:*?"<>|]+/g, '').trim() || 'Customer';
+  return `ARC ${o.word} - ${who} - ${o.num}.pdf`;
+}
+
+async function buildPdf(token, win) {
+  try {
+    await loadPdfLibs();
+    // The renderer draws text with this page's fonts — make sure they're loaded
+    await Promise.all(['400 12px Inter', '500 12px Inter', '600 12px Inter', '700 12px Inter', '12px Anton', '12px "Bebas Neue"']
+      .map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : null));
+    const pages = Array.prototype.slice.call(win.document.querySelectorAll('.page'));
+    const pdf = new window.jspdf.jsPDF({ unit: 'in', format: 'letter', orientation: 'portrait', compress: true });
+    for (let i = 0; i < pages.length; i++) {
+      const canvas = await window.html2canvas(pages[i], { scale: 2, backgroundColor: '#EAE4DA', logging: false, useCORS: true, windowWidth: 816, windowHeight: 1056 });
+      if (!pv || pv.token !== token) return;
+      if (i) pdf.addPage('letter', 'portrait');
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 8.5, 11, undefined, 'FAST');
+    }
+    pdf.setProperties({ title: pv.word + ' ' + pv.num, author: 'Agency Roofing Co.', creator: 'ARC CRM' });
+    const blob = pdf.output('blob');
+    if (!pv || pv.token !== token) return;
+    pv.file = new File([blob], pdfFileName(pv), { type: 'application/pdf' });
+    document.getElementById('pv-send').disabled = false;
+    document.getElementById('pv-save').disabled = false;
+    setPvStatus('PDF ready · ' + pages.length + ' page' + (pages.length > 1 ? 's' : '') + ' · ' + pv.file.name);
+  } catch (e) {
+    if (!pv || pv.token !== token) return;
+    setPvStatus(navigator.onLine === false
+      ? 'No internet — the PDF tool needs a connection the first time. Close and try again.'
+      : 'Couldn’t build the PDF. Close the preview and try again.', true);
+  }
+}
+
+function canShareFile(f) {
+  try { return !!(navigator.share && navigator.canShare && navigator.canShare({ files: [f] })); } catch (e) { return false; }
+}
+
+// No file sharing (desktop browsers): download the PDF, then open a pre-filled email
+function pdfFallback(file, mail) {
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url; a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  if (!mail) { showToast('PDF DOWNLOADED'); return; }
+  showToast('PDF downloaded — attach it to the email.');
+  setTimeout(() => {
+    location.href = 'mailto:' + encodeURI(mail.to || '') + '?subject=' + encodeURIComponent(mail.subject) + '&body=' + encodeURIComponent(mail.body);
+  }, 400);
+}
+
+function pvSend() {
+  if (!pv || !pv.file) { showToast('PDF IS STILL BUILDING…'); return; }
+  const c = pv.cust || {};
+  const email = (c.email || '').trim();
+  const title = 'Your Agency Roofing Co. ' + pv.word;
+  const text = `Hi ${c.first || 'there'}, attached is your ${pv.word.toLowerCase()} for ${c.address || 'your property'}. Reply or call ${ARC_PHONE} with any questions. – Orlando, Agency Roofing Co.`;
+  // Same tap: copy the customer's email, then open the share sheet with the PDF
+  if (email && navigator.clipboard && navigator.clipboard.writeText) {
+    try { navigator.clipboard.writeText(email).then(() => showToast('Email copied — paste it into To.'), () => {}); } catch (e) {}
+  }
+  const what = pv.word + ' ' + pv.num;
+  if (canShareFile(pv.file)) {
+    navigator.share({ files: [pv.file], title: title, text: text })
+      .then(() => { logActivity(what + ' shared' + (email ? ' for ' + email : '')); save(); renderActivityLog(); })
+      .catch(err => { if (err && err.name !== 'AbortError') pdfFallback(pv.file, { to: email, subject: title, body: text }); });
+    return;
+  }
+  logActivity(what + ' emailed' + (email ? ' to ' + email : ''));
+  save(); renderActivityLog();
+  pdfFallback(pv.file, { to: email, subject: title, body: text });
+}
+
+function pvSave() {
+  if (!pv || !pv.file) { showToast('PDF IS STILL BUILDING…'); return; }
+  if (canShareFile(pv.file)) {
+    navigator.share({ files: [pv.file], title: pv.file.name }).catch(err => { if (err && err.name !== 'AbortError') pdfFallback(pv.file); });
+    return;
+  }
+  pdfFallback(pv.file);
+}
+
+function closePreview() {
+  pv = null;
+  document.getElementById('pv-sheet').classList.remove('active');
+  document.getElementById('pv-stage').innerHTML = '';
+}
+
+(function wirePreview() {
+  document.getElementById('pv-close').addEventListener('click', closePreview);
+  document.getElementById('pv-send').addEventListener('click', pvSend);
+  document.getElementById('pv-save').addEventListener('click', pvSave);
+  document.getElementById('btn-generate').addEventListener('click', e => { e.preventDefault(); generateProposal(); });
 })();
 
 function restoreReturn() {

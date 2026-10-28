@@ -496,6 +496,7 @@
   }
 
   .proposal-btn-primary { background: var(--copper); color: var(--white); }
+  .proposal-btn.pv-mail-ready { background: var(--ink); color: var(--white); }
   .proposal-btn-primary:hover { background: #7a3a24; }
   .proposal-btn-primary:disabled { background: var(--stone-dark); color: var(--ink-muted); cursor: not-allowed; }
   .proposal-btn-secondary { background: var(--ink); color: var(--stone); }
@@ -1152,11 +1153,6 @@
                 <button type="button" data-jt="repair">REPAIR / MAINTENANCE</button>
               </div>
             </div>
-            <div id="price-repair" style="display:none;">
-              <div class="xe-hint">Customer prices. Every line with an amount prints on the proposal. No 5-year warranty on repair work.</div>
-              <div class="ri-list" id="f-items"></div>
-              <button type="button" class="ri-add" id="f-items-add">+ ADD LINE</button>
-            </div>
             <div id="price-replace">
             <div style="font-size:10px;color:var(--ink-muted);margin-bottom:10px;letter-spacing:0.04em;">Enter your actual costs. Customer only sees the Total Investment — not the breakdown.</div>
             <div class="price-row">
@@ -1699,9 +1695,6 @@ const LEGACY_QUOTE_FIELDS = ['id', 'num', 'title', 'scope', 'requests', 'materia
 
 function pick(o, keys) { const r = {}; keys.forEach(k => { if (o[k] !== undefined) r[k] = o[k]; }); return r; }
 
-// Repair work priced the old way: Materials = line-item total, margin 0 (same total, same fingerprint)
-function legacyPrice(o) { return { materials: itemsTotal(o.items).toFixed(2), labor: '', other: '', margin: '0' }; }
-
 function legacyZip(c) {
   if (!c.zip) return '';
   return c.zipFormat === 'plain' ? c.zip : [c.state || 'NM', c.zip].join(' ');
@@ -1710,21 +1703,16 @@ function legacyZip(c) {
 function toStored(c) {
   const o = pick(c, LEGACY_FIELDS);
   o.zip = legacyZip(c);
-  if (isRepair(c)) Object.assign(o, legacyPrice(c));
-  o.quotes = c.quotes.map(q => Object.assign(pick(q, LEGACY_QUOTE_FIELDS), isRepair(q) ? legacyPrice(q) : {}));
+  o.quotes = c.quotes.map(q => pick(q, LEGACY_QUOTE_FIELDS));
   return o;
 }
 
 function extOf(c) {
   const e = { state: c.state, jobType: c.jobType, items: c.items, completedAt: c.completedAt, nextInspection: c.nextInspection, lastInspected: c.lastInspected,
     taxRate: c.taxRate, taxAuto: c.taxAuto };
-  if (isRepair(c)) { e.costs = pick(c, ['materials', 'labor', 'other', 'margin']); e.mirror = legacyPrice(c).materials; }
+  // No "mirror": older versions then load repair jobs as replacement jobs at the same price
   const qs = {};
-  c.quotes.forEach(q => {
-    if (!isRepair(q) && !q.items.length) return;
-    qs[q.id] = { type: q.type, items: q.items };
-    if (isRepair(q)) { qs[q.id].costs = pick(q, ['materials', 'labor', 'other', 'margin']); qs[q.id].mirror = legacyPrice(q).materials; }
-  });
+  c.quotes.forEach(q => { if (isRepair(q)) qs[q.id] = { type: q.type, items: [] }; });
   if (Object.keys(qs).length) e.quotes = qs;
   return e;
 }
@@ -1738,7 +1726,8 @@ function applyExt(r, e) {
   if (e.state && !/^[A-Za-z]{2}[\s,]/.test(String(r.zip || ''))) c.state = e.state;
   const mirrored = (o, x) => String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0';
   if (e.jobType === 'repair') {
-    if (mirrored(r, e)) Object.assign(c, { jobType: 'repair' }, e.costs || {});
+    if (e.mirror === undefined) c.jobType = 'repair';   // current format: costs are in arc_v3
+    else if (mirrored(r, e)) Object.assign(c, { jobType: 'repair' }, e.costs || {});   // old line-item format
     else c.jobType = 'replace';
   }
   if (e.quotes && Array.isArray(r.quotes)) {
@@ -1746,7 +1735,8 @@ function applyExt(r, e) {
       const x = q && e.quotes[q.id];
       if (!x) return q;
       const nq = Object.assign({}, q, { items: x.items });
-      if (x.type === 'repair' && mirrored(q, x)) Object.assign(nq, { type: 'repair' }, x.costs || {});
+      if (x.type === 'repair' && x.mirror === undefined) nq.type = 'repair';
+      else if (x.type === 'repair' && mirrored(q, x)) Object.assign(nq, { type: 'repair' }, x.costs || {});
       return nq;
     });
   }
@@ -1805,7 +1795,7 @@ function normalize(c) {
   if (m) { state = /^new mexico$/i.test(m[1]) ? 'NM' : m[1].toUpperCase(); zip = m[2]; zipFormat = 'combined'; }
   else if (!state && /^[A-Za-z]{2}$/.test(zip)) { state = zip.toUpperCase(); zip = ''; }
 
-  return {
+  return migrateRepairItems({
     id: c.id || genId(),
     arcNum: c.arcNum || genArcNum(),
     createdAt: c.createdAt || Date.now(),
@@ -1844,7 +1834,7 @@ function normalize(c) {
     lastInspected: c.lastInspected || '',
     quotes: Array.isArray(c.quotes) ? c.quotes.map(normQuote) : [],
     changeOrders: Array.isArray(c.changeOrders) ? c.changeOrders.map(normCO) : [],
-  };
+  });
 }
 
 function genId() {
@@ -1973,9 +1963,8 @@ function loadDetail() {
   document.getElementById('f-taxrate').value = String(c.taxRate);
   formTaxAuto = c.taxAuto;
   formJobType = c.jobType;
-  formItems = c.items.length ? c.items.map(x => Object.assign({}, x)) : (c.jobType === 'repair' ? defaultItems() : []);
+  formItems = c.items.map(x => Object.assign({}, x));
   renderJobType();
-  renderFormItems();
   resetSortBox(c);
 
   syncHeader();
@@ -2661,7 +2650,7 @@ function generateProposal(opts) {
   logActivity(docWord + ' ' + c.arcNum + ' previewed');
   save();
   renderActivityLog();
-  openPreview({ html, word: docWord, num: c.arcNum, cust });
+  openPreview({ html, word: docWord, num: c.arcNum, cust, repair });
 }
 
 function aboutRepairBlock() {
@@ -3255,7 +3244,7 @@ const CO_REASONS = ['Customer request', 'Hidden or unforeseen condition', 'Code 
 
 function normQuote(q) {
   q = q || {};
-  return {
+  return migrateRepairItems({
     id: q.id || genId(), num: q.num || '', title: q.title || '',
     scope: q.scope || '', requests: q.requests || '',
     materials: q.materials || '', labor: q.labor || '', other: q.other || '',
@@ -3266,7 +3255,7 @@ function normQuote(q) {
     items: normItems(q.items),
     sig: q.sig || null,
     createdAt: q.createdAt || Date.now(), updatedAt: q.updatedAt || Date.now(),
-  };
+  });
 }
 
 function normCO(o) {
@@ -3302,10 +3291,10 @@ function itemsTotal(items) { return Math.round((items || []).reduce((s, i) => s 
 
 function priceOf(o, ratePct) {
   if (ratePct == null) ratePct = LEGACY_TAX;
-  const repair = isRepair(o);
-  const cost = repair ? 0 : (parseFloat(o.materials) || 0) + (parseFloat(o.labor) || 0) + (parseFloat(o.other) || 0);
-  const markup = repair ? 0 : cost * ((parseFloat(o.margin) || 0) / 100);
-  const base = repair ? itemsTotal(o.items) : cost + markup;
+  // Repair and replacement jobs price the same way: costs + margin
+  const cost = (parseFloat(o.materials) || 0) + (parseFloat(o.labor) || 0) + (parseFloat(o.other) || 0);
+  const markup = cost * ((parseFloat(o.margin) || 0) / 100);
+  const base = cost + markup;
   const disc = parseFloat(o.discountAmount) || 0;
   const sub = Math.max(0, base - disc);
   const tax = sub * (ratePct / 100);
@@ -3421,7 +3410,7 @@ function newExtra(kind) {
   // New quotes start with the type used last
   const qType = ARCSign.settings().lastQuoteType === 'repair' ? 'repair' : 'replace';
   const item = kind === 'quote'
-    ? normQuote({ num: nextDocNum(c, 'quote'), type: qType, items: qType === 'repair' ? defaultItems() : [] })
+    ? normQuote({ num: nextDocNum(c, 'quote'), type: qType, items: [] })
     : normCO({ num: nextDocNum(c, 'co') });
   (kind === 'quote' ? c.quotes : c.changeOrders).push(item);
   save();
@@ -3496,12 +3485,8 @@ function quoteForm(q) {
             <button type="button" data-qt="replace" class="${repair ? '' : 'on'}">REPLACEMENT / COATING</button>
             <button type="button" data-qt="repair" class="${repair ? 'on' : ''}">REPAIR / MAINTENANCE</button>
           </div></div>
-        <div id="xe-repair" style="${repair ? '' : 'display:none;'}">
-          <div class="xe-hint">Customer prices. Every line with an amount prints on the quote. No 5-year warranty on repair work.</div>
-          <div class="ri-list" id="xe-items">${itemRowsHTML(q.items)}</div>
-          <button type="button" class="ri-add" data-ri-add>+ ADD LINE</button>
-        </div>
-        <div id="xe-replace" style="${repair ? 'display:none;' : ''}">${costFields(q)}</div>
+        <div class="xe-hint" id="xe-repair-note" style="${repair ? '' : 'display:none;'}">Repair / maintenance: no 5-year warranty. About This Repair prints on the quote.</div>
+        ${costFields(q)}
         <div class="price-row" style="margin-top:10px;"><span class="price-label" style="color:var(--copper);font-weight:600;">Discount</span><input type="text" data-f="discountLabel" value="${v('discountLabel')}" placeholder="Label, e.g. Veteran" style="font-size:12px;"></div>
         <div class="price-row"><span class="price-label" style="color:var(--copper);font-weight:600;">Amount</span><input type="number" data-f="discountAmount" value="${v('discountAmount')}" placeholder="0.00" step="0.01" min="0" inputmode="decimal"></div>
         <div class="xe-calc" id="xe-calc" style="margin-top:12px;"></div>
@@ -3555,8 +3540,7 @@ function xeCalc() {
   if (xe.kind === 'quote') {
     const c = getCurrent(), r = quoteRate(c, it);
     const p = priceOf(it, r);
-    box.innerHTML = (isRepair(it) ? line('Line items', fmt(p.base), 'strong') :
-      line('Cost total', fmt(p.cost)) + line('Markup', fmt(p.markup)) + line('Customer price', fmt(p.base), 'strong')) +
+    box.innerHTML = line('Cost total', fmt(p.cost)) + line('Markup', fmt(p.markup)) + line('Customer price', fmt(p.base), 'strong') +
       (p.disc > 0 ? line(esc(it.discountLabel || 'Discount'), '− ' + fmt(p.disc)) : '') +
       line(esc(taxLine(r, c.city, 'Gross receipts tax')), fmt(p.tax)) +
       line('Total investment', fmt(p.total), 'total');
@@ -3745,28 +3729,11 @@ function generateChangeOrder(o) {
     const tb = e.target.closest('[data-qt]');
     if (tb) {
       it.type = tb.dataset.qt;
-      if (it.type === 'repair' && !it.items.length) it.items = defaultItems();
       rememberQuoteType(it.type);
       inner.querySelectorAll('[data-qt]').forEach(b => b.classList.toggle('on', b === tb));
-      document.getElementById('xe-repair').style.display = it.type === 'repair' ? '' : 'none';
-      document.getElementById('xe-replace').style.display = it.type === 'repair' ? 'none' : '';
-      document.getElementById('xe-items').innerHTML = itemRowsHTML(it.items);
+      document.getElementById('xe-repair-note').style.display = it.type === 'repair' ? '' : 'none';
       touchItem(); xeCalc(); renderEditorSign();
       return;
-    }
-    const rm = e.target.closest('[data-ri-rm]');
-    if (rm) {
-      it.items.splice(+rm.dataset.riRm, 1);
-      document.getElementById('xe-items').innerHTML = itemRowsHTML(it.items);
-      touchItem(); xeCalc(); renderEditorSign();
-      return;
-    }
-    if (e.target.closest('[data-ri-add]')) {
-      it.items.push({ label: '', amount: '' });
-      const list = document.getElementById('xe-items');
-      list.innerHTML = itemRowsHTML(it.items);
-      list.lastElementChild.querySelector('input').focus();
-      touchItem();
     }
   });
   inner.addEventListener('input', e => {
@@ -3819,8 +3786,27 @@ function generateChangeOrder(o) {
 
 // docId uses the same formula as earlier versions, so a signature checks out
 // in either version. Repair line items get their own fingerprint (sig.linesId).
-function linesId(o) {
-  return isRepair(o) ? ARCSign.docId('R|' + (o.items || []).map(i => i.label + '=' + (parseFloat(i.amount) || 0).toFixed(2)).join(';')) : '';
+function linesId(o) { return ''; }
+// Fingerprint of the old repair line items (signatures made before Oct 2026 carry it)
+function oldLinesId(items) {
+  return ARCSign.docId('R|' + (items || []).map(i => i.label + '=' + (parseFloat(i.amount) || 0).toFixed(2)).join(';'));
+}
+
+// Repair jobs used to be priced by line items. Convert once: Materials = line-item total,
+// margin 0, so the total (and every signature fingerprint) stays exactly the same.
+function migrateRepairItems(o) {
+  const hasLines = Array.isArray(o.items) && o.items.length;
+  const sigLines = o.sig && o.sig.linesId;
+  if (!isRepair(o) || (!hasLines && !sigLines)) return o;
+  const t = itemsTotal(o.items);
+  const r = Object.assign({}, o, { items: [] });
+  if (t || o.sig) Object.assign(r, { materials: t.toFixed(2), labor: '', other: '', margin: '0' });
+  if (sigLines) {
+    const sig = Object.assign({}, o.sig);
+    if (sig.linesId === oldLinesId(o.items)) delete sig.linesId; else sig.linesId = 'edited';
+    r.sig = sig;
+  }
+  return r;
 }
 function proposalContent(c, r) {
   if (r == null) r = mainRate(c);
@@ -4258,22 +4244,15 @@ function rememberQuoteType(t) {
 function renderJobType() {
   const repair = formJobType === 'repair';
   document.querySelectorAll('#f-jobtype [data-jt]').forEach(b => b.classList.toggle('on', b.dataset.jt === formJobType));
-  document.getElementById('price-repair').style.display = repair ? '' : 'none';
-  document.getElementById('price-replace').style.display = repair ? 'none' : '';
-  document.getElementById('pricing-title').textContent = repair ? 'Pricing — Repair Line Items' : 'Pricing — Your Cost Breakdown';
+  document.getElementById('pricing-title').textContent = repair ? 'Pricing — Repair / Maintenance' : 'Pricing — Your Cost Breakdown';
   document.getElementById('receipt-title').textContent = repair ? 'PAYMENT RECEIPT' : 'PAYMENT RECEIPT + 5-YR WARRANTY';
 }
 
-function renderFormItems() {
-  document.getElementById('f-items').innerHTML = itemRowsHTML(formItems);
-}
 
 function setFormJobType(t) {
   formJobType = t === 'repair' ? 'repair' : 'replace';
-  if (formJobType === 'repair' && !formItems.length) formItems = defaultItems();
   rememberQuoteType(formJobType);
   renderJobType();
-  renderFormItems();
   calcTotals();
   updateMaintSection();
   refreshProposalSignStatus();
@@ -4283,26 +4262,6 @@ function setFormJobType(t) {
   document.getElementById('f-jobtype').addEventListener('click', e => {
     const b = e.target.closest('[data-jt]');
     if (b) setFormJobType(b.dataset.jt);
-  });
-  const list = document.getElementById('f-items');
-  list.addEventListener('input', e => {
-    const k = e.target.dataset.ri;
-    if (!k) return;
-    formItems[+e.target.closest('.ri-row').dataset.i][k] = e.target.value;
-    calcTotals();
-    refreshProposalSignStatus();
-  });
-  list.addEventListener('click', e => {
-    const b = e.target.closest('[data-ri-rm]');
-    if (!b) return;
-    formItems.splice(+b.dataset.riRm, 1);
-    renderFormItems(); calcTotals(); refreshProposalSignStatus();
-  });
-  document.getElementById('f-items-add').addEventListener('click', () => {
-    formItems.push({ label: '', amount: '' });
-    renderFormItems();
-    const rows = list.querySelectorAll('.ri-row');
-    rows[rows.length - 1].querySelector('input').focus();
   });
 })();
 
@@ -4557,11 +4516,12 @@ function setPvStatus(t, bad) {
 }
 
 function openPreview(o) {
-  pv = { word: o.word, num: o.num, cust: o.cust, file: null, token: Date.now() + Math.random() };
+  pv = { word: o.word, num: o.num, cust: o.cust, repair: !!o.repair, file: null, mailReady: false, token: Date.now() + Math.random() };
   document.getElementById('pv-kind').textContent = o.word.toUpperCase() + ' PREVIEW';
   document.getElementById('pv-num').textContent = o.num;
   const send = document.getElementById('pv-send'), saveB = document.getElementById('pv-save');
-  send.textContent = 'SEND ' + o.word.toUpperCase();
+  send.textContent = 'EMAIL ' + o.word.toUpperCase();
+  send.classList.remove('pv-mail-ready');
   send.disabled = true; saveB.disabled = true;
   setPvStatus('Building PDF…');
   const stage = document.getElementById('pv-stage');
@@ -4649,30 +4609,63 @@ function pdfFallback(file, mail) {
   }, 400);
 }
 
+// The email Orlando has always sent (subject, body, signature), with the customer's address in To
+function pvMail() {
+  const c = pv.cust || {};
+  const name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer';
+  const addr = c.address || 'your property';
+  const what = pv.word === 'Proposal' ? (pv.repair ? 'repair quote' : 'proposal')
+    : pv.word === 'Quote' ? (pv.repair ? 'repair quote' : 'quote') : pv.word.toLowerCase();
+  const subject = `${name}, your Agency Roofing Co. ${what} for ${addr} · ${pv.num}`;
+  const body = `Hi ${c.first || name},
+
+Thank you for the opportunity to put together a ${what} for your property at ${addr}.
+
+I've attached your ${what} (${pv.num}) for your review. Please take your time — if you have any questions about the scope, materials, or pricing, don't hesitate to call me directly.
+
+When you're ready to move forward, let me know and we'll get you on the schedule.
+
+Built with agency. Driven by obligation.
+
+Orlando
+Agency Roofing Co.
+${ARC_PHONE}`;
+  return { to: (c.email || '').trim(), subject, body };
+}
+
+function mailtoHref(m) {
+  return 'mailto:' + encodeURIComponent(m.to).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.body);
+}
+
+function openMail() {
+  const m = pvMail();
+  logActivity(pv.word + ' ' + pv.num + ' emailed' + (m.to ? ' to ' + m.to : ''));
+  save(); renderActivityLog();
+  location.href = mailtoHref(m);
+}
+
+// Tap 1: save the PDF (files only, so no stray .txt). Then the email opens with
+// To, subject and message filled in; attach the PDF from Files → Recents.
+// If iOS blocks opening Mail after the share sheet, the button becomes OPEN EMAIL.
 function pvSend() {
   if (!pv || !pv.file) { showToast('PDF IS STILL BUILDING…'); return; }
-  const c = pv.cust || {};
-  const email = (c.email || '').trim();
-  const title = 'Your Agency Roofing Co. ' + pv.word;
-  const text = `Hi ${c.first || 'there'}, attached is your ${pv.word.toLowerCase()} for ${c.address || 'your property'}. Reply or call ${ARC_PHONE} with any questions. – Orlando, Agency Roofing Co.`;
-  // Same tap: copy the customer's email + message, then share the PDF alone.
-  // (Any title/text in the share makes iOS "Save to Files" add a stray .txt file.)
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    try {
-      navigator.clipboard.writeText(email ? email + '\n\n' + text : text)
-        .then(() => showToast(email ? 'Email + message copied — paste into Mail.' : 'Message copied — paste into Mail.'), () => {});
-    } catch (e) {}
-  }
-  const what = pv.word + ' ' + pv.num;
+  if (pv.mailReady) { openMail(); return; }
+  const ready = () => {
+    pv.mailReady = true;
+    const b = document.getElementById('pv-send');
+    b.textContent = 'OPEN EMAIL';
+    b.classList.add('pv-mail-ready');
+    setPvStatus('PDF saved. In Mail, tap ⊕ above the keyboard → Attach File → Recents.');
+    openMail();
+  };
   if (canShareFile(pv.file)) {
     navigator.share({ files: [pv.file] })
-      .then(() => { logActivity(what + ' shared' + (email ? ' for ' + email : '')); save(); renderActivityLog(); })
-      .catch(err => { if (err && err.name !== 'AbortError') pdfFallback(pv.file, { to: email, subject: title, body: text }); });
+      .then(ready)
+      .catch(err => { if (err && err.name !== 'AbortError') { pdfFallback(pv.file); ready(); } });
     return;
   }
-  logActivity(what + ' emailed' + (email ? ' to ' + email : ''));
-  save(); renderActivityLog();
-  pdfFallback(pv.file, { to: email, subject: title, body: text });
+  pdfFallback(pv.file);
+  ready();
 }
 
 function pvSave() {

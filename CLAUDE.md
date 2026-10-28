@@ -34,7 +34,10 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - `normalize(c)` whitelists customer fields. **Any new field must be added there**, or it is silently dropped on load. Same for `normQuote` / `normCO`.
   - Address: `address` (street + unit), `city`, `state` (default NM), `zip`. Old records with "NM 87120" in `zip` are split on load.
     Documents always print "City, NM ZIP" via `cityLine(c)`.
-  - Quote type: customer `jobType` / quote `type` = `'replace'` (cost + margin) or `'repair'` (`items: [{label, amount}]`, customer prices).
+  - Quote type: customer `jobType` / quote `type` = `'replace'` or `'repair'`. **Both price the same way** (Materials + Labor + Other,
+    Margin %, Discount — one pricing screen). The type only changes the customer-facing terms (About This Repair, no 5-year warranty,
+    inspection reminder). Before Oct 27 2026 repair jobs used line items (`items`); `migrateRepairItems` converts them on load to
+    Materials = line-item total, margin 0, so totals and signatures are unchanged. `items` is now always empty.
   - Inspections: `completedAt`, `nextInspection`, `lastInspected` (YYYY-MM-DD).
   - Tax: `taxRate` (percent, per job) and `taxAuto` (rate follows the job city via Settings → Tax rates until typed over).
     Existing customers keep 7.3125. Stored in `arc_ext` like the other newer fields.
@@ -42,10 +45,12 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   (importable by every version). The first record carries `arcBackup: { settings, ownerSig }`; import restores those only after a
   second confirm. Import also accepts `{ customers, settings, ownerSig }`. A banner on the customer list asks for a backup after 7 days.
 - On load the app calls `navigator.storage.persist()` (silent) so the browser is less likely to clear storage.
-- **Revert-safe storage:** `arc_v3` is always written in the previous version's format (`toStored`): repair work is priced there as
-  Materials = line-item total, margin 0, and ZIP keeps the way it was typed. Newer fields live in `arc_ext` (`extOf` / `applyExt`),
-  which older versions never touch; backups carry them as `arcExt`. Signature `docId` keeps the old formula; repair line items are
-  checked by `sig.linesId`. Keep this when adding fields, so reverting `index.html` never loses or misprices a record.
+- **Revert-safe storage:** `arc_v3` is always written in the previous version's format (`toStored`): real costs for every job, and
+  ZIP keeps the way it was typed. Newer fields live in `arc_ext` (`extOf` / `applyExt`), which older versions never touch; backups
+  carry them as `arcExt`. Repair jobs are written to `arc_ext` with `jobType: 'repair'` and **no `mirror`**, so an older version
+  loads them as replacement jobs at the same price (only the repair wording is lost on a revert). Ext records that still have a
+  `mirror` are the old line-item format and are converted on load. Signature `docId` keeps the old formula; `sig.linesId` is
+  legacy (dropped on conversion when it matched, set to `'edited'` when it didn't). Keep this when adding fields.
 - Pipeline stages: Lead → Inspected → Proposed → Signed → In Production → Closed (+ Declined).
 - Numbering: customers `ARC-00007`; additional quotes `ARC-00007-Q2…` (Q1 = main proposal); change orders `ARC-00007-CO1…`; receipts `ARC-00007-R`.
 - Pricing: materials + labor + other, plus margin % = customer price; discount applied pre-tax; NM gross receipts tax is **per job**
@@ -66,9 +71,13 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   signatures + footer pinned to the bottom, poppy bottom-right above the footer rule.
 - Every document must print on **one US Letter page**. Check with a print render after any change. If content truly overflows,
   `ARC_DOC_PAGINATE` moves whole blocks/bullets to page 2 (never splits a line item, the pricing card or signatures).
-- Documents open in the inline preview (`openPreview`), which builds the PDF in the background so **Send** and **Save PDF** work in one tap.
-  Both call `navigator.share({ files })` with the PDF only — any title/text makes iOS "Save to Files" add a stray .txt. Send copies
-  the customer's email + the message to the clipboard instead. PDF names: `ARC Proposal|Quote|Change Order|Receipt - [Last] - [number].pdf`.
+- Documents open in the inline preview (`openPreview`), which builds the PDF in the background so **Email** and **Save PDF** work in one tap.
+  Both call `navigator.share({ files })` with the PDF only — any title/text makes iOS "Save to Files" add a stray .txt.
+  **Email** = Orlando's original email, restored on purpose: after the PDF is saved it opens `mailto:` with To = customer email,
+  subject "[Name], your Agency Roofing Co. proposal|repair quote|quote for [address] · [number]" and his message (`pvMail`).
+  He attaches the PDF in Mail (⊕ → Attach File → Recents). If iOS blocks Mail opening after the share sheet, the button turns into
+  OPEN EMAIL. Don't change the subject or message wording without asking him.
+  PDF names: `ARC Proposal|Quote|Change Order|Receipt - [Last] - [number].pdf`.
   The receipt page (`receipt.html`) builds its own PDF from its print layout. Back from the receipt returns via `sessionStorage.arc_return`.
 - Scope/notes text renders `**bold**` and drops markdown escapes (`richLine`).
 - Terms on proposals: 30-day validity, 50% deposit on acceptance, balance on completion. Receipts carry a 5-year workmanship warranty.

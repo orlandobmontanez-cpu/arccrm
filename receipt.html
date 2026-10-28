@@ -892,8 +892,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (e.state && !c.state) c.state = e.state;
       if (e.taxRate != null && c.taxRate == null) c.taxRate = e.taxRate;
       if (e.items && !c.items) c.items = e.items;
-      if (e.jobType === 'repair' && mirrored(r, e)) c.jobType = 'repair';
-      if (e.quotes) (c.quotes || []).forEach(function(q){ var x = e.quotes[q.id]; if (x && x.type === 'repair' && mirrored(q, x)) { q.type = 'repair'; q.items = x.items; } });
+      /* Current format has no "mirror": costs are in arc_v3. Old format: line items + mirrored Materials */
+      if (e.jobType === 'repair' && (e.mirror === undefined || mirrored(r, e))) c.jobType = 'repair';
+      if (e.quotes) (c.quotes || []).forEach(function(q){ var x = e.quotes[q.id]; if (x && x.type === 'repair' && (x.mirror === undefined || mirrored(q, x))) { q.type = 'repair'; q.items = x.items; } });
     }
     return c;
   }
@@ -974,7 +975,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var jt = jobTax(c), rate = num(jt.rate) / 100;
     function isRepair(o){ return (o.jobType != null ? o.jobType : o.type) === 'repair'; }
     function priceOf(o){
-      if (isRepair(o)) return Math.round((o.items || []).reduce(function(s, i){ return s + num(i.amount); }, 0) * 100) / 100;
+      if (isRepair(o) && (o.items || []).length) return Math.round(o.items.reduce(function(s, i){ return s + num(i.amount); }, 0) * 100) / 100;
       var cost = num(o.materials) + num(o.labor) + num(o.other);
       return Math.round(cost * (1 + num(o.margin)/100) * 100) / 100;
     }
@@ -983,10 +984,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var rows = [{ t: 'Roofing services per proposal ' + (c.arcNum || ''), n: (c.scope || '').trim(), q: '1', p: price.toFixed(2) }];
     if (isRepair(c)) {
       /* Repair / maintenance: each priced line item becomes its own receipt line */
-      rows = (c.items || []).filter(function(i){ return num(i.amount) !== 0; }).map(function(i, k){
+      if ((c.items || []).length) rows = c.items.filter(function(i){ return num(i.amount) !== 0; }).map(function(i, k){
         return { t: i.label || 'Repair work', n: k === 0 ? (c.scope || '').trim() : '', q: '1', p: num(i.amount).toFixed(2) };
       });
-      if (!rows.length) rows = [{ t: 'Repair / maintenance per proposal ' + (c.arcNum || ''), n: (c.scope || '').trim(), q: '1', p: '0.00' }];
+      if (!(c.items || []).length || !rows.length) rows = [{ t: 'Repair / maintenance per proposal ' + (c.arcNum || ''), n: (c.scope || '').trim(), q: '1', p: price.toFixed(2) }];
     }
     /* Accepted additional quotes and approved change orders become their own lines */
     (c.quotes || []).filter(function(q){ return q.status === 'Accepted'; }).forEach(function(q){

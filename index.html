@@ -737,7 +737,8 @@
   .maint-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .maint-actions .proposal-btn { flex: 1 1 200px; justify-content: center; min-height: 48px; text-decoration: none; }
   .maint-actions [hidden] { display: none; }
-  #ins-wrap { padding: 0 16px 10px; flex-shrink: 0; }
+  #ins-wrap { padding: 0 16px 10px; flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-board { text-decoration: none; background: var(--copper); border-color: var(--copper); color: var(--white); }
   .btn-ins {
     width: 100%; min-height: 48px; background: rgba(234,228,218,0.07); border: 1px solid rgba(234,228,218,0.1); border-radius: 6px;
     color: var(--stone); font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.12em; cursor: pointer;
@@ -958,6 +959,7 @@
     </div>
 
     <div id="ins-wrap">
+      <a class="btn-ins btn-board" id="btn-board" href="board.html">JOB BOARD</a>
       <button class="btn-ins" id="btn-inspections" type="button">INSPECTIONS <span class="ins-count" id="ins-count"></span></button>
     </div>
 
@@ -4697,6 +4699,14 @@ function restoreReturn() {
     if (rid) {
       sessionStorage.removeItem('arc_return');
       if (customers.some(c => c.id === rid)) selectCustomer(rid);
+    }
+  } catch (e) {}
+  // Tapped a job on the Job Board (board.html?open → ./?open=<id>)
+  try {
+    const oid = new URLSearchParams(location.search).get('open');
+    if (oid) {
+      history.replaceState(null, '', location.pathname);
+      if (customers.some(c => c.id === oid)) selectCustomer(oid);
     }
   } catch (e) {}
 }

@@ -4,7 +4,12 @@ Custom CRM for **Agency Roofing Co. LLC**, a flat-roof specialty contractor in A
 Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhone** in the field.
 
 - Live site: https://orlandobmontanez-cpu.github.io/arccrm/ (GitHub Pages, deploys from `main` in about 60 seconds)
-- The live app is `index.html` (must keep that exact name). `receipt.html` is the receipt page.
+- The live app is `index.html` (must keep that exact name). `receipt.html` is the receipt page. `board.html` is the **Job Board**
+  (schedule, pipeline, accepted/declined, close rate, pricing check, success map). It is **read-only**: it reads `arc_v3` + `arc_ext`
+  and must never write them. It loads Leaflet 1.9.4 from cdnjs and OpenStreetMap tiles for the map (Orlando asked for a real
+  street map); everything else on it works offline. ZIP centers for the 870/871/875 areas are bundled in the page.
+  Close rate = Signed + In Production + Closed ÷ (those + Declined). Amounts are before tax: (materials+labor+other)×(1+margin) − discount.
+  Tapping a job opens `./?open=<customer id>` in the CRM.
 - Never add copies of the app to this repo (old ones were deleted): any page on this site shares `localStorage` with the live app
   and an old copy would overwrite `arc_v3` in an old format if opened.
 - `manifest.webmanifest` **must keep `"display": "browser"`. Never change it to `"standalone"`**: on iOS a standalone home-screen app
@@ -118,6 +123,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - Confirm the gross receipts tax rate; add the NM license number to documents once issued.
 - Have an attorney review the warranty exclusions and e-signature consent wording.
 - Remote (not in-person) signing and multi-device sync need a cloud database — planned move to Supabase.
+- True one-tap email (To + subject + message + PDF in one step) needs server-side sending from agencyroofingco@gmail.com —
+  Orlando chose to build this with the Supabase move. Until then: Email → share sheet → **Save to Files** → Mail opens filled in.
 
 ## Customer forms sent through DocuSign
 

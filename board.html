@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Job Board · Agency Roofing Co.</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#EAE4DA">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Lora:ital@1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="anonymous">
+<!--
+  JOB BOARD — read-only view of the CRM.
+  Reads localStorage arc_v3 + arc_ext (same site, same phone) and NEVER writes to them.
+  Do not add setItem / removeItem calls for CRM keys here.
+-->
+<style>
+  :root {
+    --stone: #EAE4DA; --stone-dark: #D8CFC3; --ink: #1C1A18; --ink-soft: #3A3734; --ink-muted: #6B655E;
+    --copper: #974930; --mid: #C97E78; --hi: #F0C8C2; --white: #FDFBF8; --gray: #A79F95;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--stone); color: var(--ink); font-family: 'Inter', sans-serif; }
+  body { min-height: 100dvh; padding-bottom: env(safe-area-inset-bottom); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px 40px; }
+
+  header { position: sticky; top: 0; z-index: 1000; background: var(--ink); color: var(--stone);
+    padding: calc(10px + env(safe-area-inset-top)) 16px 10px; }
+  .hd { max-width: 980px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .back { display: inline-flex; align-items: center; min-height: 48px; padding: 0 14px; border: 1px solid rgba(234,228,218,.25);
+    border-radius: 6px; color: var(--stone); text-decoration: none; font-family: 'Bebas Neue', sans-serif; letter-spacing: .12em; font-size: 15px; }
+  .ttl { flex: 1; line-height: 1; }
+  .ttl b { display: block; font-family: 'Anton', sans-serif; font-weight: 400; font-size: 22px; letter-spacing: .04em; }
+  .ttl span { font-family: 'Bebas Neue', sans-serif; color: var(--mid); letter-spacing: .2em; font-size: 13px; }
+
+  .period { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 16px 0 6px; }
+  .period button { min-height: 48px; padding: 0 4px; white-space: nowrap; border: 1px solid var(--stone-dark); background: var(--white);
+    border-radius: 6px; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: .06em; color: var(--ink-soft); cursor: pointer; }
+  .period button.on { background: var(--ink); color: var(--stone); border-color: var(--ink); }
+  .note { font-size: 11px; color: var(--ink-muted); line-height: 1.5; }
+
+  h2 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; font-size: 20px; letter-spacing: .14em; color: var(--ink); margin: 26px 0 4px; }
+  h2 + .rule { height: 2px; background: var(--copper); width: 44px; margin-bottom: 12px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+  @media (min-width: 720px) { .kpis { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+  .kpi { background: var(--white); border: 1px solid var(--stone-dark); border-radius: 8px; padding: 12px 14px; }
+  .kpi .l { font-family: 'Bebas Neue', sans-serif; letter-spacing: .12em; font-size: 13px; color: var(--ink-muted); }
+  .kpi .v { font-family: 'Anton', sans-serif; font-size: 30px; line-height: 1.15; color: var(--ink); }
+  .kpi .s { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+  .kpi.main { background: var(--ink); border-color: var(--ink); }
+  .kpi.main .l { color: var(--mid); } .kpi.main .v { color: var(--stone); } .kpi.main .s { color: var(--gray); }
+
+  .card { background: var(--white); border: 1px solid var(--stone-dark); border-radius: 8px; padding: 14px; }
+  .read { border-left: 3px solid var(--copper); background: var(--white); padding: 12px 14px; border-radius: 0 8px 8px 0;
+    font-size: 13px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 10px; }
+  .read b { color: var(--ink); }
+  .cmp { display: grid; grid-template-columns: 1fr auto auto; gap: 8px 16px; font-size: 13px; align-items: baseline; }
+  .cmp .h { font-family: 'Bebas Neue', sans-serif; letter-spacing: .12em; font-size: 13px; color: var(--ink-muted); text-align: right; }
+  .cmp .h:first-child { text-align: left; }
+  .cmp .n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .cmp .won { color: var(--copper); }
+  .bands { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .band { display: grid; grid-template-columns: 92px 1fr 64px; gap: 10px; align-items: center; font-size: 12px; }
+  .bar { height: 14px; background: var(--stone); border-radius: 3px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--copper); border-radius: 3px; }
+  .band .p { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .job { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; background: var(--white); border: 1px solid var(--stone-dark);
+    border-radius: 8px; padding: 12px 14px; min-height: 56px; text-decoration: none; color: var(--ink); }
+  .job .nm { font-weight: 600; font-size: 14px; }
+  .job .ad { font-size: 12px; color: var(--ink-muted); grid-column: 1; }
+  .job .rt { grid-column: 2; grid-row: 1 / span 2; text-align: right; align-self: center; }
+  .job .amt { font-weight: 600; font-variant-numeric: tabular-nums; font-size: 14px; }
+  .pill { display: inline-block; font-family: 'Bebas Neue', sans-serif; letter-spacing: .1em; font-size: 12px; padding: 2px 7px 1px; border-radius: 3px; margin-top: 3px; }
+  .p-sched { background: var(--ink); color: var(--stone); }
+  .p-prod { background: var(--copper); color: var(--white); }
+  .p-wait { background: var(--hi); color: var(--copper); }
+  .p-won { background: #E3EBDD; color: #3D5A2E; }
+  .p-lost { background: #EFDCDA; color: #8A2E26; }
+  .p-open { background: var(--stone); color: var(--ink-soft); }
+  .day { font-family: 'Bebas Neue', sans-serif; letter-spacing: .12em; font-size: 14px; color: var(--copper); margin: 10px 0 2px; }
+  .empty { font-size: 13px; color: var(--ink-muted); font-style: italic; padding: 10px 2px; }
+
+  .pipe { display: flex; flex-direction: column; gap: 8px; }
+  .stg { display: grid; grid-template-columns: 104px 1fr 110px; gap: 10px; align-items: center; font-size: 12px; }
+  .stg .k { font-family: 'Bebas Neue', sans-serif; letter-spacing: .1em; font-size: 14px; }
+  .stg .c { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .tabs button { min-height: 48px; border: 1px solid var(--stone-dark); background: var(--white); border-radius: 6px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: .1em; color: var(--ink-soft); cursor: pointer; }
+  .tabs button.on { background: var(--ink); color: var(--stone); border-color: var(--ink); }
+
+  #map { height: 420px; border-radius: 8px; border: 1px solid var(--stone-dark); background: #E9E5DF; }
+  #map .leaflet-tile-pane { filter: grayscale(1) sepia(.25) brightness(1.04) contrast(.92); }
+  .leaflet-popup-content { font-family: 'Inter', sans-serif; font-size: 12px; line-height: 1.5; margin: 10px 12px; }
+  .leaflet-popup-content b { font-size: 13px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11px; color: var(--ink-soft); margin: 8px 0 4px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -2px; margin-right: 5px; border: 1.5px solid var(--ink); }
+  .map-msg { font-size: 12px; color: var(--ink-muted); margin-top: 6px; }
+  table.areas { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; table-layout: fixed; }
+  table.areas th { font-family: 'Bebas Neue', sans-serif; letter-spacing: .1em; font-weight: 400; font-size: 13px; color: var(--ink-muted);
+    text-align: right; padding: 6px 4px; border-bottom: 1px solid var(--stone-dark); }
+  table.areas th:first-child, table.areas td:first-child { text-align: left; width: 38%; }
+  table.areas td { text-align: right; padding: 8px 4px; border-bottom: 1px solid var(--stone); font-variant-numeric: tabular-nums; }
+  table.areas td small { display: block; color: var(--ink-muted); font-size: 11px; }
+  footer { text-align: center; margin-top: 30px; font-family: 'Lora', serif; font-style: italic; color: var(--ink-muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <a class="back" href="./" id="back">← CRM</a>
+    <div class="ttl"><b>JOB BOARD</b><span>AGENCY ROOFING CO.</span></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="period" id="period" role="group" aria-label="Time period">
+    <button type="button" data-p="30">30 DAYS</button>
+    <button type="button" data-p="90">90 DAYS</button>
+    <button type="button" data-p="year">THIS YEAR</button>
+    <button type="button" data-p="all" class="on">ALL TIME</button>
+  </div>
+  <p class="note" id="period-note"></p>
+
+  <h2>Close Rate</h2><div class="rule"></div>
+  <div class="kpis" id="kpis"></div>
+
+  <h2>Pricing Check</h2><div class="rule"></div>
+  <div id="pricing"></div>
+
+  <h2>Schedule</h2><div class="rule"></div>
+  <div id="schedule"></div>
+
+  <h2>Pipeline</h2><div class="rule"></div>
+  <div class="card"><div class="pipe" id="pipe"></div></div>
+
+  <h2>Contracts</h2><div class="rule"></div>
+  <div class="tabs" id="ctabs">
+    <button type="button" data-t="won" class="on">ACCEPTED</button>
+    <button type="button" data-t="lost">DECLINED</button>
+  </div>
+  <div class="list" id="contracts"></div>
+
+  <h2>Where We Win</h2><div class="rule"></div>
+  <div class="legend">
+    <span><i style="background:#974930"></i>Close rate 50%+</span>
+    <span><i style="background:#C97E78"></i>25–49%</span>
+    <span><i style="background:#A79F95"></i>Under 25%</span>
+    <span><i style="background:#FDFBF8"></i>No decisions yet</span>
+    <span>Bigger dot = more proposals</span>
+  </div>
+  <div id="map"></div>
+  <p class="map-msg" id="map-msg"></p>
+  <table class="areas" id="areas"></table>
+
+  <footer>Built with agency. Driven by obligation.</footer>
+</div>
+
+<script>
+/* ZIP code centers for the ABQ metro, Valencia, Sandoval, Torrance and Santa Fe areas */
+const ZIPS = {"87001":[35.389,-106.352,"Algodones"],"87002":[34.651,-106.695,"Belen"],"87004":[35.328,-106.531,"Bernalillo"],"87005":[35.255,-107.986,"Bluewater"],"87006":[34.5,-106.804,"Bosque"],"87007":[35.046,-107.471,"Casa Blanca"],"87008":[35.129,-106.362,"Cedar Crest"],"87009":[34.371,-105.702,"Cedarvale"],"87010":[35.423,-106.132,"Cerrillos"],"87011":[34.065,-105.95,"Claunch"],"87012":[36.102,-106.669,"Coyote"],"87013":[36.048,-107.189,"Cuba"],"87014":[35.086,-107.518,"Cubero"],"87015":[35.078,-106.187,"Edgewood"],"87016":[34.77,-106.135,"Estancia"],"87017":[36.32,-106.769,"Gallina"],"87018":[36.209,-107.458,"Counselor"],"87020":[35.148,-107.853,"Grants"],"87021":[35.17,-107.891,"Milan"],"87022":[34.907,-106.689,"Isleta"],"87023":[34.592,-106.761,"Jarales"],"87024":[35.624,-106.722,"Jemez Pueblo"],"87025":[35.893,-106.771,"Jemez Springs"],"87026":[34.962,-107.233,"Laguna"],"87027":[36.119,-106.992,"La Jara"],"87028":[34.381,-106.815,"La Joya"],"87029":[36.325,-107.049,"Lindrith"],"87031":[34.781,-106.712,"Los Lunas"],"87032":[34.865,-106.052,"Mcintosh"],"87034":[34.896,-107.582,"Pueblo Of Acoma"],"87035":[34.989,-106.061,"Moriarty"],"87036":[34.516,-106.258,"Mountainair"],"87037":[36.16,-107.766,"Nageezi"],"87038":[35.041,-107.422,"New Laguna"],"87040":[35.139,-107.379,"Paguate"],"87041":[35.571,-106.338,"Pena Blanca"],"87042":[34.833,-106.687,"Peralta"],"87043":[35.309,-106.529,"Placitas"],"87044":[35.66,-106.668,"Ponderosa"],"87045":[35.355,-108.104,"Prewitt"],"87046":[36.184,-106.957,"Regina"],"87047":[35.168,-106.324,"Sandia Park"],"87048":[35.234,-106.62,"Corrales"],"87049":[35.082,-107.599,"San Fidel"],"87051":[35.112,-107.883,"San Rafael"],"87052":[35.527,-106.344,"Santo Domingo Pueblo"],"87053":[35.563,-106.771,"San Ysidro"],"87056":[35.13,-106.028,"Stanley"],"87059":[35.045,-106.306,"Tijeras"],"87060":[34.743,-106.733,"Tome"],"87061":[34.695,-106.325,"Torreon"],"87062":[34.485,-106.759,"Veguita"],"87063":[34.575,-106.031,"Willard"],"87064":[36.188,-106.556,"Youngsville"],"87068":[34.876,-106.698,"Bosque Farms"],"87070":[35.01,-105.669,"Clines Corners"],"87072":[35.609,-106.352,"Cochiti Pueblo"],"87083":[35.648,-106.343,"Cochiti Lake"],"87101":[35.2,-106.645,"Albuquerque"],"87102":[35.082,-106.648,"Albuquerque"],"87103":[35.044,-106.673,"Albuquerque"],"87104":[35.104,-106.671,"Albuquerque"],"87105":[35.045,-106.689,"Albuquerque"],"87106":[35.079,-106.617,"Albuquerque"],"87107":[35.135,-106.643,"Albuquerque"],"87108":[35.073,-106.575,"Albuquerque"],"87109":[35.151,-106.569,"Albuquerque"],"87110":[35.11,-106.578,"Albuquerque"],"87111":[35.135,-106.522,"Albuquerque"],"87112":[35.101,-106.518,"Albuquerque"],"87113":[35.176,-106.602,"Albuquerque"],"87114":[35.187,-106.665,"Albuquerque"],"87115":[35.055,-106.546,"Albuquerque"],"87116":[35.056,-106.551,"Albuquerque"],"87117":[35.02,-106.55,"Kirtland Afb"],"87119":[35.044,-106.673,"Albuquerque"],"87120":[35.142,-106.704,"Albuquerque"],"87121":[35.051,-106.727,"Albuquerque"],"87122":[35.179,-106.51,"Albuquerque"],"87123":[35.072,-106.509,"Albuquerque"],"87124":[35.249,-106.682,"Rio Rancho"],"87125":[35.044,-106.673,"Albuquerque"],"87131":[35.044,-106.673,"Albuquerque"],"87144":[35.324,-106.71,"Rio Rancho"],"87151":[35.023,-106.856,"Albuquerque"],"87153":[35.044,-106.673,"Albuquerque"],"87154":[35.044,-106.673,"Albuquerque"],"87158":[35.084,-106.651,"Albuquerque"],"87165":[35.08,-106.64,"Albuquerque"],"87174":[35.044,-106.673,"Rio Rancho"],"87176":[35.044,-106.673,"Albuquerque"],"87181":[35.044,-106.673,"Albuquerque"],"87184":[35.044,-106.673,"Albuquerque"],"87185":[35.044,-106.673,"Albuquerque"],"87187":[35.044,-106.673,"Albuquerque"],"87190":[35.044,-106.673,"Albuquerque"],"87191":[35.044,-106.673,"Albuquerque"],"87192":[35.044,-106.673,"Albuquerque"],"87193":[35.044,-106.673,"Albuquerque"],"87194":[35.044,-106.673,"Albuquerque"],"87195":[35.044,-106.673,"Albuquerque"],"87196":[35.044,-106.673,"Albuquerque"],"87197":[35.084,-106.651,"Albuquerque"],"87198":[35.084,-106.651,"Albuquerque"],"87199":[35.044,-106.673,"Albuquerque"],"87501":[35.697,-105.982,"Santa Fe"],"87502":[35.687,-105.938,"Santa Fe"],"87503":[35.687,-105.938,"Santa Fe"],"87504":[35.687,-105.938,"Santa Fe"],"87505":[35.622,-105.869,"Santa Fe"],"87506":[35.819,-105.989,"Santa Fe"],"87507":[35.657,-106.015,"Santa Fe"],"87508":[35.533,-105.926,"Santa Fe"],"87509":[35.521,-105.982,"Santa Fe"],"87510":[36.177,-106.245,"Abiquiu"],"87511":[36.089,-106.054,"Alcalde"],"87512":[36.942,-105.454,"Amalia"],"87513":[36.58,-105.687,"Arroyo Hondo"],"87514":[36.52,-105.534,"Arroyo Seco"],"87515":[36.48,-106.438,"Canjilon"],"87516":[36.181,-106.438,"Canones"],"87517":[36.364,-105.765,"Carson"],"87518":[36.465,-106.579,"Cebolla"],"87519":[36.754,-105.613,"Cerro"],"87520":[36.896,-106.583,"Chama"],"87521":[36.131,-105.739,"Chamisal"],"87522":[36.004,-105.947,"Chimayo"],"87523":[36.007,-105.861,"Cordova"],"87524":[36.932,-105.672,"Costilla"],"87525":[36.596,-105.454,"Taos Ski Valley"],"87527":[36.179,-105.862,"Dixon"],"87528":[36.86,-107.06,"Dulce"],"87529":[36.432,-105.575,"El Prado"],"87530":[36.365,-106.219,"El Rito"],"87531":[36.215,-105.89,"Embudo"],"87532":[35.987,-106.072,"Espanola"],"87533":[35.987,-106.065,"Espanola"],"87535":[35.529,-105.748,"Glorieta"],"87537":[36.074,-106.14,"Hernandez"],"87538":[35.421,-105.559,"Ilfeld"],"87539":[36.465,-106.579,"La Madera"],"87540":[35.431,-105.941,"Lamy"],"87543":[36.14,-105.682,"Llano"],"87544":[35.866,-106.268,"Los Alamos"],"87545":[35.864,-106.295,"Los Alamos"],"87547":[35.828,-106.204,"White Rock"],"87548":[36.176,-106.183,"Medanales"],"87549":[36.331,-106.003,"Ojo Caliente"],"87551":[36.729,-106.57,"Los Ojos"],"87552":[35.571,-105.67,"Pecos"],"87553":[36.176,-105.71,"Penasco"],"87554":[36.508,-106.011,"Petaca"],"87556":[36.704,-105.595,"Questa"],"87557":[36.336,-105.609,"Ranchos De Taos"],"87558":[36.666,-105.469,"Red River"],"87560":[35.334,-105.465,"Ribera"],"87562":[35.492,-105.675,"Rowe"],"87564":[36.612,-105.636,"San Cristobal"],"87565":[35.457,-105.438,"San Jose"],"87566":[36.051,-106.069,"Ohkay Owingeh"],"87567":[35.986,-106.032,"Santa Cruz"],"87569":[35.398,-105.324,"Serafina"],"87571":[36.395,-105.585,"Taos"],"87573":[35.773,-105.671,"Tererro"],"87574":[35.787,-105.916,"Tesuque"],"87575":[36.681,-106.557,"Tierra Amarilla"],"87576":[36.131,-105.759,"Trampas"],"87577":[36.647,-105.967,"Tres Piedras"],"87578":[36.044,-105.813,"Truchas"],"87579":[36.134,-105.571,"Vadito"],"87580":[36.57,-105.566,"Valdez"],"87581":[36.529,-106.145,"Vallecitos"],"87582":[36.159,-105.975,"Velarde"],"87583":[35.267,-105.361,"Villanueva"],"87592":[35.521,-105.982,"Santa Fe"],"87594":[35.521,-105.982,"Santa Fe"]};
+
+(function () {
+  'use strict';
+
+  // ── Read-only data (same format the receipt page reads) ──
+  function readCustomers() {
+    var list = [], ext = {};
+    try { list = JSON.parse(localStorage.getItem('arc_v3') || '[]') || []; } catch (e) { list = []; }
+    try { ext = JSON.parse(localStorage.getItem('arc_ext') || '{}') || {}; } catch (e) { ext = {}; }
+    return list.filter(Boolean).map(function (r) {
+      var c = JSON.parse(JSON.stringify(r)), e = ext[r.id];
+      if (e) {
+        if (e.state && !c.state) c.state = e.state;
+        if (e.jobType === 'repair') c.jobType = 'repair';
+      }
+      return c;
+    });
+  }
+
+  var STAGE_MAP = { 'Inspection': 'Inspected', 'Proposal': 'Proposed', 'Pending': 'Proposed', 'Scheduling': 'Signed',
+    'Scheduled': 'In Production', 'Final Inspection': 'Closed' };
+  var STAGES = ['Lead', 'Inspected', 'Proposed', 'Signed', 'In Production', 'Closed', 'Declined'];
+  var WON = { 'Signed': 1, 'In Production': 1, 'Closed': 1 };
+
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function stageOf(c) { var s = STAGE_MAP[c.stage] || c.stage || 'Lead'; return STAGES.indexOf(s) > -1 ? s : 'Lead'; }
+  // Contract value before tax (what the customer agreed to, not your cost)
+  function priceOf(c) {
+    var cost = num(c.materials) + num(c.labor) + num(c.other);
+    return Math.max(0, cost * (1 + num(c.margin) / 100) - num(c.discountAmount));
+  }
+  function zipOf(c) {
+    var m = String(c.zip || '').match(/(\d{5})/);
+    return m ? m[1] : '';
+  }
+  function name(c) { return [c.first, c.last].filter(Boolean).join(' ') || 'Customer'; }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function money(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+  function money2(n) { return '$' + n.toFixed(2); }
+  function pct(a, b) { return b ? Math.round(a / b * 100) + '%' : '—'; }
+  function dateOf(iso) { var p = String(iso || '').split('-').map(Number); return p[0] ? new Date(p[0], (p[1] || 1) - 1, p[2] || 1) : null; }
+  function longDay(d) { return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
+  function cityLine(c) { return [c.address, c.city].filter(Boolean).join(', '); }
+
+  var ALL = readCustomers().map(function (c) {
+    return { c: c, stage: stageOf(c), price: priceOf(c), zip: zipOf(c), size: num(c.roofsize),
+      created: num(c.createdAt) || 0, repair: c.jobType === 'repair' };
+  });
+
+  var period = 'all', ctab = 'won';
+  try { period = sessionStorage.getItem('arc_board_period') || 'all'; } catch (e) {}
+
+  function inPeriod(j) {
+    if (period === 'all') return true;
+    if (!j.created) return false;
+    var now = new Date(), from;
+    if (period === 'year') from = new Date(now.getFullYear(), 0, 1).getTime();
+    else from = now.getTime() - parseInt(period, 10) * 86400000;
+    return j.created >= from;
+  }
+
+  // ── Close rate ──
+  function renderKpis(J) {
+    var won = J.filter(function (j) { return WON[j.stage]; }), lost = J.filter(function (j) { return j.stage === 'Declined'; }),
+      open = J.filter(function (j) { return j.stage === 'Proposed'; });
+    var dec = won.length + lost.length;
+    var wonD = won.reduce(function (s, j) { return s + j.price; }, 0), lostD = lost.reduce(function (s, j) { return s + j.price; }, 0),
+      openD = open.reduce(function (s, j) { return s + j.price; }, 0);
+    document.getElementById('kpis').innerHTML =
+      kpi('Close rate', pct(won.length, dec), won.length + ' won of ' + dec + ' decided', true) +
+      kpi('Won', money(wonD), dec ? pct(wonD, wonD + lostD) + ' of proposed dollars' : 'No decisions yet') +
+      kpi('Avg won job', won.length ? money(wonD / won.length) : '—', lost.length ? 'Avg declined ' + money(lostD / lost.length) : 'Before tax') +
+      kpi('Waiting on answer', String(open.length), open.length ? money(openD) + ' in proposals out' : 'Nothing pending');
+    return { won: won, lost: lost, open: open };
+  }
+  function kpi(l, v, s, main) {
+    return '<div class="kpi' + (main ? ' main' : '') + '"><div class="l">' + esc(l) + '</div><div class="v">' + esc(v) + '</div><div class="s">' + esc(s) + '</div></div>';
+  }
+
+  // ── Pricing check: are we priced too high or too low? ──
+  function renderPricing(g) {
+    var el = document.getElementById('pricing');
+    var won = g.won, lost = g.lost, dec = won.length + lost.length;
+    function avg(a, f) { var x = a.filter(function (j) { return f(j) > 0; }); return x.length ? x.reduce(function (s, j) { return s + f(j); }, 0) / x.length : 0; }
+    var psf = function (j) { return j.size > 0 && j.price > 0 ? j.price / j.size : 0; };
+    var wPsf = avg(won, psf), lPsf = avg(lost, psf), wAvg = avg(won, function (j) { return j.price; }), lAvg = avg(lost, function (j) { return j.price; });
+    var rate = dec ? won.length / dec : 0;
+
+    var read;
+    if (dec < 5) read = 'Mark at least <b>5 jobs</b> as Signed or Declined to get a pricing read. So far: <b>' + dec + '</b>. Tip: when a customer says no, move them to <b>Declined</b> in the CRM so this stays honest.';
+    else {
+      read = 'You close <b>' + Math.round(rate * 100) + '%</b> of decided proposals. ';
+      if (rate >= 0.7) read += 'That is high for roofing. You may be <b>leaving money on the table</b>; try a few points more margin on the next proposals and watch this number.';
+      else if (rate < 0.25) read += 'That is low. Check whether declines cluster at a higher $/sq ft (below) or in certain areas (map). If not, the issue may be lead quality, not price.';
+      else read += 'That is a healthy range. Use the $/sq ft gap and the price bands below to fine-tune.';
+      if (wPsf && lPsf) {
+        var gap = (lPsf - wPsf) / wPsf;
+        if (gap > 0.1) read += ' Declined jobs ran <b>' + Math.round(gap * 100) + '% higher per sq ft</b> than jobs you won.';
+        else if (gap < -0.1) read += ' Declined jobs were actually <b>cheaper per sq ft</b>, so price likely isn’t why you lost them.';
+      }
+    }
+    var rows = '<div class="h">Before tax</div><div class="h">Won</div><div class="h">Declined</div>' +
+      '<div>Average job</div><div class="n won">' + (wAvg ? money(wAvg) : '—') + '</div><div class="n">' + (lAvg ? money(lAvg) : '—') + '</div>' +
+      '<div>Price per sq ft</div><div class="n won">' + (wPsf ? money2(wPsf) : '—') + '</div><div class="n">' + (lPsf ? money2(lPsf) : '—') + '</div>';
+
+    var BANDS = [[0, 2500, 'Under $2.5k'], [2500, 7500, '$2.5k–7.5k'], [7500, 15000, '$7.5k–15k'], [15000, 1e12, '$15k+']];
+    var bands = BANDS.map(function (b) {
+      var w = won.filter(function (j) { return j.price >= b[0] && j.price < b[1]; }).length,
+        l = lost.filter(function (j) { return j.price >= b[0] && j.price < b[1]; }).length;
+      var r = w + l ? w / (w + l) : 0;
+      return '<div class="band"><span>' + b[2] + '</span><div class="bar"><i style="width:' + Math.round(r * 100) + '%"></i></div>' +
+        '<span class="p">' + (w + l ? Math.round(r * 100) + '% · ' + (w + l) : '—') + '</span></div>';
+    }).join('');
+
+    var types = ['replace', 'repair'].map(function (t) {
+      var w = won.filter(function (j) { return (t === 'repair') === j.repair; }).length, l = lost.filter(function (j) { return (t === 'repair') === j.repair; }).length;
+      return '<div>' + (t === 'repair' ? 'Repair / maintenance' : 'Replacement / coating') + '</div><div class="n won">' + w + ' won</div><div class="n">' + pct(w, w + l) + '</div>';
+    }).join('');
+
+    el.innerHTML = '<div class="read">' + read + '</div><div class="card"><div class="cmp">' + rows + '</div>' +
+      '<div class="day" style="margin-top:16px">Close rate by job size</div><div class="bands">' + bands + '</div>' +
+      '<div class="day" style="margin-top:16px">By quote type</div><div class="cmp">' + types + '</div></div>';
+  }
+
+  // ── Schedule: signed and in-production jobs ──
+  function renderSchedule() {
+    var el = document.getElementById('schedule');
+    var active = ALL.filter(function (j) { return j.stage === 'Signed' || j.stage === 'In Production'; });
+    var dated = active.filter(function (j) { return dateOf(j.c.scheddate); })
+      .sort(function (a, b) { return dateOf(a.c.scheddate) - dateOf(b.c.scheddate); });
+    var undated = active.filter(function (j) { return !dateOf(j.c.scheddate); });
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var html = '', lastDay = '';
+    dated.forEach(function (j) {
+      var d = dateOf(j.c.scheddate), key = d.toDateString();
+      if (key !== lastDay) {
+        lastDay = key;
+        var tag = d.getTime() === today.getTime() ? ' · TODAY' : d < today ? ' · PAST' : '';
+        html += '<div class="day">' + esc(longDay(d).toUpperCase() + tag) + '</div>';
+      }
+      html += jobRow(j, j.stage === 'In Production' ? '<span class="pill p-prod">IN PRODUCTION</span>' : '<span class="pill p-sched">SCHEDULED</span>');
+    });
+    if (undated.length) {
+      html += '<div class="day">SIGNED · NOT SCHEDULED YET</div>';
+      undated.forEach(function (j) { html += jobRow(j, '<span class="pill p-wait">NEEDS A DATE</span>'); });
+    }
+    el.innerHTML = html ? '<div class="list">' + html + '</div>' : '<p class="empty">No signed jobs yet. Signed and In Production jobs show here by scheduled date.</p>';
+  }
+
+  function jobRow(j, pill) {
+    var c = j.c;
+    return '<a class="job" href="./?open=' + encodeURIComponent(c.id) + '"><span class="nm">' + esc(name(c)) + '</span>' +
+      '<span class="rt"><span class="amt">' + money(j.price) + '</span><br>' + pill + '</span>' +
+      '<span class="ad">' + esc([cityLine(c), c.rooftype, j.repair ? 'Repair' : ''].filter(Boolean).join(' · ') || 'No address') + '</span></a>';
+  }
+
+  // ── Pipeline ──
+  function renderPipe(J) {
+    var max = 1, rows = STAGES.map(function (s) {
+      var x = J.filter(function (j) { return j.stage === s; });
+      var d = x.reduce(function (t, j) { return t + j.price; }, 0);
+      if (x.length > max) max = x.length;
+      return { s: s, n: x.length, d: d };
+    });
+    document.getElementById('pipe').innerHTML = rows.map(function (r) {
+      var col = r.s === 'Declined' ? '#A79F95' : WON[r.s] ? '#974930' : '#C97E78';
+      return '<div class="stg"><span class="k">' + esc(r.s.toUpperCase()) + '</span><div class="bar"><i style="width:' + Math.round(r.n / max * 100) + '%;background:' + col + '"></i></div>' +
+        '<span class="c">' + r.n + (r.n ? ' · ' + money(r.d) : '') + '</span></div>';
+    }).join('');
+  }
+
+  // ── Accepted / declined ──
+  function renderContracts(g) {
+    var list = (ctab === 'won' ? g.won : g.lost).slice().sort(function (a, b) { return b.created - a.created; });
+    document.getElementById('contracts').innerHTML = list.length ? list.map(function (j) {
+      return jobRow(j, ctab === 'won' ? '<span class="pill p-won">' + esc(j.stage.toUpperCase()) + '</span>' : '<span class="pill p-lost">DECLINED</span>');
+    }).join('') : '<p class="empty">' + (ctab === 'won' ? 'No accepted contracts in this period.' : 'No declined proposals in this period.') + '</p>';
+  }
+
+  // ── Map ──
+  var map = null, layer = null;
+  function areaStats(J) {
+    var by = {}, cityPts = {};
+    Object.keys(ZIPS).forEach(function (z) { var v = ZIPS[z], k = v[2].toLowerCase(); (cityPts[k] = cityPts[k] || []).push(v); });
+    var off = 0;
+    J.forEach(function (j) {
+      if (j.stage === 'Lead' || j.stage === 'Inspected') return;
+      var key = j.zip && ZIPS[j.zip] ? j.zip : '', pt;
+      if (key) pt = ZIPS[key];
+      else {
+        var cp = cityPts[String(j.c.city || '').trim().toLowerCase()];
+        if (!cp) { off++; return; }
+        key = String(j.c.city).trim();
+        pt = [cp.reduce(function (s, p) { return s + p[0]; }, 0) / cp.length, cp.reduce(function (s, p) { return s + p[1]; }, 0) / cp.length, key];
+      }
+      var a = by[key] = by[key] || { key: key, lat: pt[0], lng: pt[1], city: pt[2], won: 0, lost: 0, open: 0, wonD: 0 };
+      if (WON[j.stage]) { a.won++; a.wonD += j.price; } else if (j.stage === 'Declined') a.lost++; else a.open++;
+    });
+    return { areas: Object.keys(by).map(function (k) { return by[k]; }), off: off };
+  }
+  function colorFor(a) {
+    var d = a.won + a.lost; if (!d) return '#FDFBF8';
+    var r = a.won / d; return r >= 0.5 ? '#974930' : r >= 0.25 ? '#C97E78' : '#A79F95';
+  }
+  function areaLabel(a) { return /^\d{5}$/.test(a.key) ? a.city + ' ' + a.key : a.key + ' (city)'; }
+
+  function renderMap(J) {
+    var st = areaStats(J), msg = document.getElementById('map-msg');
+    var areas = st.areas.sort(function (a, b) { return (b.won + b.lost + b.open) - (a.won + a.lost + a.open); });
+    // Ranked table (works even without signal)
+    document.getElementById('areas').innerHTML = areas.length ?
+      '<tr><th>Area</th><th>Won</th><th>Lost</th><th>Open</th><th>Close</th></tr>' + areas.map(function (a) {
+        return '<tr><td>' + esc(areaLabel(a)) + (a.wonD ? '<small>' + money(a.wonD) + ' won</small>' : '') + '</td><td>' + a.won + '</td><td>' + a.lost + '</td><td>' + a.open + '</td><td>' + pct(a.won, a.won + a.lost) + '</td></tr>';
+      }).join('') : '';
+    var notes = [];
+    if (!areas.length) notes.push('Proposals show on the map once they have a ZIP code or a city.');
+    if (st.off) notes.push(st.off + ' proposal' + (st.off > 1 ? 's' : '') + ' without a ZIP or known city ' + (st.off > 1 ? 'are' : 'is') + ' not on the map.');
+
+    if (!window.L) { notes.push('The map needs a signal to load. The area list below still works offline.'); msg.textContent = notes.join(' '); return; }
+    msg.textContent = notes.join(' ');
+    if (!map) {
+      map = L.map('map', { scrollWheelZoom: false, tap: true }).setView([35.11, -106.62], 10);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+    }
+    if (layer) layer.remove();
+    layer = L.layerGroup().addTo(map);
+    var bounds = [];
+    areas.forEach(function (a) {
+      var n = a.won + a.lost + a.open;
+      L.circleMarker([a.lat, a.lng], { radius: Math.min(28, 7 + Math.sqrt(n) * 5), color: '#1C1A18', weight: 1.5,
+        fillColor: colorFor(a), fillOpacity: 0.85 })
+        .bindPopup('<b>' + esc(areaLabel(a)) + '</b><br>Close rate ' + pct(a.won, a.won + a.lost) + '<br>' + a.won + ' won · ' + a.lost + ' declined · ' + a.open + ' open' +
+          (a.wonD ? '<br>' + money(a.wonD) + ' won' : ''))
+        .addTo(layer);
+      bounds.push([a.lat, a.lng]);
+    });
+    if (bounds.length > 1) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
+    else if (bounds.length === 1) map.setView(bounds[0], 12);
+  }
+
+  // ── Render ──
+  function render() {
+    var J = ALL.filter(inPeriod);
+    var lbl = { '30': 'Last 30 days', '90': 'Last 90 days', year: 'This year', all: 'All time' }[period];
+    document.getElementById('period-note').textContent = lbl + ' · by date the customer was added · ' + J.length + ' customer' + (J.length === 1 ? '' : 's') +
+      '. Amounts are before tax. Data stays on this phone; this page only reads it.';
+    document.querySelectorAll('#period button').forEach(function (b) { b.classList.toggle('on', b.dataset.p === period); });
+    var g = renderKpis(J);
+    renderPricing(g);
+    renderSchedule();
+    renderPipe(J);
+    renderContracts(g);
+    renderMap(J);
+  }
+
+  document.getElementById('period').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-p]'); if (!b) return;
+    period = b.dataset.p;
+    try { sessionStorage.setItem('arc_board_period', period); } catch (err) {}
+    render();
+  });
+  document.getElementById('ctabs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-t]'); if (!b) return;
+    ctab = b.dataset.t;
+    document.querySelectorAll('#ctabs button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    renderContracts(renderKpisSilent());
+  });
+  function renderKpisSilent() {
+    var J = ALL.filter(inPeriod);
+    return { won: J.filter(function (j) { return WON[j.stage]; }), lost: J.filter(function (j) { return j.stage === 'Declined'; }) };
+  }
+
+  window.addEventListener('load', render);
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous"></script>
+</body>
+</html>

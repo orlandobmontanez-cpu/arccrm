@@ -737,6 +737,11 @@
   .maint-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .maint-actions .proposal-btn { flex: 1 1 200px; justify-content: center; min-height: 48px; text-decoration: none; }
   .maint-actions [hidden] { display: none; }
+  .follow-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+  .follow-quick button { min-height: 44px; white-space: nowrap; padding: 0 2px; border: 1px solid var(--stone-dark, #D8CFC3); background: var(--white); border-radius: 6px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: .08em; color: var(--ink-soft, #3A3734); cursor: pointer; }
+  .follow-quick button.clear { color: var(--ink-muted); }
+  .card-tag.follow-tag { background: var(--copper); color: var(--white); padding: 2px 6px 1px; border-radius: 3px; }
   #ins-wrap { padding: 0 16px 10px; flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .btn-board { text-decoration: none; background: var(--copper); border-color: var(--copper); color: var(--white); }
   .btn-ins {
@@ -1212,6 +1217,31 @@
         </div>
 
         <!-- SCHEDULED DATE (appears when stage = Scheduled) -->
+        <!-- FOLLOW-UP -->
+        <div class="form-section" id="section-follow">
+          <div class="form-section-title">Next Follow-Up</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="f-followup">Follow up on</label>
+              <input type="date" id="f-followup">
+            </div>
+            <div class="form-group">
+              <label for="f-follownote">What about</label>
+              <input type="text" id="f-follownote" placeholder="Check in on the proposal" maxlength="120">
+            </div>
+          </div>
+          <div class="follow-quick" id="f-follow-quick">
+            <button type="button" data-fdays="1">TOMORROW</button>
+            <button type="button" data-fdays="3">3 DAYS</button>
+            <button type="button" data-fdays="7">1 WEEK</button>
+            <button type="button" data-fdays="0" class="clear">CLEAR</button>
+          </div>
+          <div class="maint-actions">
+            <a class="proposal-btn proposal-btn-secondary gcal-link" id="f-follow-gcal" href="#" target="_blank" rel="noopener" hidden>📅 ADD TO GOOGLE CALENDAR</a>
+          </div>
+          <p class="xsec-note" style="margin-top:8px;">Shows on the Job Board under Today when it's due.</p>
+        </div>
+
         <div class="form-section" id="section-scheduled" style="display:none;">
           <div class="form-section-title">Install Date</div>
           <div class="form-grid">
@@ -1219,6 +1249,9 @@
               <label>Scheduled Date</label>
               <input type="date" id="f-scheddate">
             </div>
+          </div>
+          <div class="maint-actions">
+            <a class="proposal-btn proposal-btn-secondary gcal-link" id="f-sched-gcal" href="#" target="_blank" rel="noopener" hidden>📅 ADD TO GOOGLE CALENDAR</a>
           </div>
         </div>
 
@@ -1689,6 +1722,8 @@ let formTaxAuto = false;
 // their price, signatures stay valid). Fields that version doesn't know live
 // in arc_ext, keyed by customer id, which older versions never touch.
 const EXT_KEY = 'arc_ext';
+// Follow-ups also live in their own key: older versions rebuild arc_ext on save and would drop them.
+const FOLLOW_KEY = 'arc_follow';   // { [customerId]: { d: 'YYYY-MM-DD', n: 'note' } }
 const LEGACY_FIELDS = ['id', 'arcNum', 'createdAt', 'updatedAt', 'stage', 'first', 'last', 'phone', 'email', 'address', 'city', 'zip',
   'rooftype', 'roofsize', 'scope', 'requests', 'materials', 'labor', 'other', 'margin', 'discountLabel', 'discountAmount', 'scheddate',
   'activityLog', 'proposalSent', 'sig', 'payLink', 'quotes', 'changeOrders'];
@@ -1711,7 +1746,7 @@ function toStored(c) {
 
 function extOf(c) {
   const e = { state: c.state, jobType: c.jobType, items: c.items, completedAt: c.completedAt, nextInspection: c.nextInspection, lastInspected: c.lastInspected,
-    taxRate: c.taxRate, taxAuto: c.taxAuto };
+    taxRate: c.taxRate, taxAuto: c.taxAuto, followUp: c.followUp, followNote: c.followNote };
   // No "mirror": older versions then load repair jobs as replacement jobs at the same price
   const qs = {};
   c.quotes.forEach(q => { if (isRepair(q)) qs[q.id] = { type: q.type, items: [] }; });
@@ -1724,7 +1759,7 @@ function extOf(c) {
 function applyExt(r, e) {
   if (!e) return r;
   const c = Object.assign({}, r);
-  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
+  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto', 'followUp', 'followNote'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
   if (e.state && !/^[A-Za-z]{2}[\s,]/.test(String(r.zip || ''))) c.state = e.state;
   const mirrored = (o, x) => String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0';
   if (e.jobType === 'repair') {
@@ -1752,6 +1787,9 @@ function load() {
     try { ext = JSON.parse(localStorage.getItem(EXT_KEY) || '{}') || {}; } catch (e) {}
     customers = raw ? JSON.parse(raw) : [];
     customers = customers.map(r => normalize(applyExt(r, r && ext[r.id])));
+    let fol = {};
+    try { fol = JSON.parse(localStorage.getItem(FOLLOW_KEY) || '{}') || {}; } catch (e) {}
+    customers.forEach(c => { const f = fol[c.id]; if (f) { c.followUp = f.d || ''; c.followNote = f.n || ''; } });
   } catch(e) { customers = []; }
 }
 
@@ -1760,7 +1798,10 @@ function save() {
   try {
     const ext = {};
     customers.forEach(c => { ext[c.id] = extOf(c); });
+    const fol = {};
+    customers.forEach(c => { if (c.followUp || c.followNote) fol[c.id] = { d: c.followUp || '', n: c.followNote || '' }; });
     localStorage.setItem(EXT_KEY, JSON.stringify(ext));
+    localStorage.setItem(FOLLOW_KEY, JSON.stringify(fol));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(customers.map(toStored)));
     _saveWarned = false;
   } catch (e) {
@@ -1834,6 +1875,8 @@ function normalize(c) {
     completedAt: c.completedAt || '',
     nextInspection: c.nextInspection || '',
     lastInspected: c.lastInspected || '',
+    followUp: c.followUp || '',
+    followNote: c.followNote || '',
     quotes: Array.isArray(c.quotes) ? c.quotes.map(normQuote) : [],
     changeOrders: Array.isArray(c.changeOrders) ? c.changeOrders.map(normCO) : [],
   });
@@ -1894,10 +1937,19 @@ function renderList() {
         ${inProg && c.id === currentId ? '<span class="in-progress-tag">IN PROGRESS</span>' : ''}
         ${c.quotes && c.quotes.length ? `<span class="card-tag">+${c.quotes.length} QUOTE${c.quotes.length > 1 ? 'S' : ''}</span>` : ''}
         ${c.changeOrders && c.changeOrders.length ? `<span class="card-tag">${c.changeOrders.length} CO</span>` : ''}
+        ${followTag(c)}
         <span class="arc-num">${esc(c.arcNum)}</span>
       </div>
     </div>`;
   }).join('');
+}
+
+// Follow-up badge on the customer list: due today or overdue
+function followTag(c) {
+  if (!c.followUp || c.stage === 'Closed' || c.stage === 'Declined') return '';
+  const today = localISODate();
+  if (c.followUp > today) return '';
+  return `<span class="card-tag follow-tag">${c.followUp === today ? 'FOLLOW UP TODAY' : 'FOLLOW-UP OVERDUE'}</span>`;
 }
 
 // ── SELECT / NEW CUSTOMER ──────────────────────────────
@@ -1959,6 +2011,8 @@ function loadDetail() {
   document.getElementById('f-discount-label').value = c.discountLabel || '';
   document.getElementById('f-discount-amount').value = c.discountAmount || '';
   document.getElementById('f-scheddate').value = c.scheddate;
+  document.getElementById('f-followup').value = c.followUp || '';
+  document.getElementById('f-follownote').value = c.followNote || '';
   document.getElementById('f-paylink').value = c.payLink || '';
   document.getElementById('f-completed').value = c.completedAt || '';
   document.getElementById('f-nextinsp').value = c.nextInspection || '';
@@ -2111,6 +2165,10 @@ function saveCustomer(toast = true) {
   c.discountLabel = document.getElementById('f-discount-label').value.trim();
   c.discountAmount = document.getElementById('f-discount-amount').value;
   c.scheddate = document.getElementById('f-scheddate').value;
+  const prevFollow = c.followUp;
+  c.followUp = document.getElementById('f-followup').value;
+  if (c.followUp !== prevFollow) logActivity(c.followUp ? 'Follow-up set for ' + longDate(c.followUp) : 'Follow-up cleared');
+  c.followNote = document.getElementById('f-follownote').value.trim();
   c.payLink = document.getElementById('f-paylink').value.trim();
   c.jobType = formJobType;
   c.items = normItems(formItems);
@@ -4317,7 +4375,29 @@ function liveCustomer() {
   return Object.assign({}, c, { first: g('f-first'), last: g('f-last'), phone: g('f-phone'), address: g('f-address'), city: g('f-city'), state: g('f-state'), zip: g('f-zip') });
 }
 
+// Google Calendar links for the follow-up and install dates (one-time, all-day)
+function updateCalLinks() {
+  const c = getCurrent();
+  if (!c) return;
+  const lc = liveCustomer();
+  const f = document.getElementById('f-followup').value, fl = document.getElementById('f-follow-gcal');
+  fl.hidden = !f;
+  if (f) fl.href = gcalEventUrl(lc, f, 'Follow up – ' + custName(lc), document.getElementById('f-follownote').value.trim());
+  const d = document.getElementById('f-scheddate').value, dl = document.getElementById('f-sched-gcal');
+  dl.hidden = !d;
+  if (d) dl.href = gcalEventUrl(lc, d, 'Roof install – ' + custName(lc), (lc.rooftype ? lc.rooftype : '') + (lc.roofsize ? ' · ' + lc.roofsize + ' sq ft' : ''));
+}
+function custName(c) { return [c.first, c.last].filter(Boolean).join(' ') || 'Customer'; }
+function gcalEventUrl(c, iso, title, note) {
+  const loc = [c.address, cityLine(c)].filter(Boolean).join(', ');
+  const details = [note, c.phone ? 'Phone: ' + c.phone : '', c.email ? 'Email: ' + c.email : '', c.arcNum ? 'Customer ' + c.arcNum : ''].filter(Boolean).join('\n');
+  const q = (k, v) => '&' + k + '=' + encodeURIComponent(v);
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE' + q('text', title) +
+    q('dates', iso.replace(/-/g, '') + '/' + addDays(iso, 1).replace(/-/g, '')) + q('location', loc) + q('details', details);
+}
+
 function updateMaintSection() {
+  updateCalLinks();
   const c = getCurrent();
   if (!c) return;
   const done = document.getElementById('f-completed').value, next = document.getElementById('f-nextinsp').value;
@@ -4422,8 +4502,16 @@ function renderInspections() {
     updateMaintSection();
   });
   next.addEventListener('change', updateMaintSection);
+  ['f-followup', 'f-follownote', 'f-scheddate'].forEach(id => document.getElementById(id).addEventListener('input', updateCalLinks));
+  document.getElementById('f-follow-quick').addEventListener('click', e => {
+    const b = e.target.closest('[data-fdays]'); if (!b) return;
+    const n = parseInt(b.dataset.fdays, 10);
+    document.getElementById('f-followup').value = n ? addDays(localISODate(), n) : '';
+    if (!n) document.getElementById('f-follownote').value = '';
+    updateCalLinks();
+  });
   ['f-first', 'f-last', 'f-phone', 'f-address', 'f-city', 'f-state', 'f-zip'].forEach(id =>
-    document.getElementById(id).addEventListener('input', () => { if (next.value) updateMaintSection(); }));
+    document.getElementById(id).addEventListener('input', () => { if (next.value) updateMaintSection(); else updateCalLinks(); }));
   document.getElementById('f-inspected').addEventListener('click', e => {
     const b = e.currentTarget;
     if (!b.classList.contains('armed')) {
@@ -4691,6 +4779,18 @@ function closePreview() {
   document.getElementById('pv-save').addEventListener('click', pvSave);
   document.getElementById('btn-generate').addEventListener('click', e => { e.preventDefault(); generateProposal(); });
 })();
+
+function reloadFromStorage() {
+  const cur = currentId;
+  load();
+  renderList();
+  renderBackupBanner();
+  if (cur && customers.some(c => c.id === cur)) selectCustomer(cur);
+}
+// Safari can show this page from its back/forward cache with old data in memory.
+// The Job Board saves edits, so always re-read storage when the page comes back.
+window.addEventListener('pageshow', e => { if (e.persisted) reloadFromStorage(); });
+window.addEventListener('storage', e => { if (e.key === STORAGE_KEY || e.key === EXT_KEY || e.key === FOLLOW_KEY) reloadFromStorage(); });
 
 function restoreReturn() {
   // Coming back from a document opened in this tab → reopen that customer

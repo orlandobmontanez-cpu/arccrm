@@ -5,8 +5,12 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 - Live site: https://orlandobmontanez-cpu.github.io/arccrm/ (GitHub Pages, deploys from `main` in about 60 seconds)
 - The live app is `index.html` (must keep that exact name). `receipt.html` is the receipt page. `board.html` is the **Job Board**
-  (schedule, pipeline, accepted/declined, close rate, pricing check, success map). It is **read-only**: it reads `arc_v3` + `arc_ext`
-  and must never write them. It loads Leaflet 1.9.4 from cdnjs and OpenStreetMap tiles for the map (Orlando asked for a real
+  (Today: follow-ups due, installs today, proposals with no follow-up; schedule; close rate; pricing check; pipeline;
+  accepted/declined; success map). Tapping a job opens a sheet to mark Accepted/Declined/Reopen, set the install date and a
+  follow-up date + note, add either to Google Calendar, and call/text/email. It writes **only** `stage`, `scheddate`,
+  `activityLog`, `updatedAt` on the `arc_v3` record and `followUp` / `followNote` in `arc_ext[id]` + `arc_follow` (`update()` in board.html) —
+  never any other field. The CRM re-reads storage on `pageshow` (back/forward cache) and `storage` events so it never saves
+  stale data over board edits. It loads Leaflet 1.9.4 from cdnjs and OpenStreetMap tiles for the map (Orlando asked for a real
   street map); everything else on it works offline. ZIP centers for the 870/871/875 areas are bundled in the page.
   Close rate = Signed + In Production + Closed ÷ (those + Declined). Amounts are before tax: (materials+labor+other)×(1+margin) − discount.
   Tapping a job opens `./?open=<customer id>` in the CRM.
@@ -36,6 +40,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
     (`taxRates` = `[{ city, rate }]` in percent, starts with Albuquerque 7.3125; `lastBackupAt` ms timestamp of the last Export Backup)
   - `arc_owner_sig` — Orlando's saved signature `{ name, img (PNG data URL), at }`
   - `arc_receipt_<customerId>` — receipt drafts
+  - `arc_follow` — follow-up dates + notes `{ [id]: { d, n } }` (also mirrored in `arc_ext`)
 - `normalize(c)` whitelists customer fields. **Any new field must be added there**, or it is silently dropped on load. Same for `normQuote` / `normCO`.
   - Address: `address` (street + unit), `city`, `state` (default NM), `zip`. Old records with "NM 87120" in `zip` are split on load.
     Documents always print "City, NM ZIP" via `cityLine(c)`.
@@ -44,6 +49,9 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
     inspection reminder). Before Oct 27 2026 repair jobs used line items (`items`); `migrateRepairItems` converts them on load to
     Materials = line-item total, margin 0, so totals and signatures are unchanged. `items` is now always empty.
   - Inspections: `completedAt`, `nextInspection`, `lastInspected` (YYYY-MM-DD).
+  - Follow-up: `followUp` (YYYY-MM-DD) + `followNote` (short text), stored in `arc_ext` **and** `arc_follow`
+    (`{ id: { d, n } }`, its own key — older versions rebuild `arc_ext` on save and would drop them; `arc_follow` wins on load). Set in the CRM (Next Follow-Up section,
+    with Google Calendar link) or on the Job Board. The customer list shows FOLLOW UP TODAY / FOLLOW-UP OVERDUE badges.
   - Tax: `taxRate` (percent, per job) and `taxAuto` (rate follows the job city via Settings → Tax rates until typed over).
     Existing customers keep 7.3125. Stored in `arc_ext` like the other newer fields.
 - Never break existing records: old data must load unchanged. Import/Export backups are a JSON array of customers

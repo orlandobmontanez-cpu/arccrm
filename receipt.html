@@ -281,6 +281,7 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <script src="arcsync.js"></script>
+<script src="arcmail.js"></script>
 <script>if (window.ARCSync) ARCSync.init({ pull: false });</script>
 </head>
 <body>
@@ -1171,6 +1172,19 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var addr = (site && !/^same as billing$/i.test(site) ? site : $('cAddr1').value.trim()) || 'your property';
     var title = 'Your Agency Roofing Co. Receipt';
     var text = 'Hi ' + first + ', attached is your receipt for ' + addr + '. Reply or call (505) 900-1711 with any questions. \u2013 Orlando, Agency Roofing Co.';
+    /* Gmail sending set up (arcmail.js): panel with To, subject, message and the PDF attached; SEND sends it */
+    if (window.ARCMail && ARCMail.enabled) {
+      var full = $('cName').value.trim() || first, rno = $('rNo').value.trim();
+      ARCMail.compose({ kind: 'Receipt', to: email, file: pdfFile,
+        subject: full + ', your Agency Roofing Co. receipt for ' + addr + (rno ? ' \u00b7 ' + rno : ''),
+        body: 'Hi ' + first + ',\n\nAttached is your receipt' + (rno ? ' (' + rno + ')' : '') + ' for ' + addr + '. Thank you for your business.\n\n' +
+          'If you have any questions, reply to this email or call me directly.\n\nBuilt with agency. Driven by obligation.\n\nOrlando\nAgency Roofing Co.\n(505) 900-1711',
+        onSent: function(r){ toast('Sent to ' + r.to + '. A copy is in your Gmail Sent folder.'); logSent(r.to, rno); },
+        fallback: mailApp });
+      return;
+    }
+    mailApp();
+    function mailApp(){
     /* Same tap: copy the customer's email + message, then share the PDF alone
        (any title/text in the share makes iOS "Save to Files" add a stray .txt) */
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1181,7 +1195,24 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       return;
     }
     fallback(pdfFile, { to: email, subject: title, body: text });
+    }
   });
+  /* Note the send in the customer's CRM activity log (same format the CRM uses) */
+  function logSent(to, rno){
+    try {
+      if (!CUST || !CUST.id) return;
+      var list = JSON.parse(localStorage.getItem('arc_v3') || '[]'), rec = null;
+      for (var i = 0; i < list.length; i++) if (list[i] && list[i].id === CUST.id) { rec = list[i]; break; }
+      if (!rec) return;
+      var ts = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+      rec.activityLog = Array.isArray(rec.activityLog) ? rec.activityLog : [];
+      rec.activityLog.unshift({ ts: ts, msg: 'Receipt ' + (rno || '') + ' emailed to ' + to });
+      if (rec.activityLog.length > 50) rec.activityLog = rec.activityLog.slice(0, 50);
+      rec.updatedAt = Date.now();
+      localStorage.setItem('arc_v3', JSON.stringify(list));
+    } catch(e){}
+  }
+  if (window.ARCMail) ARCMail.preload();
 
   /* ── Sign in person ── */
   function saveDraftQuiet(){ try { localStorage.setItem(KEY, JSON.stringify(snapshot())); } catch(e){} }

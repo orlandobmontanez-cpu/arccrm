@@ -32,8 +32,9 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 ## Architecture
 
-- Everything is plain HTML/CSS/JS in single files. **No build step, no frameworks, no external JS.** One shared exception:
-  **`arcsync.js`** (cloud sync), loaded in the `<head>` of index, board and receipt — keep it the only shared file. The only outside resources are Google Fonts
+- Everything is plain HTML/CSS/JS in single files. **No build step, no frameworks, no external JS.** Two shared files only:
+  **`arcsync.js`** (cloud sync; `<head>` of index, board and receipt) and **`arcmail.js`** (Gmail sending; index and receipt).
+  It loads Google's sign-in script (`accounts.google.com/gsi/client`) on demand. The only outside resources are Google Fonts
   and, for PDFs only, html2canvas 1.4.1 + jsPDF 2.5.1 from cdnjs (Orlando asked for this; loaded on demand when a preview or receipt opens).
 - Data lives in the phone's browser `localStorage` (per device, same origin as the site):
   - `arc_v3` — array of customer records (the whole CRM)
@@ -97,6 +98,23 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - Sign in: Settings → Cloud Sync (email + password, created in Supabase → Authentication → Users). Status line on the list.
 - Any **new stored key or field** must be inside one of the synced records (or added to `localRecords`/`applyRecords`).
 
+## Emailing documents — `arcmail.js` (Gmail API from the browser)
+
+- **Email** on a proposal/quote/change order preview and **Send** on the receipt open `ARCMail.compose(...)`: a sheet with To
+  (customer email), Subject, Message and the PDF attached; **SEND** sends it with the Gmail API as the signed-in Google account
+  (orlando.montanez@agencyroofingco.com), so it lands in Gmail Sent. Orlando asked for this; he reviews then taps Send — never
+  auto-send without the panel.
+- Auth: Google Identity Services token client, scope `gmail.send` only, `CLIENT_ID` constant in `arcmail.js` (OAuth **Web**
+  client in his Google Cloud project "ARC CRM", consent screen **Internal**, authorized JavaScript origin
+  `https://orlandobmontanez-cpu.github.io`). The 1-hour access token is kept in `sessionStorage` (`arc_gtoken`) only.
+  `requestAccessToken` must run inside the tap (pop-up rules), so the PDF and the Google script are prepared beforehand.
+  No client secret or refresh token anywhere. If `CLIENT_ID` is empty, `ARCMail.enabled` is false and the Mail-app flow runs.
+- Message = RFC 822 multipart/mixed built by hand (base64 body + PDF, RFC 2047 folded subject) → `users/me/messages/send` `{ raw }`.
+- "Use the Mail app instead" in the sheet runs the older flow below. Sends are logged in the customer's activity log
+  (the receipt page writes the log entry straight into `arc_v3`).
+- Proposal subject/message wording comes from `pvMail` (don't change without asking). Receipt subject:
+  "[Name], your Agency Roofing Co. receipt for [address] · [number]".
+
 ## Documents (proposal, quote, change order, receipt)
 
 - Proposal, quote and change order share one style: `ARC_DOC_CSS` + `ARC_DOC_HEAD` + `docShell()` in `index.html`. Change it there, not per document.
@@ -151,8 +169,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - Confirm the gross receipts tax rate; add the NM license number to documents once issued.
 - Have an attorney review the warranty exclusions and e-signature consent wording.
 - Remote (not in-person) signing: build on the Supabase project (multi-device sync is done).
-- True one-tap email (To + subject + message + PDF in one step) needs server-side sending from agencyroofingco@gmail.com —
-  Orlando chose to build this on Supabase (next after sync). Until then: Email → share sheet → **Save to Files** → Mail opens filled in.
+- Scheduled / automatic follow-up emails (no tap) would need server-side sending (Supabase Edge Function + stored Google
+  refresh token). Not built; current sending is tap → review → Send from the browser.
 
 ## Customer forms sent through DocuSign
 

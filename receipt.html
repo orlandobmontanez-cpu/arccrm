@@ -135,10 +135,11 @@ div.f[contenteditable]:empty::before{content:attr(data-ph); color:#B9B0A6}
 .pay{display:grid; grid-template-columns:auto 1fr; gap:6px 12px; margin-top:12px; font-size:12.5px; align-items:center}
 .pay label{color:var(--ink-3); font-size:10px; text-transform:uppercase; letter-spacing:.1em; font-weight:600}
 select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
-.totals{background:var(--stone); padding:14px 16px 12px; display:grid; grid-template-columns:1fr auto; gap:7px 0; font-size:13px; font-variant-numeric:tabular-nums}
+.totals{background:var(--stone); padding:14px 16px 12px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:7px 0; font-size:13px; font-variant-numeric:tabular-nums}
 .totals .k{color:var(--ink-2)}
 .totals .out{display:none}
-.totals .k.out{white-space:nowrap; font-variant-numeric:normal}
+.totals .k.out{font-variant-numeric:normal; min-width:0}
+.totals .v.out{white-space:nowrap}
 .totals .v{text-align:right; padding-left:12px}
 .totals .inl{display:flex; align-items:center; gap:4px}
 .totals .inl .f{width:4.2em; text-align:right}
@@ -160,6 +161,7 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
 .w-dates{display:flex; flex-wrap:wrap; gap:4px 18px; margin:6px 0 8px; font-size:12px}
 .w-dates b{font-family:var(--bebas); letter-spacing:.14em; font-weight:400; color:var(--copper); font-size:13px; margin-right:4px}
 .w-dates input.f{width:9em; font-weight:600; display:inline-block}
+.w-dates > span{display:inline-flex; align-items:baseline}
 .w-body{font-size:11.2px; line-height:1.5; color:var(--ink-2)}
 .w-body p{margin:0 0 5px}
 .w-body strong{color:var(--ink)}
@@ -276,6 +278,8 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
   .items th.num,.items td.num{display:none!important}
   .totals .ed{display:none!important}
   .totals .out{display:block!important}
+  .totals .k.grand.out{font-size:16px; letter-spacing:.08em; white-space:nowrap}
+  .lic-wrap:has(input:placeholder-shown){display:none}
   .about-r{padding:12px 16px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -474,7 +478,7 @@ select.f{appearance:none; -webkit-appearance:none; cursor:pointer}
   <footer class="foot">
     <span class="tag">Thank you for trusting us with your roof.</span>
     <span>Flat roof specialists · Albuquerque, NM</span>
-    <span>NM Lic. <input class="f" id="lic" data-k="lic" placeholder="License #" value=""></span>
+    <span class="lic-wrap">NM Lic. <input class="f" id="lic" data-k="lic" placeholder="License #" value=""></span>
     <span>agencyroofingco.com</span>
   </footer>
 </main>
@@ -834,6 +838,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     });
   }
 
+  /* Round to cents, half-up, without float drift (1560 × 7.3125% = 114.075 → 114.08 every time) */
+  function cents(x){ return Math.round(Number((x * 100).toPrecision(12))) / 100; }
   function calc(){
     var sub = 0;
     var many = rowsEl.children.length > 2;
@@ -845,10 +851,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     });
     var disc = num($('tDisc').value);
     var taxable = Math.max(sub - disc, 0);
-    var tax = Math.round(taxable * num($('tRate').value)) / 100;
-    var total = taxable + tax;
+    var tax = cents(taxable * num($('tRate').value) / 100);
+    var total = cents(taxable + tax);
     var paid = num($('tPaid').value);
-    var bal = Math.round((total - paid)*100)/100;
+    var bal = cents(total - paid);
     $('tSub').textContent = money(sub);
     $('tTax').textContent = money(tax);
     $('tTotal').textContent = money(total);
@@ -1004,7 +1010,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     });
     var sub = rows.reduce(function(s, r){ return s + num(r.p); }, 0);
     var taxable = Math.max(sub - disc, 0);
-    var total = Math.round((taxable + Math.round(taxable * rate * 100) / 100) * 100) / 100;
+    var total = cents(taxable + cents(taxable * rate));
     var name = [c.first, c.last].filter(Boolean).join(' ');
     /* "City, NM ZIP" — older records kept "NM 87120" in the ZIP box */
     var zip = String(c.zip || '').trim(), st = String(c.state || '').trim().toUpperCase();
@@ -1123,12 +1129,23 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           /* Form fields → plain text so nothing is clipped; empty ones hide like they do in print */
           var live = document.querySelectorAll('#sheet input, #sheet select');
           [].forEach.call(doc.querySelectorAll('#sheet input, #sheet select'), function(el, k){
+            if (el.type === 'hidden') return;   /* bookkeeping fields (tax city) never print */
             var src = live[k] || el, v = src.tagName === 'SELECT' ? (src.options[src.selectedIndex] || {}).text || '' : src.value;
             if (src.type === 'date') v = v ? fmtDate(v) : '';
             var sp = doc.createElement('span');
             sp.className = el.className; sp.textContent = v || '\u00a0';
             sp.style.display = 'inline-block'; sp.style.whiteSpace = 'pre'; sp.style.overflow = 'hidden';
             sp.style.width = doc.defaultView.getComputedStyle(el).width;   /* keep the field's print width */
+            if (src.type === 'date') sp.style.width = 'auto';             /* dates print in full, never clipped */
+            if (el.id === 'cPhone') { var dg = v.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, ''); if (dg.length === 10) sp.textContent = '(' + dg.slice(0,3) + ') ' + dg.slice(3,6) + '-' + dg.slice(6); }
+            sp.style.verticalAlign = 'baseline';                          /* sits on the same line as its label */
+            if (el.closest('.party')) { sp.style.width = 'auto'; sp.style.maxWidth = '100%'; sp.style.whiteSpace = 'normal'; sp.style.overflowWrap = 'anywhere'; }
+            if (el.id === 'pRef' && !v) { var rl = doc.querySelector('label[for="pRef"]'); if (rl) rl.style.display = 'none'; sp.style.display = 'none'; }
+            if (el.id === 'lic' && !v) { var lw = el.closest('.lic-wrap'); if (lw) lw.style.display = 'none'; }
+            if (el.closest('.totals')) {                                 /* price card: dollar sign, flush right */
+              if (v && v.charAt(0) !== '$') sp.textContent = money(num(v));
+              sp.style.width = 'auto'; sp.style.textAlign = 'right';
+            }
             if (!v && el.closest('.party')) sp.style.display = 'none';
             el.parentNode.replaceChild(sp, el);
           });

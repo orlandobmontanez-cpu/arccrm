@@ -3375,14 +3375,18 @@ function priceOf(o, ratePct) {
   const base = cost + markup;
   const disc = parseFloat(o.discountAmount) || 0;
   const sub = Math.max(0, base - disc);
-  const tax = sub * (ratePct / 100);
-  return { cost: cost, markup: markup, base: base, disc: disc, sub: sub, tax: tax, total: sub + tax };
+  // Tax rounded to the cent (half-up, no float drift) so Subtotal + Tax = Final on every document.
+  // `raw` is the old unrounded total — signature fingerprints keep using it so signed docs never change.
+  const tax = cents(sub * (ratePct / 100));
+  return { cost: cost, markup: markup, base: base, disc: disc, sub: sub, tax: tax, total: cents(sub + tax), raw: sub + sub * (ratePct / 100) };
 }
+
+function cents(x) { return Math.round(Number((x * 100).toPrecision(12))) / 100; }
 
 function coPrice(o, ratePct) {
   const p = priceOf({ materials: o.materials, labor: o.labor, other: o.other, margin: o.margin }, ratePct);
   const s = o.direction === 'deduct' ? -1 : 1;
-  return { cost: p.cost, markup: p.markup, sub: s * p.sub, tax: s * p.tax, total: s * p.total };
+  return { cost: p.cost, markup: p.markup, sub: s * p.sub, tax: s * p.tax, total: s * p.total, raw: s * p.raw };
 }
 
 function fmtSigned(n) {
@@ -3888,15 +3892,15 @@ function migrateRepairItems(o) {
 }
 function proposalContent(c, r) {
   if (r == null) r = mainRate(c);
-  return ['P', c.arcNum, c.first, c.last, c.address, c.scope, c.requests, priceOf(c, r).total.toFixed(2)].join('|');
+  return ['P', c.arcNum, c.first, c.last, c.address, c.scope, c.requests, priceOf(c, r).raw.toFixed(2)].join('|');
 }
 function quoteContent(c, q, r) {
   if (r == null) r = quoteRate(c, q);
-  return ['Q', q.num, c.first, c.last, c.address, q.title, q.scope, q.requests, priceOf(q, r).total.toFixed(2)].join('|');
+  return ['Q', q.num, c.first, c.last, c.address, q.title, q.scope, q.requests, priceOf(q, r).raw.toFixed(2)].join('|');
 }
 function coContent(c, o, r) {
   if (r == null) r = coRate(c, o);
-  return ['CO', o.num, c.first, c.last, c.address, o.title, o.direction, o.reason, o.description, o.days, coPrice(o, r).total.toFixed(2)].join('|');
+  return ['CO', o.num, c.first, c.last, c.address, o.title, o.direction, o.reason, o.description, o.days, coPrice(o, r).raw.toFixed(2)].join('|');
 }
 
 function sigState(obj, content) {

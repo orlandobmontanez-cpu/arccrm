@@ -13,7 +13,7 @@
 */
 (function () {
   'use strict';
-  var CLIENT_ID = '';
+  var CLIENT_ID = '993318895806-huklkvkfdokb59pkmtaller6l2n0v25e.apps.googleusercontent.com';
   var HINT = 'orlando.montanez@agencyroofingco.com';
   var SCOPE = 'https://www.googleapis.com/auth/gmail.send';
   var GIS = 'https://accounts.google.com/gsi/client';

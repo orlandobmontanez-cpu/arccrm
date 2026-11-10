@@ -1139,7 +1139,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             if (src.type === 'date') sp.style.width = 'auto';             /* dates print in full, never clipped */
             if (el.id === 'cPhone') { var dg = v.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, ''); if (dg.length === 10) sp.textContent = '(' + dg.slice(0,3) + ') ' + dg.slice(3,6) + '-' + dg.slice(6); }
             sp.style.verticalAlign = 'baseline';                          /* sits on the same line as its label */
-            if (el.closest('.party')) { sp.style.width = 'auto'; sp.style.maxWidth = '100%'; sp.style.whiteSpace = 'normal'; sp.style.overflowWrap = 'anywhere'; }
+            if (el.closest('.party')) { sp.style.width = 'auto'; sp.style.maxWidth = '100%'; sp.style.whiteSpace = 'normal'; sp.style.overflowWrap = 'anywhere'; if (el.id === 'cEmail') sp.textContent = v.replace('@', '\u200b@'); }
             if (el.id === 'pRef' && !v) { var rl = doc.querySelector('label[for="pRef"]'); if (rl) rl.style.display = 'none'; sp.style.display = 'none'; }
             if (el.id === 'lic' && !v) { var lw = el.closest('.lic-wrap'); if (lw) lw.style.display = 'none'; }
             if (el.closest('.totals')) {                                 /* price card: dollar sign, flush right */

@@ -898,6 +898,7 @@
   #toast.show { transform: translateX(-50%) translateY(0); }
 </style>
 <script src="arcsync.js"></script>
+<script src="arcmail.js"></script>
 </head>
 <body>
 
@@ -4176,7 +4177,7 @@ function syncCanApply() {
   if (formDirty) return false;
   const a = document.activeElement;
   if (a && a.closest && a.closest('#detail') && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return false;
-  return !document.querySelector('#sg.on, #modal-overlay.active, #x-editor.active, #set-sheet.active, #pv-sheet.active, #ins-sheet.active');
+  return !document.querySelector('#am-sheet.on, #sg.on, #modal-overlay.active, #x-editor.active, #set-sheet.active, #pv-sheet.active, #ins-sheet.active');
 }
 function syncTime(ms) {
   if (!ms) return '';
@@ -4742,6 +4743,7 @@ function openPreview(o) {
   document.getElementById('pv-num').textContent = o.num;
   const send = document.getElementById('pv-send'), saveB = document.getElementById('pv-save');
   send.textContent = 'EMAIL ' + o.word.toUpperCase();
+  if (window.ARCMail) ARCMail.preload();
   send.classList.remove('pv-mail-ready');
   send.disabled = true; saveB.disabled = true;
   setPvStatus('Building PDF…');
@@ -4868,7 +4870,26 @@ function openMail() {
 // Tap 1: save the PDF (files only, so no stray .txt). Then the email opens with
 // To, subject and message filled in; attach the PDF from Files → Recents.
 // If iOS blocks opening Mail after the share sheet, the button becomes OPEN EMAIL.
+// Email button. With Gmail sending set up (arcmail.js): a panel opens with To, subject, message
+// and the PDF attached, and SEND sends it from the business Gmail. Otherwise: the Mail-app flow.
 function pvSend() {
+  if (!pv || !pv.file) { showToast('PDF IS STILL BUILDING…'); return; }
+  if (window.ARCMail && ARCMail.enabled && !pv.mailReady) {
+    const m = pvMail(), word = pv.word, num = pv.num;
+    ARCMail.compose({ kind: word, to: m.to, subject: m.subject, body: m.body, file: pv.file,
+      onSent: r => {
+        logActivity(word + ' ' + num + ' emailed to ' + r.to);
+        save(); renderActivityLog();
+        setPvStatus('Emailed to ' + r.to + '. A copy is in your Gmail Sent folder.');
+        showToast('SENT TO ' + r.to.toUpperCase());
+      },
+      fallback: pvSendMailApp });
+    return;
+  }
+  pvSendMailApp();
+}
+
+function pvSendMailApp() {
   if (!pv || !pv.file) { showToast('PDF IS STILL BUILDING…'); return; }
   if (pv.mailReady) { openMail(); return; }
   const ready = () => {

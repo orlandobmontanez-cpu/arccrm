@@ -185,6 +185,7 @@
   .toast.on { opacity: 1; transform: translate(-50%, 0); }
   .toast.err { background: var(--lost); }
 </style>
+<script src="arcsync.js"></script>
 </head>
 <body>
 <header>
@@ -726,6 +727,11 @@ const ZIPS = {"87001":[35.389,-106.352,"Algodones"],"87002":[34.651,-106.695,"Be
 
   loadAll();
   window.addEventListener('load', render);
+  // Cloud sync: pick up changes from the other device (never while you're typing in the sheet)
+  if (window.ARCSync) {
+    ARCSync.init({ canApply: function () { var a = document.activeElement; return !(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)); } });
+    window.addEventListener('arc:synced', function () { loadAll(); render(); });
+  }
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous"></script>

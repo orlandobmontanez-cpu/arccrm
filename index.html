@@ -693,6 +693,18 @@
   /* ── BACKUP REMINDER ── */
   #backup-banner { margin: 0 16px 10px; display: flex; background: var(--copper); border-radius: 6px; flex-shrink: 0; overflow: hidden; }
   #backup-banner[hidden] { display: none; }
+  .sync-line { margin: 0 16px 10px; min-height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 12px; flex-shrink: 0;
+    background: var(--white); border: 1px solid rgba(28,26,24,.12); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px;
+    color: var(--ink-soft, #3A3734); text-align: left; cursor: pointer; }
+  .sync-line[hidden] { display: none; }
+  .sync-line .dot { width: 8px; height: 8px; border-radius: 50%; background: #6B8F5A; flex-shrink: 0; }
+  .sync-line.off .dot { background: #A79F95; } .sync-line.busy .dot { background: var(--mid); }
+  .sync-line.warn { background: var(--copper); border-color: var(--copper); color: var(--white); font-weight: 600; }
+  .sync-line.warn .dot { background: var(--white); }
+  .sync-line.err .dot { background: #8A2E26; }
+  .sync-box .sync-st { font-size: 13px; color: var(--ink-soft, #3A3734); margin: 6px 0 10px; line-height: 1.5; }
+  .sync-box .sync-err { color: #8A2E26; font-size: 13px; margin-top: 8px; }
+  .sync-box .sync-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .bb-go { flex: 1; min-height: 48px; background: none; border: none; color: var(--white); text-align: left; padding: 8px 12px;
     font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; line-height: 1.35; cursor: pointer; }
   .bb-x { min-width: 48px; min-height: 48px; background: rgba(28,26,24,0.18); border: none; color: var(--white); font-size: 20px; cursor: pointer; }
@@ -885,6 +897,7 @@
   }
   #toast.show { transform: translateX(-50%) translateY(0); }
 </style>
+<script src="arcsync.js"></script>
 </head>
 <body>
 
@@ -945,6 +958,8 @@
       <button type="button" class="bb-go" id="bb-go"></button>
       <button type="button" class="bb-x" id="bb-x" aria-label="Dismiss">&times;</button>
     </div>
+
+    <button type="button" id="sync-line" class="sync-line" hidden></button>
 
     <div id="search-wrap">
       <input type="text" id="search" placeholder="Search customers..." oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -1986,6 +2001,7 @@ function mobileBack() {
 // ── LOAD DETAIL ────────────────────────────────────────
 
 function loadDetail() {
+  formDirty = false;
   const c = getCurrent();
   if (!c) return;
 
@@ -2179,6 +2195,7 @@ function saveCustomer(toast = true) {
   c.updatedAt = Date.now();
 
   save();
+  formDirty = false;
   renderList();
   syncHeader();
   if (toast) { showToast('SAVED'); logActivity('Record saved'); renderActivityLog(); }
@@ -4117,6 +4134,7 @@ function openSettings() {
   const own = ARCSign.ownerSig();
   const body = document.getElementById('set-inner');
   body.innerHTML = `
+    <div class="form-section sync-box" id="set-sync"></div>
     <div class="form-section">
       <div class="form-section-title">Tax Rates by City</div>
       <p class="xsec-note">New jobs get the rate for their city. A city not on this list gets the Albuquerque rate and a reminder to check it. Signed documents keep the rate they were signed at.</p>
@@ -4148,7 +4166,120 @@ function openSettings() {
     </div>`;
   document.getElementById('set-sheet').classList.add('active');
   renderSettingsQR();
+  renderSyncSettings();
 }
+
+// ── CLOUD SYNC (arcsync.js) ────────────────────────────
+// Same customers on iPhone and Mac. Data still saves on this device first, so it works with no signal.
+let formDirty = false;
+function syncCanApply() {
+  if (formDirty) return false;
+  const a = document.activeElement;
+  if (a && a.closest && a.closest('#detail') && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return false;
+  return !document.querySelector('#sg.on, #modal-overlay.active, #x-editor.active, #set-sheet.active, #pv-sheet.active, #ins-sheet.active');
+}
+function syncTime(ms) {
+  if (!ms) return '';
+  const d = new Date(ms), mins = Math.round((Date.now() - ms) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + ' min ago';
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+function renderSyncLine(s) {
+  const el = document.getElementById('sync-line');
+  if (!el || !window.ARCSync) return;
+  s = s || ARCSync.status();
+  let cls = '', txt;
+  if (!s.signedIn) { cls = 'off'; txt = s.error || 'Sync is off. Tap to sign in and use this CRM on your iPhone and Mac.'; }
+  else if (s.waiting) { cls = 'warn'; txt = 'New changes from your other device. Tap to load them.'; }
+  else if (s.error) { cls = s.pending ? 'err' : 'off'; txt = s.error + (s.pending ? ' (' + s.pending + ' waiting)' : ''); }
+  else if (s.busy) { cls = 'busy'; txt = 'Syncing…'; }
+  else if (!s.online) { cls = 'off'; txt = 'Offline' + (s.pending ? ' · ' + s.pending + ' change' + (s.pending === 1 ? '' : 's') + ' will sync' : ''); }
+  else txt = 'Synced' + (s.lastSync ? ' ' + syncTime(s.lastSync) : '') + (s.pending ? ' · ' + s.pending + ' sending' : '');
+  el.className = 'sync-line ' + cls;
+  el.innerHTML = '<span class="dot"></span><span>' + esc(txt) + '</span>';
+  el.hidden = false;
+  if (document.getElementById('set-sync') && document.getElementById('set-sheet').classList.contains('active')) renderSyncStatusOnly(s);
+}
+function renderSyncStatusOnly(s) {
+  const st = document.getElementById('sync-st');
+  if (st && s.signedIn) st.textContent = s.waiting ? 'Changes from your other device will load when you close Settings.' :
+    s.error ? s.error : s.busy ? 'Syncing…' : 'Last synced ' + (syncTime(s.lastSync) || 'not yet') + (s.pending ? ' · ' + s.pending + ' waiting to send' : '') + '.';
+}
+function renderSyncSettings(errMsg) {
+  const box = document.getElementById('set-sync');
+  if (!box || !window.ARCSync) return;
+  const s = ARCSync.status();
+  if (!s.signedIn) {
+    let last = '';
+    try { last = localStorage.getItem('arc_sync_email') || ''; } catch (e) {}
+    box.innerHTML = `
+      <div class="form-section-title">Cloud Sync</div>
+      <p class="xsec-note">Sign in to keep this CRM the same on your iPhone and Mac. Everything still saves on this device first, so it works with no signal and syncs when you're back online.</p>
+      <div class="form-grid cols-1">
+        <div class="form-group"><label for="sync-email">Email</label>
+          <input type="email" id="sync-email" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" value="${esc(last || 'orlando.montanez@agencyroofingco.com')}"></div>
+        <div class="form-group"><label for="sync-pass">Password</label>
+          <input type="password" id="sync-pass" autocomplete="current-password" placeholder="Your CRM sync password"></div>
+      </div>
+      <div class="sync-acts"><button type="button" class="proposal-btn proposal-btn-primary" id="sync-signin">SIGN IN AND SYNC</button></div>
+      ${errMsg || s.error ? `<div class="sync-err">${esc(errMsg || s.error)}</div>` : ''}`;
+  } else {
+    box.innerHTML = `
+      <div class="form-section-title">Cloud Sync</div>
+      <div class="sync-st"><b>On</b> · signed in as ${esc(s.email)}</div>
+      <div class="sync-st" id="sync-st"></div>
+      <div class="sync-acts">
+        <button type="button" class="proposal-btn proposal-btn-secondary" id="sync-now">SYNC NOW</button>
+        <button type="button" class="proposal-btn xe-del" id="sync-out">SIGN OUT</button>
+      </div>
+      <p class="xsec-note" style="margin-top:8px;">Signing out stops syncing on this device. Your customers stay on it.</p>
+      ${errMsg ? `<div class="sync-err">${esc(errMsg)}</div>` : ''}`;
+    renderSyncStatusOnly(s);
+  }
+}
+(function wireSync() {
+  if (!window.ARCSync) return;
+  document.getElementById('detail').addEventListener('input', () => { formDirty = true; });
+  document.getElementById('detail').addEventListener('change', () => { formDirty = true; });
+  ARCSync.init({ canApply: syncCanApply });
+  ARCSync.onStatus(renderSyncLine);
+  // Changes arrived from the other device and were written to this phone's storage
+  window.addEventListener('arc:synced', () => reloadFromStorage());
+  // Retry loading waiting changes once nothing is open
+  setInterval(() => { const s = ARCSync.status(); if (s.waiting && syncCanApply()) ARCSync.applyWhenReady(); renderSyncLine(); }, 2500);
+  document.getElementById('sync-line').addEventListener('click', () => {
+    const s = ARCSync.status();
+    if (!s.signedIn) { openSettings(); return; }
+    if (s.waiting) {
+      if (currentId) saveCustomer(false);
+      formDirty = false;
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      ARCSync.applyWhenReady();
+      return;
+    }
+    ARCSync.syncNow();
+  });
+  let outArmed = null;
+  document.getElementById('set-inner').addEventListener('click', e => {
+    const b = e.target.closest('#sync-signin, #sync-now, #sync-out');
+    if (!b) return;
+    e.preventDefault();
+    if (b.id === 'sync-signin') {
+      const em = document.getElementById('sync-email').value.trim(), pw = document.getElementById('sync-pass').value;
+      if (!em || !pw) { renderSyncSettings('Enter your email and password.'); return; }
+      try { localStorage.setItem('arc_sync_email', em); } catch (err) {}
+      b.disabled = true; b.textContent = 'SIGNING IN…';
+      ARCSync.signIn(em, pw).then(() => { renderSyncSettings(); showToast('SYNC IS ON'); },
+        err => { renderSyncSettings(/invalid/i.test(err.message) ? 'That email and password didn\u2019t match.' : err.message); });
+    } else if (b.id === 'sync-now') {
+      ARCSync.syncNow().then(() => renderSyncSettings());
+    } else if (b.id === 'sync-out') {
+      if (outArmed !== b) { outArmed = b; b.textContent = 'TAP AGAIN TO SIGN OUT'; setTimeout(() => { if (b.isConnected) { b.textContent = 'SIGN OUT'; outArmed = null; } }, 3500); return; }
+      ARCSync.signOut(); outArmed = null; renderSyncSettings(); showToast('SYNC IS OFF ON THIS DEVICE');
+    }
+  });
+})();
 
 function readSettingsForm() {
   const st = ARCSign.settings();
@@ -4783,9 +4914,22 @@ function closePreview() {
 function reloadFromStorage() {
   const cur = currentId;
   load();
-  renderList();
+  if (cur && customers.some(c => c.id === cur)) {
+    currentId = cur;
+    renderList();
+    if (document.getElementById('detail').style.display !== 'none') loadDetail();
+  } else {
+    if (cur) {   // deleted on the other device
+      currentId = null;
+      document.getElementById('detail').style.display = 'none';
+      document.getElementById('empty-state').style.display = 'flex';
+      document.getElementById('main').classList.remove('visible');
+      document.getElementById('sidebar').classList.remove('hidden');
+    }
+    renderList();
+  }
   renderBackupBanner();
-  if (cur && customers.some(c => c.id === cur)) selectCustomer(cur);
+  if (typeof updateInsCount === 'function') try { updateInsCount(); } catch (e) {}
 }
 // Safari can show this page from its back/forward cache with old data in memory.
 // The Job Board saves edits, so always re-read storage when the page comes back.

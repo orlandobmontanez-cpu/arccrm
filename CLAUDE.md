@@ -32,7 +32,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 ## Architecture
 
-- Everything is plain HTML/CSS/JS in single files. **No build step, no frameworks, no external JS.** The only outside resources are Google Fonts
+- Everything is plain HTML/CSS/JS in single files. **No build step, no frameworks, no external JS.** One shared exception:
+  **`arcsync.js`** (cloud sync), loaded in the `<head>` of index, board and receipt — keep it the only shared file. The only outside resources are Google Fonts
   and, for PDFs only, html2canvas 1.4.1 + jsPDF 2.5.1 from cdnjs (Orlando asked for this; loaded on demand when a preview or receipt opens).
 - Data lives in the phone's browser `localStorage` (per device, same origin as the site):
   - `arc_v3` — array of customer records (the whole CRM)
@@ -76,6 +77,25 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   change orders, repair quotes, receipt print/PDF) shows only: Subtotal, Gross Receipts Tax (City, rate%), Final Investment. No line items,
   no "Base Proposal", no discount line. Receipts also keep Amount Paid / Balance Due. Line items stay visible inside the CRM.
 - `save()` catches storage-full errors and warns. Signatures are images (~17 KB each); keep them small.
+
+## Cloud sync (iPhone ⇄ Mac) — `arcsync.js` + Supabase
+
+- Supabase project `xndcntpxhzfaqtmzcuje` (owned by orlando.montanez@agencyroofingco.com). The publishable key in `arcsync.js`
+  is public by design; security is **Row Level Security** (`supabase/setup.sql`: one table `arc_records`, rows locked to
+  `owner = auth.uid()`) plus **sign-ups turned off**. Never put a secret / service_role key in this repo.
+- Pages still read and write `localStorage` exactly as before (works offline). `arcsync.js` wraps `Storage.prototype.setItem`
+  to notice saves to `arc_v3`, `arc_ext`, `arc_follow`, `arc_settings`, `arc_owner_sig`, `arc_receipt_*`, and mirrors them as
+  records: `c:<id>` = `{ v3, ext, fol }`, `settings`, `ownersig`, `r:<id>`. Its own bookkeeping lives in `arc_sync` and the
+  login in `arc_auth` (never synced).
+- Cycle: pull (rows with server `updated_at` ≥ cursor) → apply → scan → push (upsert on `owner,key`). Last edit wins per record
+  by `mod` (device ms); a record's first sync uses its own `updatedAt`. Deletes are tombstones (`deleted: true`).
+  Hashes use sorted-key JSON because Postgres jsonb reorders keys.
+- Applying remote changes rewrites localStorage and fires `arc:synced`; the page re-reads (`reloadFromStorage` in the CRM,
+  `loadAll`/`render` on the board). The CRM blocks applying while you're editing (`formDirty`, focused input, or any sheet/
+  modal open — `syncCanApply`) and shows "New changes from your other device. Tap to load them." (saves the open form first).
+  The receipt page only pushes (`init({ pull: false })`).
+- Sign in: Settings → Cloud Sync (email + password, created in Supabase → Authentication → Users). Status line on the list.
+- Any **new stored key or field** must be inside one of the synced records (or added to `localRecords`/`applyRecords`).
 
 ## Documents (proposal, quote, change order, receipt)
 
@@ -130,9 +150,9 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 - Confirm the gross receipts tax rate; add the NM license number to documents once issued.
 - Have an attorney review the warranty exclusions and e-signature consent wording.
-- Remote (not in-person) signing and multi-device sync need a cloud database — planned move to Supabase.
+- Remote (not in-person) signing: build on the Supabase project (multi-device sync is done).
 - True one-tap email (To + subject + message + PDF in one step) needs server-side sending from agencyroofingco@gmail.com —
-  Orlando chose to build this with the Supabase move. Until then: Email → share sheet → **Save to Files** → Mail opens filled in.
+  Orlando chose to build this on Supabase (next after sync). Until then: Email → share sheet → **Save to Files** → Mail opens filled in.
 
 ## Customer forms sent through DocuSign
 

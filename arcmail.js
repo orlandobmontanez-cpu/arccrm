@@ -4,7 +4,10 @@
   - Tap Email → a panel opens with To, Subject and Message filled in and the PDF attached → tap SEND.
   - Sends with the Gmail API as the signed-in Google account, so the email comes from
     orlando.montanez@agencyroofingco.com and shows in Gmail's Sent folder.
-  - Permission asked from Google: "send email" only (gmail.send). It cannot read the inbox.
+  - Permission asked from Google: "send email" (gmail.send) — it cannot read the inbox — and
+    "files this app creates" (drive.file) — it can only see the PDFs and folders it made itself.
+  - After a send, the same PDF is filed in Google Drive: Agency Roofing / Customers / Last, First · ARC-00001.
+    Resending the same document replaces that file (Drive keeps the old version in its history).
   - No server and no secret: Google's sign-in window gives this page a 1-hour pass, kept for this tab only.
   - If CLIENT_ID is empty, ARCMail.enabled is false and pages keep their Mail-app flow.
 
@@ -15,7 +18,10 @@
   'use strict';
   var CLIENT_ID = '993318895806-huklkvkfdokb59pkmtaller6l2n0v25e.apps.googleusercontent.com';
   var HINT = 'orlando.montanez@agencyroofingco.com';
-  var SCOPE = 'https://www.googleapis.com/auth/gmail.send';
+  var GMAIL = 'https://www.googleapis.com/auth/gmail.send', DRIVE = 'https://www.googleapis.com/auth/drive.file';
+  var SCOPE = GMAIL + ' ' + DRIVE;
+  var DAPI = 'https://www.googleapis.com/drive/v3/files', DUP = 'https://www.googleapis.com/upload/drive/v3/files';
+  var OK_KEY = 'arc_google_ok2';   // set after the first Allow that includes Drive
   var GIS = 'https://accounts.google.com/gsi/client';
   var SEND = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
   var TKEY = 'arc_gtoken';
@@ -38,16 +44,16 @@
   function cached() {
     try {
       var t = JSON.parse(sessionStorage.getItem(TKEY) || 'null');
-      if (t && t.exp - 60000 > Date.now()) return t.t;
+      if (t && t.exp - 60000 > Date.now() && t.s) return t;
     } catch (e) {}
     return null;
   }
   function forget() { try { sessionStorage.removeItem(TKEY); } catch (e) {} }
   // Must be called directly from a tap (opens Google's window when a new pass is needed)
-  function requestToken() {
+  function requestToken(needDrive) {
     return new Promise(function (res, rej) {
       var t = cached();
-      if (t) return res(t);
+      if (t && (t.d || !needDrive)) return res({ token: t.t, drive: !!t.d });
       if (!gisReady()) return rej(new Error('not-ready'));
       pending = { res: res, rej: rej };
       if (!tokenClient) {
@@ -56,9 +62,13 @@
           callback: function (r) {
             var p = pending; pending = null; if (!p) return;
             if (!r || r.error || !r.access_token) return p.rej(new Error(r && r.error === 'access_denied' ? 'denied' : 'google'));
-            try { sessionStorage.setItem(TKEY, JSON.stringify({ t: r.access_token, exp: Date.now() + (parseInt(r.expires_in, 10) || 3600) * 1000 })); } catch (e) {}
-            try { localStorage.setItem('arc_mail_ok', '1'); } catch (e) {}
-            p.res(r.access_token);
+            // Google lists what was allowed in r.scope (Drive can be unticked). No list at all = what was asked for.
+            var has = function (sc) { if (!r.scope) return true; try { return google.accounts.oauth2.hasGrantedAllScopes(r, sc); } catch (e) { return String(r.scope).split(' ').indexOf(sc) >= 0; } };
+            if (!has(GMAIL)) return p.rej(new Error('denied'));
+            var d = has(DRIVE);
+            try { sessionStorage.setItem(TKEY, JSON.stringify({ t: r.access_token, d: d, s: 1, exp: Date.now() + (parseInt(r.expires_in, 10) || 3600) * 1000 })); } catch (e) {}
+            try { if (d) localStorage.setItem(OK_KEY, '1'); } catch (e) {}
+            p.res({ token: r.access_token, drive: d });
           },
           error_callback: function (e) {
             var p = pending; pending = null; if (!p) return;
@@ -67,8 +77,8 @@
         });
       }
       var known = false;
-      try { known = localStorage.getItem('arc_mail_ok') === '1'; } catch (e) {}
-      tokenClient.requestAccessToken({ prompt: known ? '' : 'consent' });
+      try { known = localStorage.getItem(OK_KEY) === '1'; } catch (e) {}
+      tokenClient.requestAccessToken({ prompt: known && !(needDrive && t) ? '' : 'consent' });
     });
   }
 
@@ -139,6 +149,110 @@
           throw e;
         });
       }, function () { throw new Error('offline'); });
+  }
+
+  // ── Google Drive filing (drive.file: only folders/files this app created are visible to it) ──
+  function dfetch(token, url, opt) {
+    opt = opt || {}; opt.headers = Object.assign({ Authorization: 'Bearer ' + token }, opt.headers || {});
+    return fetch(url, opt).then(function (r) {
+      if (r.ok) return r.json();
+      return r.text().then(function (t) { var e = new Error(r.status === 401 ? 'expired' : r.status === 403 ? 'drive-off' : 'drive'); e.detail = r.status + ' ' + t.slice(0, 300); throw e; });
+    }, function () { throw new Error('offline'); });
+  }
+  function qs(v) { return "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"; }
+  var folderIds = {};
+  // Finds this app's folder tagged `tag` (appProperties.arc), or creates it under `parent`
+  function folder(token, tag, name, parent) {
+    if (folderIds[tag]) return Promise.resolve(folderIds[tag]);
+    var q = "mimeType='application/vnd.google-apps.folder' and trashed=false and appProperties has { key='arc' and value=" + qs(tag) + " }";
+    return dfetch(token, DAPI + '?fields=files(id,name)&spaces=drive&pageSize=5&q=' + encodeURIComponent(q)).then(function (r) {
+      if (r.files && r.files.length) return r.files[0].id;
+      var meta = { name: name, mimeType: 'application/vnd.google-apps.folder', appProperties: { arc: tag } };
+      if (parent) meta.parents = [parent];
+      return dfetch(token, DAPI + '?fields=id', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(meta) }).then(function (f) { return f.id; });
+    }).then(function (id) { folderIds[tag] = id; return id; });
+  }
+  function multipart(meta, file) {
+    var bd = 'arcd_' + Date.now().toString(36);
+    return new Blob(['--' + bd + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) + '\r\n--' + bd + '\r\nContent-Type: application/pdf\r\n\r\n', file, '\r\n--' + bd + '--'],
+      { type: 'multipart/related; boundary=' + bd });
+  }
+  // Agency Roofing / Customers / <Last, First · ARC-00001>
+  function custFolder(token, d) {
+    return folder(token, 'root', 'Agency Roofing')
+      .then(function (root) { return folder(token, 'customers', 'Customers', root); })
+      .then(function (cust) { return folder(token, 'c:' + d.key, d.folder, cust); });
+  }
+  // d = { key: customer id, folder: 'Last, First · ARC-00001' } → { id, name, link }
+  function saveToDrive(token, file, d) {
+    var name = file.name || 'document.pdf';
+    return custFolder(token, d)
+      .then(function (dir) {
+        var q = 'name=' + qs(name) + ' and ' + qs(dir) + ' in parents and trashed=false';
+        return dfetch(token, DAPI + '?fields=files(id)&spaces=drive&pageSize=1&q=' + encodeURIComponent(q)).then(function (r) {
+          var old = r.files && r.files[0];
+          if (old) return dfetch(token, DUP + '/' + old.id + '?uploadType=multipart&fields=id,name,webViewLink', { method: 'PATCH', body: multipart({ name: name }, file) });
+          return dfetch(token, DUP + '?uploadType=multipart&fields=id,name,webViewLink', { method: 'POST', body: multipart({ name: name, parents: [dir], mimeType: 'application/pdf' }, file) });
+        });
+      })
+      .then(function (f) { return { id: f.id, name: f.name, link: f.webViewLink }; });
+  }
+
+  // Scanned receipts / supplier invoices: …/<customer>/Receipts & Invoices/<file>
+  function uploadScan(token, file, d) {
+    var type = file.type || (/\.pdf$/i.test(file.name) ? 'application/pdf' : 'image/jpeg');
+    return custFolder(token, d)
+      .then(function (dir) { return folder(token, 'cx:' + d.key, 'Receipts & Invoices', dir); })
+      .then(function (dir) {
+        var meta = { name: file.name || ('Scan ' + new Date().toISOString().slice(0, 10)), parents: [dir], mimeType: type, appProperties: { arcCost: d.key } };
+        var bd = 'arcs_' + Date.now().toString(36);
+        var body = new Blob(['--' + bd + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) + '\r\n--' + bd + '\r\nContent-Type: ' + type + '\r\n\r\n', file, '\r\n--' + bd + '--'],
+          { type: 'multipart/related; boundary=' + bd });
+        return dfetch(token, DUP + '?uploadType=multipart&fields=id,name,webViewLink,mimeType', { method: 'POST', body: body });
+      })
+      .then(function (f) { return { id: f.id, name: f.name, link: f.webViewLink, type: f.mimeType }; });
+  }
+  // Google reads the scan: copy it as a Google Doc (Drive's own text recognition), export the text, delete the copy
+  function readText(token, fileId) {
+    return dfetch(token, DAPI + '/' + fileId + '/copy?ocrLanguage=en&fields=id', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'ARC text read (temporary)', mimeType: 'application/vnd.google-apps.document' }) })
+      .then(function (doc) {
+        var gone = function () { return fetch(DAPI + '/' + doc.id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } }).catch(function () {}); };
+        return fetch(DAPI + '/' + doc.id + '/export?mimeType=text/plain', { headers: { Authorization: 'Bearer ' + token } })
+          .then(function (r) { if (!r.ok) throw new Error('drive'); return r.text(); })
+          .then(function (t) { gone(); return t.replace(/^\uFEFF/, ''); }, function (e) { gone(); throw e; });
+      });
+  }
+  // Rename the scan and store its full record in the file's Drive details
+  function describe(token, fileId, meta) {
+    return dfetch(token, DAPI + '/' + fileId + '?fields=id,name,webViewLink', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(meta) })
+      .then(function (f) { return { id: f.id, name: f.name, link: f.webViewLink }; });
+  }
+  function trash(token, fileId) {
+    return dfetch(token, DAPI + '/' + fileId + '?fields=id', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trashed: true }) });
+  }
+  // "Agency Roofing Expenses" Google Sheet, rewritten from the CRM's records (so it always matches them exactly)
+  function writeSheet(token, csv) {
+    var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
+    return folder(token, 'root', 'Agency Roofing').then(function (root) {
+      var q = "trashed=false and appProperties has { key='arc' and value='expenses-sheet' }";
+      return dfetch(token, DAPI + '?fields=files(id)&spaces=drive&pageSize=1&q=' + encodeURIComponent(q)).then(function (r) {
+        var old = r.files && r.files[0];
+        var fresh = function () {
+          var meta = { name: 'Agency Roofing Expenses', parents: [root], mimeType: 'application/vnd.google-apps.spreadsheet', appProperties: { arc: 'expenses-sheet' } };
+          return dfetch(token, DUP + '?uploadType=multipart&fields=id,webViewLink', { method: 'POST', body: multipartType(meta, blob, 'text/csv') });
+        };
+        if (!old) return fresh();
+        // Replace the sheet's contents; if Google won't convert in place, make a new one and bin the old one
+        return dfetch(token, DUP + '/' + old.id + '?uploadType=multipart&fields=id,webViewLink', { method: 'PATCH', body: multipartType({ name: 'Agency Roofing Expenses' }, blob, 'text/csv') })
+          .catch(function (e) { if (e && (e.message === 'expired' || e.message === 'offline')) throw e; return fresh().then(function (f) { trash(token, old.id).catch(function () {}); return f; }); });
+      });
+    }).then(function (f) { return { id: f.id, link: f.webViewLink }; });
+  }
+  function multipartType(meta, blob, type) {
+    var bd = 'arct_' + Date.now().toString(36);
+    return new Blob(['--' + bd + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) + '\r\n--' + bd + '\r\nContent-Type: ' + type + '\r\n\r\n', blob, '\r\n--' + bd + '--'],
+      { type: 'multipart/related; boundary=' + bd });
   }
 
   // ── Compose panel ──
@@ -235,11 +349,19 @@
     if (!su.value.trim()) { su.classList.add('bad'); say('Add a subject.', true); return; }
     setBusy(true, 'SENDING…'); say('');
     // requestToken() runs inside this tap so Google's window is allowed to open
-    requestToken().then(function (token) {
-      return buildRaw({ to: addr, subject: su.value.trim(), body: bo.value, file: o.file }).then(function (raw) { return gmailSend(token, raw); });
+    var pass = null;
+    requestToken().then(function (p) {
+      pass = p;
+      return buildRaw({ to: addr, subject: su.value.trim(), body: bo.value, file: o.file }).then(function (raw) { return gmailSend(p.token, raw); });
     }).then(function (res) {
       close();
       if (o.onSent) o.onSent({ to: addr, subject: su.value.trim(), id: res && res.id });
+      // Then file the same PDF in Drive (never blocks or undoes the send)
+      if (o.drive && o.drive.key && o.onDrive) {
+        if (!pass.drive) { o.onDrive({ ok: false, why: 'no-permission' }); return; }
+        saveToDrive(pass.token, o.file, o.drive).then(function (f) { o.onDrive({ ok: true, name: f.name, link: f.link, folder: o.drive.folder }); },
+          function (e) { if (window.console && e && e.detail) console.warn('ARCMail Drive', e.detail); o.onDrive({ ok: false, why: e && e.message }); });
+      }
     }, function (e) {
       var k = e && e.message;
       if (k === 'expired') forget();
@@ -254,6 +376,23 @@
     preload: function () { if (CLIENT_ID) loadGis().catch(function () {}); },
     compose: function (o) { if (!o || !o.file) return; open(o); },
     isOpen: function () { return !!cur; },
+    // ── Google Drive for job costing (pages call these) ──
+    // Is there a Google pass with Drive permission for this tab already? (no tap needed)
+    get hasDrivePass() { var t = cached(); return !!(t && t.d); },
+    // Must run inside a tap. Resolves { token, drive }.
+    connectInTap: function () { return requestToken(true); },
+    forget: forget,
+    ready: function () { return gisReady(); },
+    uploadScan: function (file, d) { var t = cached(); if (!t || !t.d) return Promise.reject(new Error('no-pass')); return uploadScan(t.t, file, d); },
+    readText: function (id) { var t = cached(); if (!t || !t.d) return Promise.reject(new Error('no-pass')); return readText(t.t, id); },
+    describe: function (id, meta) { var t = cached(); if (!t || !t.d) return Promise.reject(new Error('no-pass')); return describe(t.t, id, meta); },
+    trash: function (id) { var t = cached(); if (!t || !t.d) return Promise.reject(new Error('no-pass')); return trash(t.t, id); },
+    writeSheet: function (csv) { var t = cached(); if (!t || !t.d) return Promise.reject(new Error('no-pass')); return writeSheet(t.t, csv); },
+    driveNote: function (r) {   // one line for a toast when Drive filing didn't work
+      return r.why === 'no-permission' ? 'Not saved to Drive: Google Drive permission wasn’t allowed.'
+        : r.why === 'drive-off' ? 'Not saved to Drive: turn on the Google Drive API in Google Cloud.'
+        : r.why === 'offline' ? 'Not saved to Drive: no connection.' : 'Couldn’t save to Drive this time. The email was sent.';
+    },
     _setClientId: function (id) { CLIENT_ID = id; tokenClient = null; }   // tests only
   };
 })();

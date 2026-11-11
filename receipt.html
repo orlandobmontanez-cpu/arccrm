@@ -1196,7 +1196,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         subject: full + ', your Agency Roofing Co. receipt for ' + addr + (rno ? ' \u00b7 ' + rno : ''),
         body: 'Hi ' + first + ',\n\nAttached is your receipt' + (rno ? ' (' + rno + ')' : '') + ' for ' + addr + '. Thank you for your business.\n\n' +
           'If you have any questions, reply to this email or call me directly.\n\nBuilt with agency. Driven by obligation.\n\nOrlando\nAgency Roofing Co.\n(505) 900-1711',
+        drive: CUST && CUST.id ? { key: CUST.id, folder: ([CUST.last, CUST.first].filter(Boolean).join(', ') || 'Customer') + (CUST.arcNum ? ' \u00b7 ' + CUST.arcNum : '') } : null,
         onSent: function(r){ toast('Sent to ' + r.to + '. A copy is in your Gmail Sent folder.'); logSent(r.to, rno); },
+        onDrive: function(r){
+          if (r.ok) { toast('Sent, and saved to Google Drive \u203a Customers \u203a ' + r.folder + '.'); logMsg('Receipt ' + (rno || '') + ' saved to Google Drive'); }
+          else toast(ARCMail.driveNote(r));
+        },
         fallback: mailApp });
       return;
     }
@@ -1215,7 +1220,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     }
   });
   /* Note the send in the customer's CRM activity log (same format the CRM uses) */
-  function logSent(to, rno){
+  function logSent(to, rno){ logMsg('Receipt ' + (rno || '') + ' emailed to ' + to); }
+  function logMsg(msg){
     try {
       if (!CUST || !CUST.id) return;
       var list = JSON.parse(localStorage.getItem('arc_v3') || '[]'), rec = null;
@@ -1223,7 +1229,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (!rec) return;
       var ts = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
       rec.activityLog = Array.isArray(rec.activityLog) ? rec.activityLog : [];
-      rec.activityLog.unshift({ ts: ts, msg: 'Receipt ' + (rno || '') + ' emailed to ' + to });
+      rec.activityLog.unshift({ ts: ts, msg: msg });
       if (rec.activityLog.length > 50) rec.activityLog = rec.activityLog.slice(0, 50);
       rec.updatedAt = Date.now();
       localStorage.setItem('arc_v3', JSON.stringify(list));

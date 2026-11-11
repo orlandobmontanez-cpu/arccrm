@@ -43,6 +43,9 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   - `arc_owner_sig` — Orlando's saved signature `{ name, img (PNG data URL), at }`
   - `arc_receipt_<customerId>` — receipt drafts
   - `arc_follow` — follow-up dates + notes `{ [id]: { d, n } }` (also mirrored in `arc_ext`)
+  - `arc_costs` — job costing `{ [id]: [expense] }` (own key, never in `arc_v3`/`arc_ext`, so older versions can't drop it).
+    Expense = `{ id, date, vendor, cat: materials|labor|other, ref, sub, tax, total, items: [{ d, q, p }], note, file: { id, name, link } | null, driveStale, at, upd }`
+    (`normExpense`). Backups carry it as `arcCosts`; importing a backup without `arcCosts` keeps the job's expenses.
 - `normalize(c)` whitelists customer fields. **Any new field must be added there**, or it is silently dropped on load. Same for `normQuote` / `normCO`.
   - Address: `address` (street + unit), `city`, `state` (default NM), `zip`. Old records with "NM 87120" in `zip` are split on load.
     Documents always print "City, NM ZIP" via `cityLine(c)`.
@@ -97,6 +100,10 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   The receipt page only pushes (`init({ pull: false })`).
 - Sign in: Settings → Cloud Sync (email + password, created in Supabase → Authentication → Users). Status line on the list.
 - Any **new stored key or field** must be inside one of the synced records (or added to `localRecords`/`applyRecords`).
+- Job costing syncs through its **own table `arc_costs`** (`supabase/costs.sql`, same shape + RLS; key = customer id, value `{ list }`,
+  meta in `arc_sync_costs`). Never put new record types in `arc_records` under a new key prefix: an older `arcsync.js` pulls every
+  row and then tombstones keys it can't produce locally. If `arc_costs` doesn't exist yet, main sync carries on and Settings says
+  "run supabase/costs.sql" (`status.costsSetup`).
 
 ## Emailing documents — `arcmail.js` (Gmail API from the browser)
 
@@ -104,7 +111,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   (customer email), Subject, Message and the PDF attached; **SEND** sends it with the Gmail API as the signed-in Google account
   (orlando.montanez@agencyroofingco.com), so it lands in Gmail Sent. Orlando asked for this; he reviews then taps Send — never
   auto-send without the panel.
-- Auth: Google Identity Services token client, scope `gmail.send` only, `CLIENT_ID` constant in `arcmail.js` (OAuth **Web**
+- Auth: Google Identity Services token client, scopes `gmail.send` + `drive.file` (only files/folders this app creates), `CLIENT_ID` constant in `arcmail.js` (OAuth **Web**
   client in his Google Cloud project "ARC CRM", consent screen **Internal**, authorized JavaScript origin
   `https://orlandobmontanez-cpu.github.io`). The 1-hour access token is kept in `sessionStorage` (`arc_gtoken`) only.
   `requestAccessToken` must run inside the tap (pop-up rules), so the PDF and the Google script are prepared beforehand.
@@ -114,6 +121,22 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   (the receipt page writes the log entry straight into `arc_v3`).
 - Proposal subject/message wording comes from `pvMail` (don't change without asking). Receipt subject:
   "[Name], your Agency Roofing Co. receipt for [address] · [number]".
+
+## Google Drive + Job Costing (`arcmail.js` Drive helpers + Job Costing section in `index.html`)
+
+- Needs the **Google Drive API** enabled in the "ARC CRM" Google Cloud project. Same Google sign-in as Gmail (one consent).
+  Folders are found by `appProperties.arc` tags, never by name: `root` = **Agency Roofing**, `customers` = **Customers**,
+  `c:<id>` = **Last, First · ARC-00007**, `cx:<id>` = **Receipts & Invoices**. The sheet is tagged `expenses-sheet`.
+- Every emailed proposal/quote/change order/receipt PDF is also filed in the customer folder (same name replaces the old copy).
+- Job Costing (customer record, after Change Orders): quoted Materials/Labor/Other (proposal + approved change orders) vs actual
+  expenses, contract before tax, profit + margin. Internal only, never on a customer document.
+  Add receipt: tap 1 connects Google if needed (pop-up must be in a tap), tap 2 opens the file picker. The scan uploads to
+  Receipts & Invoices, Google reads it (copy as a Google Doc = Drive text recognition → export text → delete the copy),
+  `ReadReceipt.parse` (between `READ-RECEIPT` markers) fills the form, Orlando checks and saves. On save the scan is renamed
+  `YYYY-MM-DD · Vendor · $Total · ARC-00007.ext` and its Drive description holds the full record (`driveRecord`).
+  Every change rewrites the **Agency Roofing Expenses** Google Sheet from the CRM (`expenseCsv`, formula-safe); its link is
+  `settings.expSheet`. Offline/no Google pass: saved in the CRM with `driveStale`, Drive catches up on the next connect.
+  Cancelling a new scan or deleting an expense moves the scan to Drive trash.
 
 ## Documents (proposal, quote, change order, receipt)
 
@@ -161,6 +184,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 - Playwright with Chromium at 390×844 (phone). Chromium is at `/opt/pw-browsers/chromium`.
 - Paste-to-Sort parser unit tests: `node tests/sort-it.test.js`. Add a sample when you fix a parsing case.
+- Receipt reader unit tests: `node tests/read-receipt.test.js` (text as Google returns it). Add a sample when you fix a case.
 - Run the flows you touched end to end, check there are zero JavaScript errors, and print-render each affected document to confirm it is still one page.
 - Tell Orlando in one line what changed and what to tap on his phone to check it.
 

@@ -8,6 +8,9 @@
       settings        → arc_settings
       ownersig        → arc_owner_sig
       r:<customerId>  → arc_receipt_<customerId>
+  - Job costing (scanned receipts/invoices per job) syncs through its own table `arc_costs`
+    (one row per customer: arc_costs[id] = list of expenses). It is separate on purpose: an older
+    version of this file would delete records it doesn't know about, and it never reads arc_costs.
   - It pulls changes made on the other device and writes them back into localStorage, then fires
     `arc:synced` so the page re-reads its data. Pages can block that (canApply) while you're mid-edit.
   - Last edit wins per record (customers sync separately, so different customers never collide).
@@ -22,7 +25,8 @@
   var SB_KEY = 'sb_publishable_KuUPSNQGagKSNL2_GDLbZw_eEPwlTWc';
   var TABLE = 'arc_records';
   var AUTH_KEY = 'arc_auth', META_KEY = 'arc_sync';
-  var WATCH = { arc_v3: 1, arc_ext: 1, arc_follow: 1, arc_settings: 1, arc_owner_sig: 1 };
+  var COSTS = 'arc_costs', COST_META = 'arc_sync_costs';
+  var WATCH = { arc_v3: 1, arc_ext: 1, arc_follow: 1, arc_settings: 1, arc_owner_sig: 1, arc_costs: 1 };
   function watched(k) { return WATCH[k] === 1 || String(k).indexOf('arc_receipt_') === 0; }
 
   var LS = window.localStorage;
@@ -90,11 +94,26 @@
     }
   }
 
+  // Job costing records: key = customer id, value = { list: [expenses] }
+  function localCosts() {
+    var all = parse(get(COSTS), {}), out = {};
+    Object.keys(all || {}).forEach(function (id) { if (Array.isArray(all[id])) out[id] = { list: all[id] }; });
+    return out;
+  }
+  function applyCosts(rows) {
+    var all = parse(get(COSTS), {}) || {};
+    rows.forEach(function (r) { var v = r.deleted ? null : r.value; if (v && Array.isArray(v.list)) all[r.key] = v.list; else delete all[r.key]; });
+    put(COSTS, JSON.stringify(all));
+  }
+  function costMod(v) { var m = 0; (v && v.list || []).forEach(function (x) { m = Math.max(m, x && (x.upd || x.at) || 0); }); return m; }
+
   // ── Meta: what this device last synced ──
   var meta = parse(get(META_KEY), null) || {};
   function freshMeta(uid) { return { uid: uid || null, hashes: {}, queue: {}, cursor: null, lastSync: 0 }; }
   if (!meta.hashes) meta = freshMeta(meta.uid);
-  function saveMeta() { try { put(META_KEY, JSON.stringify(meta)); } catch (e) {} }
+  var cmeta = parse(get(COST_META), null) || {};
+  if (!cmeta.hashes) cmeta = freshMeta(cmeta.uid);
+  function saveMeta() { try { put(META_KEY, JSON.stringify(meta)); put(COST_META, JSON.stringify(cmeta)); } catch (e) {} }
 
   // ── Auth (Supabase GoTrue, password sign-in) ──
   var auth = parse(get(AUTH_KEY), null);
@@ -141,38 +160,46 @@
   }
 
   // ── Status for the page ──
-  var status = { busy: false, error: '', waiting: false };
+  var status = { busy: false, error: '', waiting: false, costsSetup: false };
   var listeners = [];
   function setStatus(p) { Object.assign(status, p || {}); var s = getStatus(); listeners.forEach(function (f) { try { f(s); } catch (e) {} }); }
   function getStatus() {
     return { signedIn: !!auth, email: auth ? auth.email : '', online: navigator.onLine !== false, busy: status.busy,
-      error: status.error, waiting: status.waiting, pending: Object.keys(meta.queue || {}).length, lastSync: meta.lastSync || 0 };
+      error: status.error, waiting: status.waiting, costsSetup: status.costsSetup,
+      pending: Object.keys(meta.queue || {}).length + Object.keys(cmeta.queue || {}).length, lastSync: meta.lastSync || 0 };
   }
 
-  // ── Sync cycle: pull → (apply) → scan → push ──
+  // ── Sync cycle: pull → (apply) → scan → push, for each table ──
   var cfg = { pull: true, canApply: function () { return true; } };
   var running = false, again = false;
+  var CH = [
+    { table: TABLE, m: function () { return meta; }, local: localRecords, apply: applyRecords,
+      first: function (k, v) { return k.indexOf('c:') === 0 ? (v.v3.updatedAt || v.v3.createdAt || 0) : 0; } },
+    { table: 'arc_costs', costs: true, m: function () { return cmeta; }, local: localCosts, apply: applyCosts,
+      first: function (k, v) { return costMod(v); } }
+  ];
 
-  function scan() {
-    var local = localRecords(), q = meta.queue, now = Date.now();
+  function scan(ch) {
+    if (!ch) { CH.forEach(scan); return; }
+    var M = ch.m(), local = ch.local(), q = M.queue, now = Date.now();
     Object.keys(local).forEach(function (k) {
       var h = hash(local[k]);
-      if (meta.hashes[k] === h) { delete q[k]; return; }
+      if (M.hashes[k] === h) { delete q[k]; return; }
       // First sync of a record: use its own edit time so the newer copy wins between devices
-      var mod = meta.hashes[k] === undefined ? (k.indexOf('c:') === 0 ? (local[k].v3.updatedAt || local[k].v3.createdAt || 0) : 0) : now;
+      var mod = M.hashes[k] === undefined ? ch.first(k, local[k]) : now;
       if (!q[k] || q[k].h !== h) q[k] = { h: h, mod: mod };
     });
-    Object.keys(meta.hashes).forEach(function (k) {
-      if (!(k in local) && meta.hashes[k] !== null) q[k] = { h: null, mod: now, deleted: true };
+    Object.keys(M.hashes).forEach(function (k) {
+      if (!(k in local) && M.hashes[k] !== null) q[k] = { h: null, mod: now, deleted: true };
     });
     saveMeta();
     return local;
   }
 
-  function pull() {
-    var rows = [], cursor = meta.cursor;
+  function pull(ch) {
+    var M = ch.m(), rows = [], cursor = M.cursor;
     function page() {
-      var p = TABLE + '?select=key,value,mod,deleted,updated_at&order=updated_at.asc&limit=500' + (cursor ? '&updated_at=gte.' + encodeURIComponent(cursor) : '');
+      var p = ch.table + '?select=key,value,mod,deleted,updated_at&order=updated_at.asc&limit=500' + (cursor ? '&updated_at=gte.' + encodeURIComponent(cursor) : '');
       return api(p, { method: 'GET' }).then(function (batch) {
         batch = batch || [];
         rows = rows.concat(batch);
@@ -187,54 +214,61 @@
       var seen = {};
       for (var i = all.length - 1; i >= 0; i--) { if (!seen[all[i].key]) seen[all[i].key] = all[i]; }
       var latest = Object.keys(seen).map(function (k) { return seen[k]; });
-      var maxTs = all.length ? all[all.length - 1].updated_at : meta.cursor;
-      var local = localRecords(), toApply = [];
+      var maxTs = all.length ? all[all.length - 1].updated_at : M.cursor;
+      var local = ch.local(), toApply = [];
       latest.forEach(function (r) {
-        var lh = hash(local[r.key]), rh = r.deleted ? null : hash(r.value), sh = meta.hashes[r.key];
-        if (lh === rh) { meta.hashes[r.key] = rh; delete meta.queue[r.key]; return; }
+        var lh = hash(local[r.key]), rh = r.deleted ? null : hash(r.value), sh = M.hashes[r.key];
+        if (lh === rh) { M.hashes[r.key] = rh; delete M.queue[r.key]; return; }
         var localChanged = lh !== (sh === undefined ? null : sh) && !(lh === null && sh === undefined);
         if (!localChanged) { toApply.push(r); return; }
-        var q = meta.queue[r.key];
-        var lmod = q ? q.mod : (sh === undefined ? ((local[r.key] && local[r.key].v3 && local[r.key].v3.updatedAt) || 0) : Date.now());
-        if ((r.mod || 0) > lmod) { toApply.push(r); delete meta.queue[r.key]; }
+        var q = M.queue[r.key];
+        var lmod = q ? q.mod : (sh === undefined ? (local[r.key] ? ch.first(r.key, local[r.key]) : 0) : Date.now());
+        if ((r.mod || 0) > lmod) { toApply.push(r); delete M.queue[r.key]; }
       });
       if (toApply.length) {
         if (!cfg.canApply()) { setStatus({ waiting: true }); return false; }   // try again when it's safe
-        applyRecords(toApply);
-        toApply.forEach(function (r) { meta.hashes[r.key] = r.deleted ? null : hash(r.value); delete meta.queue[r.key]; });
-        meta.cursor = maxTs; saveMeta();
+        ch.apply(toApply);
+        toApply.forEach(function (r) { M.hashes[r.key] = r.deleted ? null : hash(r.value); delete M.queue[r.key]; });
+        M.cursor = maxTs; saveMeta();
         setStatus({ waiting: false });
-        try { window.dispatchEvent(new CustomEvent('arc:synced', { detail: { keys: toApply.map(function (r) { return r.key; }) } })); } catch (e) {}
+        var keys = toApply.map(function (r) { return (ch.costs ? 'x:' : '') + r.key; });
+        try { window.dispatchEvent(new CustomEvent('arc:synced', { detail: { keys: keys } })); } catch (e) {}
         return true;
       }
-      meta.cursor = maxTs; saveMeta();
+      M.cursor = maxTs; saveMeta();
       setStatus({ waiting: false });
       return true;
     });
   }
 
-  function push() {
-    var local = localRecords(), keys = Object.keys(meta.queue);
+  function push(ch) {
+    var M = ch.m(), local = ch.local(), keys = Object.keys(M.queue);
     if (!keys.length) return Promise.resolve();
     var rows = keys.map(function (k) {
-      var q = meta.queue[k], gone = !(k in local);
+      var q = M.queue[k], gone = !(k in local);
       return { owner: auth.uid, key: k, value: gone ? null : local[k], mod: q.mod || Date.now(), deleted: gone };
     });
     var chunks = [];
     for (var i = 0; i < rows.length; i += 25) chunks.push(rows.slice(i, i + 25));
     return chunks.reduce(function (p, chunk) {
       return p.then(function () {
-        return api(TABLE + '?on_conflict=owner,key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(chunk) })
+        return api(ch.table + '?on_conflict=owner,key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(chunk) })
           .then(function () {
             chunk.forEach(function (r) {
               var nowH = r.deleted ? null : hash(r.value);
-              meta.hashes[r.key] = nowH;
-              if (meta.queue[r.key] && meta.queue[r.key].h === nowH) delete meta.queue[r.key];
+              M.hashes[r.key] = nowH;
+              if (M.queue[r.key] && M.queue[r.key].h === nowH) delete M.queue[r.key];
             });
             saveMeta();
           });
       });
     }, Promise.resolve());
+  }
+
+  // The costs table not existing yet (setup step not run) must never stop the main sync
+  function missingTable(e) { return /HTTP 404|PGRST205|relation .* does not exist|Could not find the table/i.test(String(e && e.message || e)); }
+  function runChannel(ch) {
+    return (cfg.pull ? pull(ch) : Promise.resolve(true)).then(function (ok) { scan(ch); return push(ch).then(function () { return ok; }); });
   }
 
   function cycle() {
@@ -243,8 +277,12 @@
     if (navigator.onLine === false) { scan(); setStatus({ error: '' }); return Promise.resolve(); }
     running = true; setStatus({ busy: true });
     var applied = true;
-    return (cfg.pull ? pull() : Promise.resolve(true))
-      .then(function (ok) { applied = ok; scan(); return push(); })
+    return runChannel(CH[0])
+      .then(function (ok) {
+        applied = ok;
+        return runChannel(CH[1]).then(function (ok2) { if (ok2 === false) applied = false; setStatus({ costsSetup: false }); },
+          function (e) { if (missingTable(e)) { setStatus({ costsSetup: true }); return; } throw e; });
+      })
       .then(function () {
         if (applied !== false) meta.lastSync = Date.now();
         saveMeta();
@@ -286,7 +324,8 @@
         if (!res.ok) throw new Error((res.j && (res.j.error_description || res.j.msg || res.j.message)) || 'Sign-in failed');
         var a = tokenFrom(res.j);
         if (meta.uid && meta.uid !== a.uid) meta = freshMeta(a.uid);   // different account: start clean
-        meta.uid = a.uid; saveMeta();
+        if (cmeta.uid && cmeta.uid !== a.uid) cmeta = freshMeta(a.uid);
+        meta.uid = a.uid; cmeta.uid = a.uid; saveMeta();
         saveAuth(a);
         setStatus({ error: '' });
         return cycle();
@@ -295,7 +334,7 @@
     signOut: function () {
       var t = auth && auth.access;
       saveAuth(null);
-      meta = freshMeta(null); saveMeta();
+      meta = freshMeta(null); cmeta = freshMeta(null); saveMeta();
       if (t) fetch(SB_URL + '/auth/v1/logout', { method: 'POST', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + t } }).catch(function () {});
       setStatus({ error: '', waiting: false });
     },

@@ -11,6 +11,10 @@
   - Job costing (scanned receipts/invoices per job) syncs through its own table `arc_costs`
     (one row per customer: arc_costs[id] = list of expenses). It is separate on purpose: an older
     version of this file would delete records it doesn't know about, and it never reads arc_costs.
+  - Billing (Invoices screen: companies, invoices, payments) syncs through `arc_docs`:
+      co:<id> → company, inv:<id> → invoice, billing-seq → { n: highest invoice number used } (merged as max)
+    Each channel only handles the keys it owns (`owns`), so a newer version can add record types to
+    arc_docs later without this version ever applying or deleting them.
   - It pulls changes made on the other device and writes them back into localStorage, then fires
     `arc:synced` so the page re-reads its data. Pages can block that (canApply) while you're mid-edit.
   - Last edit wins per record (customers sync separately, so different customers never collide).
@@ -25,8 +29,8 @@
   var SB_KEY = 'sb_publishable_KuUPSNQGagKSNL2_GDLbZw_eEPwlTWc';
   var TABLE = 'arc_records';
   var AUTH_KEY = 'arc_auth', META_KEY = 'arc_sync';
-  var COSTS = 'arc_costs', COST_META = 'arc_sync_costs';
-  var WATCH = { arc_v3: 1, arc_ext: 1, arc_follow: 1, arc_settings: 1, arc_owner_sig: 1, arc_costs: 1 };
+  var COSTS = 'arc_costs', COST_META = 'arc_sync_costs', BILL = 'arc_billing', BILL_META = 'arc_sync_docs';
+  var WATCH = { arc_v3: 1, arc_ext: 1, arc_follow: 1, arc_settings: 1, arc_owner_sig: 1, arc_costs: 1, arc_billing: 1 };
   function watched(k) { return WATCH[k] === 1 || String(k).indexOf('arc_receipt_') === 0; }
 
   var LS = window.localStorage;
@@ -105,6 +109,26 @@
     rows.forEach(function (r) { var v = r.deleted ? null : r.value; if (v && Array.isArray(v.list)) all[r.key] = v.list; else delete all[r.key]; });
     put(COSTS, JSON.stringify(all));
   }
+  // Billing: arc_billing = { co: { [id]: company }, inv: { [id]: invoice }, seq: n }
+  function billOwns(k) { return /^(co|inv):/.test(k) || k === 'billing-seq'; }
+  function localBilling() {
+    var b = parse(get(BILL), {}) || {}, out = {};
+    Object.keys(b.co || {}).forEach(function (id) { if (b.co[id]) out['co:' + id] = b.co[id]; });
+    Object.keys(b.inv || {}).forEach(function (id) { if (b.inv[id]) out['inv:' + id] = b.inv[id]; });
+    if (b.seq) out['billing-seq'] = { n: b.seq };
+    return out;
+  }
+  function applyBilling(rows) {
+    var b = parse(get(BILL), {}) || {};
+    b.co = b.co || {}; b.inv = b.inv || {};
+    rows.forEach(function (r) {
+      var v = r.deleted ? null : r.value, k = r.key;
+      if (k === 'billing-seq') { if (v && +v.n > (+b.seq || 0)) b.seq = +v.n; return; }   // never goes down
+      var m = /^(co|inv):(.+)$/.exec(k); if (!m) return;
+      if (v) b[m[1]][m[2]] = v; else delete b[m[1]][m[2]];
+    });
+    put(BILL, JSON.stringify(b));
+  }
   function costMod(v) { var m = 0; (v && v.list || []).forEach(function (x) { m = Math.max(m, x && (x.upd || x.at) || 0); }); return m; }
 
   // ── Meta: what this device last synced ──
@@ -113,7 +137,9 @@
   if (!meta.hashes) meta = freshMeta(meta.uid);
   var cmeta = parse(get(COST_META), null) || {};
   if (!cmeta.hashes) cmeta = freshMeta(cmeta.uid);
-  function saveMeta() { try { put(META_KEY, JSON.stringify(meta)); put(COST_META, JSON.stringify(cmeta)); } catch (e) {} }
+  var dmeta = parse(get(BILL_META), null) || {};
+  if (!dmeta.hashes) dmeta = freshMeta(dmeta.uid);
+  function saveMeta() { try { put(META_KEY, JSON.stringify(meta)); put(COST_META, JSON.stringify(cmeta)); put(BILL_META, JSON.stringify(dmeta)); } catch (e) {} }
 
   // ── Auth (Supabase GoTrue, password sign-in) ──
   var auth = parse(get(AUTH_KEY), null);
@@ -160,13 +186,13 @@
   }
 
   // ── Status for the page ──
-  var status = { busy: false, error: '', waiting: false, costsSetup: false };
+  var status = { busy: false, error: '', waiting: false, costsSetup: false, docsSetup: false };
   var listeners = [];
   function setStatus(p) { Object.assign(status, p || {}); var s = getStatus(); listeners.forEach(function (f) { try { f(s); } catch (e) {} }); }
   function getStatus() {
     return { signedIn: !!auth, email: auth ? auth.email : '', online: navigator.onLine !== false, busy: status.busy,
-      error: status.error, waiting: status.waiting, costsSetup: status.costsSetup,
-      pending: Object.keys(meta.queue || {}).length + Object.keys(cmeta.queue || {}).length, lastSync: meta.lastSync || 0 };
+      error: status.error, waiting: status.waiting, costsSetup: status.costsSetup, docsSetup: status.docsSetup,
+      pending: Object.keys(meta.queue || {}).length + Object.keys(cmeta.queue || {}).length + Object.keys(dmeta.queue || {}).length, lastSync: meta.lastSync || 0 };
   }
 
   // ── Sync cycle: pull → (apply) → scan → push, for each table ──
@@ -176,7 +202,9 @@
     { table: TABLE, m: function () { return meta; }, local: localRecords, apply: applyRecords,
       first: function (k, v) { return k.indexOf('c:') === 0 ? (v.v3.updatedAt || v.v3.createdAt || 0) : 0; } },
     { table: 'arc_costs', costs: true, m: function () { return cmeta; }, local: localCosts, apply: applyCosts,
-      first: function (k, v) { return costMod(v); } }
+      first: function (k, v) { return costMod(v); } },
+    { table: 'arc_docs', prefix: 'd:', owns: billOwns, m: function () { return dmeta; }, local: localBilling, apply: applyBilling,
+      first: function (k, v) { return (v && (v.upd || v.at)) || 0; } }
   ];
 
   function scan(ch) {
@@ -211,6 +239,7 @@
       });
     }
     return page().then(function (all) {
+      if (ch.owns) all = all.filter(function (r) { return ch.owns(r.key); });   // rows from newer versions: leave them alone
       var seen = {};
       for (var i = all.length - 1; i >= 0; i--) { if (!seen[all[i].key]) seen[all[i].key] = all[i]; }
       var latest = Object.keys(seen).map(function (k) { return seen[k]; });
@@ -231,7 +260,7 @@
         toApply.forEach(function (r) { M.hashes[r.key] = r.deleted ? null : hash(r.value); delete M.queue[r.key]; });
         M.cursor = maxTs; saveMeta();
         setStatus({ waiting: false });
-        var keys = toApply.map(function (r) { return (ch.costs ? 'x:' : '') + r.key; });
+        var keys = toApply.map(function (r) { return (ch.costs ? 'x:' : ch.prefix || '') + r.key; });
         try { window.dispatchEvent(new CustomEvent('arc:synced', { detail: { keys: keys } })); } catch (e) {}
         return true;
       }
@@ -281,7 +310,11 @@
       .then(function (ok) {
         applied = ok;
         return runChannel(CH[1]).then(function (ok2) { if (ok2 === false) applied = false; setStatus({ costsSetup: false }); },
-          function (e) { if (missingTable(e)) { setStatus({ costsSetup: true }); return; } throw e; });
+          function (e) { if (missingTable(e)) { setStatus({ costsSetup: true }); return; } throw e; })
+          .then(function () {
+            return runChannel(CH[2]).then(function (ok3) { if (ok3 === false) applied = false; setStatus({ docsSetup: false }); },
+              function (e) { if (missingTable(e)) { setStatus({ docsSetup: true }); return; } throw e; });
+          });
       })
       .then(function () {
         if (applied !== false) meta.lastSync = Date.now();
@@ -325,7 +358,8 @@
         var a = tokenFrom(res.j);
         if (meta.uid && meta.uid !== a.uid) meta = freshMeta(a.uid);   // different account: start clean
         if (cmeta.uid && cmeta.uid !== a.uid) cmeta = freshMeta(a.uid);
-        meta.uid = a.uid; cmeta.uid = a.uid; saveMeta();
+        if (dmeta.uid && dmeta.uid !== a.uid) dmeta = freshMeta(a.uid);
+        meta.uid = a.uid; cmeta.uid = a.uid; dmeta.uid = a.uid; saveMeta();
         saveAuth(a);
         setStatus({ error: '' });
         return cycle();
@@ -334,7 +368,7 @@
     signOut: function () {
       var t = auth && auth.access;
       saveAuth(null);
-      meta = freshMeta(null); cmeta = freshMeta(null); saveMeta();
+      meta = freshMeta(null); cmeta = freshMeta(null); dmeta = freshMeta(null); saveMeta();
       if (t) fetch(SB_URL + '/auth/v1/logout', { method: 'POST', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + t } }).catch(function () {});
       setStatus({ error: '', waiting: false });
     },

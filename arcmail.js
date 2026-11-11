@@ -115,7 +115,7 @@
       var name = (m.file.name || 'document.pdf').replace(/[\r\n"]/g, '');
       var asciiName = name.replace(/[^\x20-\x7E]/g, '-');
       var mime = [
-        'To: ' + m.to,
+        'To: ' + m.to].concat(m.cc ? ['Cc: ' + m.cc] : [], m.bcc ? ['Bcc: ' + m.bcc] : [], [
         'Subject: ' + hdr(m.subject),
         'MIME-Version: 1.0',
         'Content-Type: multipart/mixed; boundary="' + bd + '"',
@@ -135,7 +135,7 @@
         wrap76(pdf),
         '--' + bd + '--',
         ''
-      ].join('\r\n');
+      ]).join('\r\n');
       return btoa(mime).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     });
   }
@@ -183,10 +183,16 @@
       .then(function (root) { return folder(token, 'customers', 'Customers', root); })
       .then(function (cust) { return folder(token, 'c:' + d.key, d.folder, cust); });
   }
-  // d = { key: customer id, folder: 'Last, First · ARC-00001' } → { id, name, link }
+  // Any folder path from Agency Roofing down: [{ tag, name }, …] (found by tag, created when missing)
+  function pathFolder(token, path) {
+    return path.reduce(function (p, step) {
+      return p.then(function (parent) { return folder(token, step.tag, step.name, parent); });
+    }, folder(token, 'root', 'Agency Roofing'));
+  }
+  // d = { key: customer id, folder: 'Last, First · ARC-00001' } or { path: [{ tag, name }, …] } → { id, name, link }
   function saveToDrive(token, file, d) {
     var name = file.name || 'document.pdf';
-    return custFolder(token, d)
+    return (d.path ? pathFolder(token, d.path) : custFolder(token, d))
       .then(function (dir) {
         var q = 'name=' + qs(name) + ' and ' + qs(dir) + ' in parents and trashed=false';
         return dfetch(token, DAPI + '?fields=files(id)&spaces=drive&pageSize=1&q=' + encodeURIComponent(q)).then(function (r) {
@@ -280,7 +286,10 @@
     '.am-send{display:block;width:100%;min-height:54px;margin-top:12px;border:0;border-radius:10px;background:#974930;color:#FDFBF8;font-family:"Bebas Neue",sans-serif;font-size:20px;letter-spacing:.14em;cursor:pointer}' +
     '.am-send:disabled{opacity:.6}' +
     '.am-alt{display:block;width:100%;min-height:48px;margin-top:6px;border:0;background:none;color:#6B655E;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}' +
-    '.am-from{font-size:12px;color:#6B655E;margin-top:2px}';
+    '.am-from{font-size:12px;color:#6B655E;margin-top:2px}' +
+    '.am-me{display:flex;align-items:center;gap:10px;min-height:48px;margin-top:8px;font-size:14px;color:#1C1A18;cursor:pointer;text-transform:none;letter-spacing:0;font-family:Inter,-apple-system,sans-serif;font-weight:500}' +
+    '.am-me input{width:22px;height:22px;accent-color:#974930;flex-shrink:0}' +
+    '.am-me span{color:#6B655E;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}';
   var scrim = null, sheet = null, cur = null, busy = false;
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function build() {
@@ -308,6 +317,9 @@
       '<div class="am-from">From your Agency Roofing Gmail. A copy lands in your Sent folder.</div>' +
       '<label class="am-l" for="am-to">TO</label>' +
       '<input class="am-f' + (o.to ? '' : ' bad') + '" id="am-to" type="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="customer@email.com" value="' + esc(o.to || '') + '">' +
+      (o.cc !== undefined ? '<label class="am-l" for="am-cc">CC <span style="color:#6B655E;letter-spacing:.06em">(optional, separate with commas)</span></label>' +
+        '<input class="am-f" id="am-cc" type="email" multiple inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ap@company.com" value="' + esc(o.cc || '') + '">' : '') +
+      (o.bcc ? '<label class="am-me"><input type="checkbox" id="am-me" checked> Send a copy to me <span>(' + esc(o.bcc) + ')</span></label>' : '') +
       '<label class="am-l" for="am-subject">SUBJECT</label>' +
       '<input class="am-f" id="am-subject" type="text" value="' + esc(o.subject || '') + '">' +
       '<label class="am-l" for="am-body">MESSAGE</label>' +
@@ -347,19 +359,24 @@
     var addr = to.value.trim();
     if (!/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/.test(addr)) { to.classList.add('bad'); say('Enter the customer’s email address.', true); to.focus(); return; }
     if (!su.value.trim()) { su.classList.add('bad'); say('Add a subject.', true); return; }
+    var ccEl = document.getElementById('am-cc'), meEl = document.getElementById('am-me');
+    var cc = ccEl ? ccEl.value.split(/[,;\s]+/).filter(Boolean) : [];
+    var badCc = cc.filter(function (x) { return !/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/.test(x); });
+    if (badCc.length) { ccEl.classList.add('bad'); say('Check the CC address: ' + badCc[0], true); return; }
+    var bcc = meEl && meEl.checked && o.bcc ? o.bcc : '';
     setBusy(true, 'SENDING…'); say('');
     // requestToken() runs inside this tap so Google's window is allowed to open
     var pass = null;
     requestToken().then(function (p) {
       pass = p;
-      return buildRaw({ to: addr, subject: su.value.trim(), body: bo.value, file: o.file }).then(function (raw) { return gmailSend(p.token, raw); });
+      return buildRaw({ to: addr, cc: cc.join(', '), bcc: bcc, subject: su.value.trim(), body: bo.value, file: o.file }).then(function (raw) { return gmailSend(p.token, raw); });
     }).then(function (res) {
       close();
-      if (o.onSent) o.onSent({ to: addr, subject: su.value.trim(), id: res && res.id });
+      if (o.onSent) o.onSent({ to: addr, cc: cc.join(', '), bcc: bcc, subject: su.value.trim(), id: res && res.id });
       // Then file the same PDF in Drive (never blocks or undoes the send)
-      if (o.drive && o.drive.key && o.onDrive) {
+      if (o.drive && (o.drive.key || o.drive.path) && o.onDrive) {
         if (!pass.drive) { o.onDrive({ ok: false, why: 'no-permission' }); return; }
-        saveToDrive(pass.token, o.file, o.drive).then(function (f) { o.onDrive({ ok: true, name: f.name, link: f.link, folder: o.drive.folder }); },
+        saveToDrive(pass.token, o.file, o.drive).then(function (f) { o.onDrive({ ok: true, name: f.name, link: f.link, folder: o.drive.folder || o.drive.path.map(function (x) { return x.name; }).join(' › ') }); },
           function (e) { if (window.console && e && e.detail) console.warn('ARCMail Drive', e.detail); o.onDrive({ ok: false, why: e && e.message }); });
       }
     }, function (e) {

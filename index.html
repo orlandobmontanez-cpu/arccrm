@@ -709,6 +709,53 @@
   .jc-profit div.now small { color: var(--copper-light); }
   @media (max-width: 400px) { .jc-grid { gap: 0 8px; font-size: 11.5px; } }
 
+  /* ── INVOICES ── */
+  .btn-inv { grid-column: span 2; }
+  .bf-2 { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bl-sum { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1px; background: var(--stone-dark); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .bl-sum div { background: var(--white); padding: 10px 10px 9px; min-width: 0; }
+  .bl-sum div.late { background: #F8E9E7; }
+  .bl-sum b { display: block; font-family: 'Bebas Neue', sans-serif; font-weight: 400; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-muted); }
+  .bl-sum span { display: block; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bl-sum .late span { color: var(--danger); }
+  .bl-sum small { display: block; font-size: 10.5px; color: var(--ink-muted); margin-top: 1px; }
+  .bl-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+  .bl-chip { min-height: 44px; border-radius: 6px; border: 1px solid var(--stone-dark); background: var(--white); font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--ink-soft); cursor: pointer; }
+  .bl-chip.on { background: var(--ink); border-color: var(--ink); color: var(--stone); }
+  .x-amt small { font-weight: 400; color: var(--ink-muted); font-size: 11px; }
+  .bs-pill { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.12em; padding: 2px 8px; border-radius: 3px; background: var(--stone); color: var(--ink-soft); white-space: nowrap; }
+  .bs-pill.sent, .bs-pill.partly-paid { background: rgba(201,126,120,0.18); color: var(--copper); }
+  .bs-pill.paid { background: var(--success); color: var(--white); }
+  .bs-pill.overdue { background: var(--danger); color: var(--white); }
+  .bs-pill.void { background: var(--stone-dark); color: var(--ink-muted); text-decoration: line-through; }
+  .b-sel { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid var(--stone-dark); border-radius: 6px; background: var(--white); font: inherit; font-size: 16px; color: var(--ink); -webkit-appearance: none; appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink-muted) 50%), linear-gradient(135deg, var(--ink-muted) 50%, transparent 50%); background-position: calc(100% - 18px) 21px, calc(100% - 13px) 21px; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 34px; }
+  .b-sel.bad { border-color: var(--danger); background-color: #F8E9E7; }
+  .ex-co3 { display: grid; grid-template-columns: minmax(0,1fr) 64px 96px; gap: 8px; }
+  .bi-co-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
+  .b-mini { min-height: 48px; min-width: 48px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--stone-dark); background: var(--white); font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--copper); cursor: pointer; white-space: nowrap; }
+  .b-mini.b-x { color: var(--ink-muted); font-family: inherit; font-size: 18px; padding: 0 10px; }
+  .b-mini.armed { background: var(--danger); border-color: var(--danger); color: var(--white); font-family: 'Bebas Neue', sans-serif; font-size: 13px; }
+  .bi-co-info { font-size: 12px; color: var(--ink-soft); margin-top: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+  .b-link { background: none; border: none; color: var(--copper); font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; min-height: 44px; padding: 0 4px; cursor: pointer; }
+  .b-check { display: flex; gap: 12px; align-items: flex-start; padding: 12px; min-height: 48px; border: 1px solid var(--stone-dark); border-radius: 8px; background: var(--white); margin-bottom: 12px; cursor: pointer; font-size: 12px; line-height: 1.45; color: var(--ink-soft); }
+  .b-check input { width: 22px; height: 22px; accent-color: var(--copper); flex-shrink: 0; margin-top: 1px; }
+  .b-check b { display: block; font-size: 14px; color: var(--ink); }
+  .bi-tax .b-check { margin-bottom: 8px; }
+  .bi-rate { font-size: 12px; color: var(--ink-muted); margin: -6px 2px 12px; }
+  .bi-item .bi-amt { grid-column: 1 / -1; text-align: right; font-size: 12px; font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .bi-item .bi-amt:empty { display: none; }
+  .bi-pay { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 8px; align-items: center; background: var(--white); border: 1px solid var(--stone-dark); border-radius: 8px; padding: 8px 8px 8px 12px; font-size: 13px; }
+  .bi-pay small { display: block; font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+  .bi-payform { background: var(--white); border: 1px solid var(--copper-mid); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+  .bi-payform .ex-f input { background: var(--stone-light); }
+  .bi-log { font-size: 12px; color: var(--ink-soft); line-height: 1.45; }
+  .bi-log div { padding: 6px 0; border-bottom: 1px solid var(--stone-dark); }
+  .bi-log span { display: block; font-size: 10.5px; color: var(--ink-muted); }
+  .b-void { display: block; width: 100%; min-height: 48px; margin-top: 18px; border: 1px solid rgba(139,32,32,0.3); border-radius: 6px; background: transparent; color: var(--danger); font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.12em; cursor: pointer; }
+  .b-void.armed { background: var(--danger); color: var(--white); }
+  #inv-foot:empty { display: none; }
+
   /* ── SIGNATURES & SETTINGS ── */
   .sgn-box { display: flex; flex-direction: column; gap: 8px; }
   .proposal-section .sgn-box, .proposal-section > [id^="sign-status"] { margin-bottom: 12px; }
@@ -1041,6 +1088,7 @@
     <div id="ins-wrap">
       <a class="btn-ins btn-board" id="btn-board" href="board.html">JOB BOARD</a>
       <button class="btn-ins" id="btn-inspections" type="button">INSPECTIONS <span class="ins-count" id="ins-count"></span></button>
+      <button class="btn-ins btn-inv" id="btn-invoices" type="button">INVOICES <span class="ins-count" id="inv-count"></span></button>
     </div>
 
     <div id="customer-list"></div>
@@ -1442,6 +1490,16 @@
     <button class="proposal-btn proposal-btn-secondary" id="xe-close2" type="button">SAVE &amp; CLOSE</button>
     <button class="proposal-btn proposal-btn-primary" id="xe-pdf" type="button">PREVIEW</button>
   </div></div>
+</div>
+
+<!-- INVOICES (billing roofing companies) -->
+<div class="x-sheet" id="inv-sheet" role="dialog" aria-modal="true" aria-labelledby="inv-title">
+  <div class="xe-head">
+    <div><span class="xe-kind" id="inv-kind">AGENCY ROOFING CO.</span><span class="xe-num" id="inv-title">Invoices</span></div>
+    <button class="xe-close" id="inv-close" type="button" aria-label="Save and close">&times;</button>
+  </div>
+  <div class="xe-body" id="inv-body"><div class="xe-inner" id="inv-inner"></div></div>
+  <div class="xe-foot" id="inv-foot"></div>
 </div>
 
 <!-- EXPENSE (scanned receipt / supplier invoice) -->
@@ -2877,10 +2935,11 @@ function exportData() {
   const st = ARCSign.settings();
   st.lastBackupAt = Date.now();
   ARCSign.saveSettings(st);
-  const extra = { version: 2, exportedAt: new Date(st.lastBackupAt).toISOString(), settings: st, ownerSig: ARCSign.ownerSig() };
+  loadBilling();
+  const extra = { version: 2, exportedAt: new Date(st.lastBackupAt).toISOString(), settings: st, ownerSig: ARCSign.ownerSig(), billing: billing };
   if (data.length) data[0].arcBackup = extra;
   // No customers yet: the object form still saves settings + signature
-  const blob = new Blob([JSON.stringify(data.length ? data : { customers: [], settings: extra.settings, ownerSig: extra.ownerSig }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(data.length ? data : { customers: [], settings: extra.settings, ownerSig: extra.ownerSig, billing: extra.billing }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const ts = new Date().toISOString().slice(0,10);
@@ -2898,12 +2957,28 @@ function exportData() {
 function readBackup(data) {
   if (Array.isArray(data)) {
     const meta = data.map(d => d && d.arcBackup).find(Boolean) || null;
-    return { customers: data.filter(d => d && typeof d === 'object'), settings: meta && meta.settings, ownerSig: meta && meta.ownerSig };
+    return { customers: data.filter(d => d && typeof d === 'object'), settings: meta && meta.settings, ownerSig: meta && meta.ownerSig, billing: meta && meta.billing };
   }
   if (data && typeof data === 'object' && Array.isArray(data.customers)) {
-    return { customers: data.customers, settings: data.settings || null, ownerSig: data.ownerSig || null };
+    return { customers: data.customers, settings: data.settings || null, ownerSig: data.ownerSig || null, billing: data.billing || null };
   }
   return null;
+}
+
+// Invoices in a backup merge in: nothing on this device is removed, the newer copy of each record wins,
+// and the invoice counter only ever goes up.
+function mergeBillingBackup(b) {
+  if (!b || typeof b !== 'object') return;
+  loadBilling();
+  Object.keys(b.co || {}).forEach(id => { const x = b.co[id]; if (x && (!billing.co[id] || (+x.upd || 0) > billing.co[id].upd)) billing.co[id] = normCompany(x); });
+  Object.keys(b.inv || {}).forEach(id => { const x = b.inv[id]; if (x && (!billing.inv[id] || (+x.upd || 0) > billing.inv[id].upd)) billing.inv[id] = normInvoice(x); });
+  billing.seq = Math.max(billing.seq, +b.seq || 0);
+  saveBilling(); loadBilling(); renderInvCount();
+}
+function renderInvCount() {
+  const el = document.getElementById('inv-count'); if (!el) return;
+  const n = invList().filter(v => invCalc(v).status === 'Overdue').length;
+  el.textContent = n ? n + ' LATE' : '';
 }
 
 // Settings + saved signature come back only after a separate yes
@@ -2973,6 +3048,7 @@ function importData(input) {
               }
             });
             save();
+            mergeBillingBackup(backup.billing);
             renderList();
             showToast('IMPORT COMPLETE');
             offerRestoreExtras(backup);
@@ -4387,6 +4463,565 @@ function updateExpenseSheet() {
   if (window.ARCMail && ARCMail.enabled) ARCMail.preload();
 })();
 
+// ── INVOICES: billing roofing companies for services ─────────────────────
+// Stored in arc_billing = { co: { [id]: company }, inv: { [id]: invoice }, seq: highest number used }.
+// Synced through the arc_docs table (arcsync.js). Numbers INV-1001, INV-1002… count up and never repeat:
+// a sent invoice is voided, never deleted; only a never-sent draft can be deleted, and its number is still used up.
+var BILL_KEY = 'arc_billing';
+var BILL_ME = 'orlando.montanez@agencyroofingco.com';
+var BILL_TERMS = [['receipt', 'Due on receipt', 0], ['net15', 'Net 15', 15], ['net30', 'Net 30', 30], ['net45', 'Net 45', 45]];
+var PAY_METHODS = ['Check', 'ACH / bank transfer', 'Card', 'Zelle', 'Cash', 'Other'];
+var billing = { co: {}, inv: {}, seq: 1000 };
+
+function billId(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function isoAdd(iso, days) { var d = new Date((iso || localISODate()) + 'T12:00:00'); d.setDate(d.getDate() + days); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function longDate(iso) { return iso ? new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''; }
+function shortDate(iso) { return iso ? new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; }
+function termOf(k) { return BILL_TERMS.find(function (t) { return t[0] === k; }) || BILL_TERMS[2]; }
+
+function normCompany(x) {
+  x = x || {};
+  var s = function (v, n) { return String(v == null ? '' : v).slice(0, n || 200); };
+  return { id: s(x.id, 40) || billId('co'), name: s(x.name, 120), contact: s(x.contact, 120), email: s(x.email, 160).trim(), cc: s(x.cc, 300).trim(),
+    phone: s(x.phone, 40), address: s(x.address, 160), city: s(x.city, 80), state: s(x.state, 4) || 'NM', zip: s(x.zip, 12),
+    terms: termOf(x.terms)[0], nttc: !!x.nttc, notes: s(x.notes, 600), at: +x.at || Date.now(), upd: +x.upd || +x.at || Date.now() };
+}
+function normInvoice(x) {
+  x = x || {};
+  var s = function (v, n) { return String(v == null ? '' : v).slice(0, n || 200); };
+  var seq = parseInt(x.seq, 10) || parseInt(String(x.num || '').replace(/\D/g, ''), 10) || 0;
+  return { id: s(x.id, 40) || billId('inv'), seq: seq, num: s(x.num, 40) || ('INV-' + seq), coId: s(x.coId, 40),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(x.date || '') ? x.date : localISODate(), terms: termOf(x.terms)[0],
+    due: /^\d{4}-\d{2}-\d{2}$/.test(x.due || '') ? x.due : '', po: s(x.po, 60), job: s(x.job, 200),
+    items: (Array.isArray(x.items) ? x.items : []).filter(function (i) { return i && (String(i.d || '').trim() || +i.rate); })
+      .map(function (i) { return { d: s(i.d, 300), q: +i.q > 0 ? +i.q : 1, rate: num2(i.rate) }; }),
+    taxOn: !!x.taxOn, taxCity: s(x.taxCity, 80), taxRate: isFinite(+x.taxRate) && x.taxRate !== '' && x.taxRate != null ? +x.taxRate : null,
+    note: s(x.note, 1000), status: ['Draft', 'Sent', 'Void'].indexOf(x.status) > -1 ? x.status : 'Draft',
+    sentAt: +x.sentAt || 0, sentTo: s(x.sentTo, 300),
+    payments: (Array.isArray(x.payments) ? x.payments : []).filter(Boolean).map(function (p, i) {
+      return { id: s(p.id, 40) || billId('p'), n: +p.n || i + 1, date: /^\d{4}-\d{2}-\d{2}$/.test(p.date || '') ? p.date : localISODate(),
+        amount: num2(p.amount), method: PAY_METHODS.indexOf(p.method) > -1 ? p.method : 'Check', ref: s(p.ref, 60), sentAt: +p.sentAt || 0 }; }),
+    log: (Array.isArray(x.log) ? x.log : []).slice(0, 40).map(function (l) { return { ts: s(l && l.ts, 40), msg: s(l && l.msg, 200) }; }),
+    at: +x.at || Date.now(), upd: +x.upd || +x.at || Date.now() };
+}
+
+function loadBilling() {
+  var b = {};
+  try { b = JSON.parse(localStorage.getItem(BILL_KEY) || '{}') || {}; } catch (e) {}
+  billing = { co: {}, inv: {}, seq: Math.max(1000, +b.seq || 0) };
+  Object.keys(b.co || {}).forEach(function (id) { if (b.co[id]) billing.co[id] = normCompany(b.co[id]); });
+  Object.keys(b.inv || {}).forEach(function (id) { if (b.inv[id]) { var v = normInvoice(b.inv[id]); billing.inv[v.id] = v; billing.seq = Math.max(billing.seq, v.seq); } });
+  // Two devices offline can hand out the same number: the later never-sent draft gets the next one
+  var seen = {}, renum = false;
+  Object.keys(billing.inv).map(function (k) { return billing.inv[k]; }).sort(function (a, b) { return a.at - b.at; }).forEach(function (v) {
+    if (seen[v.num] && v.status === 'Draft' && !v.payments.length) { billing.seq++; v.seq = billing.seq; v.num = 'INV-' + v.seq; v.upd = Date.now(); renum = true; }
+    seen[v.num] = 1;
+  });
+  if (renum) saveBilling();
+}
+function saveBilling() {
+  try { localStorage.setItem(BILL_KEY, JSON.stringify(billing)); if (typeof renderInvCount === 'function') renderInvCount(); return true; }
+  catch (e) { showToast('STORAGE FULL — EXPORT A BACKUP'); return false; }
+}
+function nextInvoiceNumber() { billing.seq = Math.max(billing.seq, 1000) + 1; return billing.seq; }
+function invLog(v, msg) {
+  v.log.unshift({ ts: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }), msg: msg });
+  if (v.log.length > 40) v.log.length = 40;
+}
+
+function invRate(v) {
+  if (v.taxRate != null) return v.taxRate;
+  return ARCSign.cityRate(v.taxCity || 'Albuquerque').rate;
+}
+function invCalc(v) {
+  var sub = cents(v.items.reduce(function (s, i) { return s + cents(i.q * i.rate); }, 0));
+  var rate = v.taxOn ? invRate(v) : 0;
+  var tax = v.taxOn ? cents(sub * rate / 100) : 0, total = cents(sub + tax);
+  var paid = cents(v.payments.reduce(function (s, p) { return s + p.amount; }, 0)), bal = cents(total - paid);
+  var today = localISODate(), due = v.due || v.date;
+  var st = v.status === 'Void' ? 'Void' : (total > 0 && bal <= 0.004) ? 'Paid' : v.status === 'Draft' && !paid ? 'Draft'
+    : (due < today && bal > 0.004) ? 'Overdue' : paid > 0 ? 'Partly paid' : 'Sent';
+  return { sub: sub, rate: rate, tax: tax, total: total, paid: paid, bal: bal, status: st };
+}
+function invList() { return Object.keys(billing.inv).map(function (k) { return billing.inv[k]; }); }
+function coList() { return Object.keys(billing.co).map(function (k) { return billing.co[k]; }).sort(function (a, b) { return a.name.localeCompare(b.name); }); }
+function coName(id) { var c = billing.co[id]; return c ? c.name || 'Unnamed company' : 'No company'; }
+
+// ── Screen state ──
+var bv = { view: 'list', filter: 'open', invId: null, coId: null, draft: null, payOpen: false, payDraft: null, del: false, from: 'list' };
+
+function openInvoices() {
+  saveCustomer(false);
+  loadBilling();
+  bv = { view: 'list', filter: bv.filter || 'open', invId: null, coId: null, draft: null, payOpen: false, del: false, from: 'list' };
+  document.getElementById('inv-sheet').classList.add('active');
+  renderBilling();
+}
+function closeInvoices() {
+  if (bv.view === 'inv') commitInvoice();                       // drafts keep whatever was typed, company or not
+  else if (bv.view === 'co' && document.getElementById('co-name') && document.getElementById('co-name').value.trim()) { if (!saveCompany()) return; }
+  document.getElementById('inv-sheet').classList.remove('active');
+  if (window.ARCSync) ARCSync.applyWhenReady();
+}
+
+function renderBilling() {
+  var head = document.getElementById('inv-title'), kind = document.getElementById('inv-kind');
+  var body = document.getElementById('inv-inner'), foot = document.getElementById('inv-foot');
+  document.getElementById('inv-body').scrollTop = 0;
+  if (bv.view === 'list') { kind.textContent = 'AGENCY ROOFING CO.'; head.textContent = 'Invoices'; body.innerHTML = billListHtml(); foot.innerHTML = billListFoot(); }
+  else if (bv.view === 'cos') { kind.textContent = 'INVOICES'; head.textContent = 'Companies'; body.innerHTML = coListHtml(); foot.innerHTML = '<div class="xe-foot-in bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="back">← INVOICES</button><button type="button" class="proposal-btn proposal-btn-primary" data-b="newco">+ NEW COMPANY</button></div>'; }
+  else if (bv.view === 'co') { var c = bv.draft; kind.textContent = 'COMPANY'; head.textContent = c.name || 'New company'; body.innerHTML = coFormHtml(c); foot.innerHTML = coFoot(); }
+  else if (bv.view === 'inv') { var v = bv.draft; kind.textContent = 'INVOICE · ' + invCalc(v).status.toUpperCase(); head.textContent = v.num; body.innerHTML = invFormHtml(v); foot.innerHTML = invFoot(v); invRecalc(); }
+}
+
+// ── List ──
+function billListHtml() {
+  var all = invList().map(function (v) { return { v: v, k: invCalc(v) }; });
+  var f = bv.filter;
+  var show = all.filter(function (x) {
+    return f === 'all' ? true : f === 'paid' ? x.k.status === 'Paid' : f === 'overdue' ? x.k.status === 'Overdue'
+      : ['Sent', 'Partly paid', 'Overdue', 'Draft'].indexOf(x.k.status) > -1;
+  }).sort(function (a, b) { return b.v.seq - a.v.seq; });
+  var open = all.filter(function (x) { return ['Sent', 'Partly paid', 'Overdue'].indexOf(x.k.status) > -1; });
+  var owed = cents(open.reduce(function (s, x) { return s + x.k.bal; }, 0));
+  var late = cents(all.filter(function (x) { return x.k.status === 'Overdue'; }).reduce(function (s, x) { return s + x.k.bal; }, 0));
+  var y = String(new Date().getFullYear());
+  var paidYr = cents(all.reduce(function (s, x) { return s + x.v.payments.filter(function (p) { return p.date.slice(0, 4) === y; }).reduce(function (t, p) { return t + p.amount; }, 0); }, 0));
+  var chip = function (k, l) { return '<button type="button" class="bl-chip' + (f === k ? ' on' : '') + '" data-filter="' + k + '">' + l + '</button>'; };
+  return '<div class="bl-sum"><div><b>OPEN</b><span>' + fmt(owed) + '</span><small>' + open.length + ' invoice' + (open.length === 1 ? '' : 's') + '</small></div>' +
+      '<div class="' + (late > 0 ? 'late' : '') + '"><b>OVERDUE</b><span>' + fmt(late) + '</span><small>past the due date</small></div>' +
+      '<div><b>PAID ' + y + '</b><span>' + fmt(paidYr) + '</span><small>payments received</small></div></div>' +
+    '<div class="bl-chips">' + chip('open', 'OPEN') + chip('overdue', 'OVERDUE') + chip('paid', 'PAID') + chip('all', 'ALL') + '</div>' +
+    '<div class="x-list">' + (show.length ? show.map(function (x) {
+      var v = x.v, k = x.k, cls = k.status.toLowerCase().replace(/\s+/g, '-');
+      var when = k.status === 'Paid' ? 'Paid ' + shortDate((v.payments[v.payments.length - 1] || {}).date) : k.status === 'Draft' ? 'Draft · ' + shortDate(v.date) : 'Due ' + shortDate(v.due || v.date);
+      return '<button class="x-row" type="button" data-inv="' + esc(v.id) + '"><span><span class="x-num">' + esc(v.num) + ' · ' + esc(when) + '</span>' +
+        '<span class="x-title">' + esc(coName(v.coId)) + (v.job ? ' <small>· ' + esc(v.job) + '</small>' : '') + '</span></span>' +
+        '<span class="x-right"><span class="bs-pill ' + cls + '">' + k.status.toUpperCase() + '</span><span class="x-amt">' +
+        (k.status === 'Paid' || k.status === 'Void' || k.status === 'Draft' ? fmt(k.total) : fmt(k.bal) + ' <small>due</small>') + '</span></span></button>';
+    }).join('') : '<div class="x-empty">' + (all.length ? 'Nothing here. Try ALL.' : 'No invoices yet. Tap + NEW INVOICE to bill a company.') + '</div>') + '</div>';
+}
+function billListFoot() {
+  return '<div class="xe-foot-in bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="cos">COMPANIES</button>' +
+    '<button type="button" class="proposal-btn proposal-btn-primary" data-b="newinv">+ NEW INVOICE</button></div>';
+}
+
+// ── Companies ──
+function coListHtml() {
+  var list = coList();
+  return '<p class="xsec-note">Roofing companies you bill. Their email, terms and tax status fill in on each new invoice.</p><div class="x-list">' +
+    (list.length ? list.map(function (c) {
+      var n = invList().filter(function (v) { return v.coId === c.id; }), owed = cents(n.reduce(function (s, v) { var k = invCalc(v); return s + (['Sent', 'Partly paid', 'Overdue'].indexOf(k.status) > -1 ? k.bal : 0); }, 0));
+      return '<button class="x-row" type="button" data-co="' + esc(c.id) + '"><span><span class="x-num">' + n.length + ' invoice' + (n.length === 1 ? '' : 's') + ' · ' + esc(termOf(c.terms)[1]) + (c.nttc ? ' · NTTC' : '') + '</span>' +
+        '<span class="x-title">' + esc(c.name || 'Unnamed company') + (c.contact ? ' <small>· ' + esc(c.contact) + '</small>' : '') + '</span></span>' +
+        '<span class="x-right"><span class="x-amt">' + (owed ? fmt(owed) + ' <small>open</small>' : '') + '</span></span></button>';
+    }).join('') : '<div class="x-empty">No companies yet.</div>') + '</div>';
+}
+function bf(id, label, val, attrs) { return '<div class="ex-f"><label for="' + id + '">' + label + '</label><input id="' + id + '" value="' + esc(val == null ? '' : val) + '" ' + (attrs || 'type="text"') + '></div>'; }
+function coFormHtml(c) {
+  return bf('co-name', 'COMPANY NAME', c.name, 'type="text" autocomplete="organization" placeholder="Rio Grande Roofing LLC"') +
+    bf('co-contact', 'CONTACT / ATTENTION', c.contact, 'type="text" autocomplete="name" placeholder="Who the invoice goes to"') +
+    bf('co-email', 'BILLING EMAIL', c.email, 'type="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ap@company.com"') +
+    bf('co-cc', 'ALSO COPY (OPTIONAL)', c.cc, 'type="text" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="pm@company.com, owner@company.com"') +
+    bf('co-phone', 'PHONE', c.phone, 'type="tel" inputmode="tel" autocomplete="tel"') +
+    bf('co-address', 'STREET ADDRESS', c.address, 'type="text" autocomplete="street-address"') +
+    '<div class="ex-co3">' + bf('co-city', 'CITY', c.city, 'type="text" placeholder="Albuquerque"') + bf('co-state', 'STATE', c.state, 'type="text" maxlength="2" autocapitalize="characters"') +
+      bf('co-zip', 'ZIP', c.zip, 'type="text" inputmode="numeric" maxlength="10"') + '</div>' +
+    '<div class="ex-f"><label for="co-terms">DEFAULT TERMS</label><select id="co-terms" class="b-sel">' + BILL_TERMS.map(function (t) { return '<option value="' + t[0] + '"' + (c.terms === t[0] ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') + '</select></div>' +
+    '<label class="b-check"><input type="checkbox" id="co-nttc"' + (c.nttc ? ' checked' : '') + '><span><b>NTTC on file</b> New invoices to this company start with gross receipts tax off.</span></label>' +
+    '<div class="ex-f"><label for="co-notes">NOTES (ONLY YOU SEE THESE)</label><textarea id="co-notes" placeholder="Vendor #, who approves invoices, how they pay">' + esc(c.notes) + '</textarea></div>';
+}
+function coFoot() {
+  var used = bv.draft && invList().some(function (v) { return v.coId === bv.draft.id; });
+  var exists = bv.draft && billing.co[bv.draft.id];
+  return '<div class="xe-foot-in">' + (exists && !used ? '<button type="button" class="proposal-btn xe-del" data-b="delco">DELETE</button>' : '<span></span>') +
+    '<button type="button" class="proposal-btn proposal-btn-secondary" data-b="cancel">CANCEL</button><button type="button" class="proposal-btn proposal-btn-primary" data-b="saveco">SAVE</button></div>';
+}
+function coRead() {
+  var c = bv.draft, g = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  if (!document.getElementById('co-name')) return c;
+  c.name = g('co-name'); c.contact = g('co-contact'); c.email = g('co-email'); c.cc = g('co-cc'); c.phone = g('co-phone');
+  c.address = g('co-address'); c.city = g('co-city'); c.state = (g('co-state') || 'NM').toUpperCase(); c.zip = g('co-zip');
+  c.terms = g('co-terms') || 'net30'; c.nttc = document.getElementById('co-nttc').checked; c.notes = g('co-notes');
+  return c;
+}
+function saveCompany() {
+  var c = coRead(), nm = document.getElementById('co-name');
+  if (!c.name) { nm.classList.add('bad'); nm.focus(); return false; }
+  var em = document.getElementById('co-email');
+  if (c.email && !/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/.test(c.email)) { em.classList.add('bad'); em.focus(); return false; }
+  c.upd = Date.now(); billing.co[c.id] = normCompany(c);
+  if (!saveBilling()) return false;
+  return true;
+}
+
+// ── Invoice editor ──
+function newInvoice(coId) {
+  var co = billing.co[coId] || null;
+  var v = normInvoice({ id: billId('inv'), seq: nextInvoiceNumber(), coId: coId || '', date: localISODate(), terms: co ? co.terms : 'net30',
+    items: [{ d: '', q: 1, rate: 0 }], taxOn: co ? !co.nttc : true, taxCity: co && co.city ? co.city : 'Albuquerque', status: 'Draft' });
+  v.items = [{ d: '', q: 1, rate: 0 }];
+  v.due = isoAdd(v.date, termOf(v.terms)[2]);
+  v.num = 'INV-' + v.seq;
+  invLog(v, 'Invoice ' + v.num + ' created');
+  billing.inv[v.id] = v; saveBilling();   // the number is used up the moment it's handed out
+  bv.view = 'inv'; bv.invId = v.id; bv.draft = normInvoice(JSON.parse(JSON.stringify(v))); bv.draft.items = v.items.slice(); bv.payOpen = false; bv.del = false;
+  renderBilling();
+  var s = document.getElementById(coId ? 'bi-job' : 'bi-co'); if (s) s.focus();
+}
+function openInvoice(id) {
+  var v = billing.inv[id]; if (!v) return;
+  bv.view = 'inv'; bv.invId = id; bv.draft = normInvoice(JSON.parse(JSON.stringify(v))); bv.payOpen = false; bv.del = false;
+  if (!bv.draft.items.length) bv.draft.items = [{ d: '', q: 1, rate: 0 }];
+  renderBilling();
+}
+function billItemRow(i, n) {
+  return '<div class="ex-item bi-item" data-i="' + n + '"><input class="d" type="text" value="' + esc(i.d) + '" placeholder="Service: e.g. TPO install, 24 squares" aria-label="Description">' +
+    '<span class="ql">QTY</span><input class="n q" type="text" inputmode="decimal" value="' + esc(i.q) + '" aria-label="Quantity">' +
+    '<span class="pl">RATE $</span><input class="n p" type="text" inputmode="decimal" value="' + (i.rate ? i.rate.toFixed(2) : '') + '" placeholder="0.00" aria-label="Rate">' +
+    '<button type="button" class="rm" aria-label="Remove line">×</button><span class="bi-amt"></span></div>';
+}
+function invFormHtml(v) {
+  var k = invCalc(v), cos = coList(), co = billing.co[v.coId];
+  var h = '';
+  if (k.status === 'Void') h += '<div class="ex-note">This invoice is void. Its number stays used so your numbering never repeats.</div>';
+  else if (v.status === 'Sent') h += '<div class="ex-note">Sent ' + esc(shortDate(new Date(v.sentAt).toISOString().slice(0, 10))) + (v.sentTo ? ' to ' + esc(v.sentTo) : '') + '. If you change it, send it again so they have the new copy.</div>';
+  h += '<div class="ex-f"><label for="bi-co">BILL TO</label><div class="bi-co-row"><select id="bi-co" class="b-sel"><option value="">Choose a company…</option>' +
+      cos.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === v.coId ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') +
+      '</select><button type="button" class="b-mini" data-b="newco-inv">+ NEW</button></div>' +
+      (co ? '<div class="bi-co-info">' + esc([co.contact, co.email || 'No billing email yet'].filter(Boolean).join(' · ')) + ' <button type="button" class="b-link" data-b="editco">Edit</button></div>' : '') + '</div>' +
+    '<div class="ex-2">' + bf('bi-date', 'INVOICE DATE', v.date, 'type="date"') +
+      '<div class="ex-f"><label for="bi-terms">TERMS</label><select id="bi-terms" class="b-sel">' + BILL_TERMS.map(function (t) { return '<option value="' + t[0] + '"' + (v.terms === t[0] ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') + '</select></div></div>' +
+    '<div class="ex-2">' + bf('bi-due', 'DUE DATE', v.due, 'type="date"') + bf('bi-po', 'PO / JOB #', v.po, 'type="text" autocomplete="off" placeholder="Optional"') + '</div>' +
+    bf('bi-job', 'JOB / PROJECT', v.job, 'type="text" autocomplete="off" placeholder="e.g. 4410 Menaul Blvd NE — TPO tear-off"') +
+    '<div class="ex-f"><label>SERVICES</label><div class="ex-items" id="bi-items">' + v.items.map(billItemRow).join('') + '</div>' +
+      '<button type="button" class="ex-add" id="bi-additem">+ ADD LINE</button></div>' +
+    '<div class="bi-tax"><label class="b-check"><input type="checkbox" id="bi-taxon"' + (v.taxOn ? ' checked' : '') + '><span><b>Charge gross receipts tax</b> Turn off when they gave you an NTTC.</span></label>' +
+      '<div class="bi-taxcity"' + (v.taxOn ? '' : ' hidden') + '>' + bf('bi-taxcity', 'TAX CITY (WHERE THE WORK IS)', v.taxCity, 'type="text" placeholder="Albuquerque"') + '<div class="bi-rate" id="bi-rate"></div></div></div>' +
+    '<div class="xe-calc" id="bi-calc"></div>' +
+    '<div class="ex-f" style="margin-top:12px;"><label for="bi-note">NOTE ON THE INVOICE (OPTIONAL)</label><textarea id="bi-note" placeholder="Prints on the invoice. e.g. Work completed Nov 8–10.">' + esc(v.note) + '</textarea></div>';
+  // Payments
+  h += '<div class="form-section-title" style="margin-top:22px;">Payments &amp; receipts</div>' +
+    '<div class="x-list" id="bi-pays">' + (v.payments.length ? v.payments.map(function (p) {
+      return '<div class="bi-pay"><div><b>' + fmt(p.amount) + '</b> · ' + esc(p.method) + (p.ref ? ' #' + esc(p.ref) : '') + '<small>' + esc(shortDate(p.date)) + ' · Receipt ' + esc(v.num) + '-R' + p.n + (p.sentAt ? ' · emailed' : '') + '</small></div>' +
+        '<button type="button" class="b-mini" data-pay="' + esc(p.id) + '">RECEIPT</button><button type="button" class="b-mini b-x" data-unpay="' + esc(p.id) + '" aria-label="Remove payment">×</button></div>';
+    }).join('') : '<div class="x-empty">No payments recorded.</div>') + '</div>';
+  if (bv.payOpen) {
+    var pd = bv.payDraft;
+    h += '<div class="bi-payform"><div class="ex-2">' + bf('bp-amount', 'AMOUNT RECEIVED', pd.amount ? pd.amount.toFixed(2) : '', 'type="text" inputmode="decimal"') + bf('bp-date', 'DATE RECEIVED', pd.date, 'type="date"') + '</div>' +
+      '<div class="ex-2"><div class="ex-f"><label for="bp-method">PAID BY</label><select id="bp-method" class="b-sel">' + PAY_METHODS.map(function (m) { return '<option' + (m === pd.method ? ' selected' : '') + '>' + m + '</option>'; }).join('') + '</select></div>' +
+      bf('bp-ref', 'CHECK / REF #', pd.ref, 'type="text" autocomplete="off" placeholder="Optional"') + '</div>' +
+      '<div class="bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="paycancel">CANCEL</button><button type="button" class="proposal-btn proposal-btn-primary" data-b="paysave">SAVE PAYMENT</button></div></div>';
+  } else if (k.status !== 'Void' && k.total > 0 && k.bal > 0.004) {
+    h += '<button type="button" class="proposal-btn proposal-btn-secondary x-add" data-b="payopen">+ RECORD A PAYMENT</button>';
+  }
+  if (v.log.length) h += '<div class="form-section-title" style="margin-top:22px;">History</div><div class="bi-log">' + v.log.map(function (l) { return '<div><span>' + esc(l.ts) + '</span>' + esc(l.msg) + '</div>'; }).join('') + '</div>';
+  if (v.status !== 'Void') h += '<button type="button" class="b-void" data-b="void">' + (v.status === 'Draft' && !v.payments.length ? 'DELETE THIS DRAFT' : 'VOID THIS INVOICE') + '</button>';
+  return h;
+}
+function invFoot(v) {
+  var void_ = v.status === 'Void';
+  return '<div class="xe-foot-in bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="saveinv">SAVE &amp; CLOSE</button>' +
+    '<button type="button" class="proposal-btn proposal-btn-primary" data-b="previnv"' + (void_ ? ' disabled' : '') + '>PREVIEW &amp; SEND</button></div>';
+}
+function invRead() {
+  var v = bv.draft, g = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  if (!document.getElementById('bi-date')) return v;
+  v.coId = g('bi-co'); v.date = g('bi-date') || localISODate(); v.terms = g('bi-terms') || 'net30'; v.due = g('bi-due');
+  v.po = g('bi-po'); v.job = g('bi-job'); v.note = g('bi-note');
+  v.taxOn = document.getElementById('bi-taxon').checked; v.taxCity = g('bi-taxcity');
+  v.taxRate = null;
+  v.items = [].map.call(document.querySelectorAll('#bi-items .bi-item'), function (r) {
+    return { d: r.querySelector('.d').value.trim(), q: parseFloat(r.querySelector('.q').value) || 1, rate: num2(r.querySelector('.p').value) };
+  });
+  return v;
+}
+function invRecalc() {
+  if (bv.view !== 'inv') return;
+  var v = invRead(), k = invCalc(v), calc = document.getElementById('bi-calc');
+  [].forEach.call(document.querySelectorAll('#bi-items .bi-item'), function (r, n) { var i = v.items[n]; r.querySelector('.bi-amt').textContent = i && (i.rate || i.d) ? '= ' + fmt(cents(i.q * i.rate)) : ''; });
+  var rt = document.getElementById('bi-rate');
+  if (rt) { var cr = ARCSign.cityRate(v.taxCity || 'Albuquerque'); rt.textContent = taxPctLabel(cr.rate) + (cr.known ? ' for ' + (v.taxCity || 'Albuquerque') : ' (Albuquerque rate — check the rate for ' + (v.taxCity || 'this city') + ')'); }
+  var tc = document.querySelector('.bi-taxcity'); if (tc) tc.hidden = !v.taxOn;
+  if (calc) calc.innerHTML = '<div class="xe-line"><span>Subtotal</span><span>' + fmt(k.sub) + '</span></div>' +
+    '<div class="xe-line"><span>' + (v.taxOn ? esc(taxLine(k.rate, v.taxCity || 'Albuquerque')) : 'Gross receipts tax (not charged)') + '</span><span>' + fmt(k.tax) + '</span></div>' +
+    '<div class="xe-line total"><span>INVOICE TOTAL</span><span>' + fmt(k.total) + '</span></div>' +
+    (k.paid ? '<div class="xe-line"><span>Payments received</span><span>− ' + fmt(k.paid) + '</span></div><div class="xe-line strong"><span>Balance due</span><span>' + fmt(k.bal) + '</span></div>' : '');
+}
+function invValid(forSend) {
+  var v = invRead();
+  var bad = function (id) { var el = document.getElementById(id); if (el) { el.classList.add('bad'); el.focus(); } return false; };
+  if (!v.coId) return bad('bi-co');
+  if (forSend) {
+    var rows = [].slice.call(document.querySelectorAll('#bi-items .bi-item'));
+    var mark = function (el) { if (el) { el.classList.add('bad'); el.focus(); } return false; };
+    if (!v.items.some(function (i) { return i.rate; })) return mark(rows[0] && rows[0].querySelector('.p'));
+    var noDesc = rows.find(function (r) { return !r.querySelector('.d').value.trim() && num2(r.querySelector('.p').value); });
+    if (noDesc) return mark(noDesc.querySelector('.d'));
+  }
+  return true;
+}
+function commitInvoice() {
+  var v = invRead();
+  v.items = v.items.filter(function (i) { return i.d || i.rate; });
+  var old = billing.inv[v.id];
+  if (old && JSON.stringify(normInvoice(old)) === JSON.stringify(normInvoice(v))) return true;
+  v.upd = Date.now();
+  if (old && old.status === 'Sent' && JSON.stringify(old.items) + invCalc(old).total !== JSON.stringify(v.items) + invCalc(v).total) invLog(v, 'Edited after sending — total ' + fmt(invCalc(v).total));
+  billing.inv[v.id] = normInvoice(v);
+  bv.draft = normInvoice(JSON.parse(JSON.stringify(billing.inv[v.id])));
+  if (!bv.draft.items.length) bv.draft.items = [{ d: '', q: 1, rate: 0 }];
+  return saveBilling();
+}
+function billSaveCurrent(quiet) {
+  if (bv.view === 'inv') { if (!invValid(false)) { if (!quiet) showToast('CHOOSE A COMPANY'); return false; } return commitInvoice(); }
+  if (bv.view === 'co') return saveCompany();
+  return true;
+}
+
+// ── Payments ──
+function savePayment() {
+  var amt = num2(document.getElementById('bp-amount').value);
+  if (!(amt > 0)) { var a = document.getElementById('bp-amount'); a.classList.add('bad'); a.focus(); return; }
+  invRead();
+  var v = bv.draft, p = { id: billId('p'), n: v.payments.reduce(function (m, x) { return Math.max(m, x.n); }, 0) + 1, date: document.getElementById('bp-date').value || localISODate(),
+    amount: amt, method: document.getElementById('bp-method').value, ref: document.getElementById('bp-ref').value.trim() };
+  v.payments.push(p);
+  if (v.status === 'Draft') v.status = 'Sent';   // paid without emailing (handed over in person)
+  invLog(v, 'Payment ' + fmt(amt) + ' received (' + p.method + (p.ref ? ' #' + p.ref : '') + ')' + (invCalc(v).bal <= 0.004 ? ' — paid in full' : ''));
+  bv.payOpen = false;
+  commitInvoice(); renderBilling(); showToast('PAYMENT SAVED · TAP RECEIPT TO SEND IT');
+}
+
+// ── Documents ──
+var BILL_DOC_CSS = `<style>
+  .hero-title { font-size: 30px; margin-bottom: 10px; }
+  .hero-sub { margin-bottom: 14px; }
+  .meta { margin-bottom: 16px; }
+  .bt { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px; }
+  .bt .who { font-size: 10.5px; line-height: 1.55; color: #1C1A18; }
+  .bt .who b { font-size: 12px; font-weight: 600; }
+  .it { width: 100%; border-collapse: collapse; font-size: 10.5px; color: #1C1A18; }
+  .it th { font-family: 'Bebas Neue', sans-serif; font-weight: 400; font-size: 11px; letter-spacing: 0.14em; color: #974930; text-align: left; padding: 0 0 6px; border-bottom: 1.2px solid #1C1A18; }
+  .it td { padding: 7px 0; border-bottom: 0.6px solid rgba(28,26,24,0.18); vertical-align: top; line-height: 1.45; }
+  .it .n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; padding-left: 14px; }
+  .it .q { width: 46px; } .it .r { width: 84px; } .it .a { width: 92px; font-weight: 600; }
+  .body { margin-top: 16px; }
+  .pr > span:last-child { padding-left: 12px; white-space: nowrap; align-self: flex-start; }
+  .para { font-size: 10.5px; line-height: 1.6; color: #1C1A18; }
+  .pr-paid { color: #2A5C3A; }
+  .stamp { display: inline-block; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.2em; padding: 4px 10px 3px; border: 1.5px solid #974930; color: #974930; border-radius: 2px; margin-bottom: 10px; }
+  .stamp.full { border-color: #2A5C3A; color: #2A5C3A; }
+  .ty { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 12px; color: #974930; }
+  .ty-sub { font-size: 9.5px; color: #3A3734; margin-top: 3px; }
+  .rcv-sig { display: flex; align-items: flex-end; gap: 16px; }
+  .rcv-sig img { height: 38px; }
+  .rcv-sig .ln { border-top: 0.8px solid #1C1A18; padding-top: 3px; font-size: 9px; letter-spacing: 0.06em; color: #3A3734; min-width: 200px; }
+</style>`;
+function billWho(co) {
+  return '<b>' + esc(co.name) + '</b>' + (co.contact ? '<br>Attn: ' + esc(co.contact) : '') + (co.address ? '<br>' + esc(co.address) : '') +
+    (cityLine(co) ? '<br>' + esc(cityLine(co)) : '') + (co.email ? '<br>' + esc(co.email) : '') + (co.phone ? '<br>' + esc(co.phone) : '');
+}
+var BILL_FROM = '<b>Agency Roofing Co. LLC</b><br>Orlando Montanez, Owner<br>Albuquerque, New Mexico<br>' + ARC_PHONE + '<br>' + BILL_ME;
+function itemsTable(v) {
+  return '<table class="it" data-keep><thead><tr><th>Description</th><th class="n q">Qty</th><th class="n r">Rate</th><th class="n a">Amount</th></tr></thead><tbody>' +
+    v.items.map(function (i) { return '<tr><td>' + richLine(i.d) + '</td><td class="n q">' + (+i.q).toLocaleString('en-US', { maximumFractionDigits: 2 }) + '</td><td class="n r">' + fmt(i.rate) + '</td><td class="n a">' + fmt(cents(i.q * i.rate)) + '</td></tr>'; }).join('') +
+    '</tbody></table>';
+}
+function invoiceDoc(v, co) {
+  var k = invCalc(v), t = termOf(v.terms);
+  var taxRow = v.taxOn ? '<div class="pr pr-tax"><span>' + esc(taxLine(k.rate, v.taxCity || 'Albuquerque')) + '</span><span>' + fmt(k.tax) + '</span></div>'
+    : '<div class="pr pr-tax"><span>Gross Receipts Tax' + (co.nttc ? ' (NTTC on file)' : '') + '</span><span>Not charged</span></div>';
+  var flow = ARC_DOC_HEAD + '<hr class="div-thin" data-keep>' +
+    '<div class="hero-title" data-keep>Invoice for <span class="name">' + esc(co.name) + '</span></div>' +
+    '<div class="hero-sub" data-keep><b>' + (v.job ? esc(v.job) : 'Services provided') + '</b>' + (v.job && v.po ? ' · PO ' + esc(v.po) : '') + '</div>' +
+    '<div class="meta" data-keep>' +
+      '<div class="meta-cell"><span class="meta-label">Invoice No.</span><span class="meta-value">' + esc(v.num) + '</span></div>' +
+      '<div class="meta-cell"><span class="meta-label">Invoice Date</span><span class="meta-value">' + longDate(v.date) + '</span></div>' +
+      '<div class="meta-cell"><span class="meta-label">Due Date</span><span class="meta-value">' + longDate(v.due || v.date) + '</span></div>' +
+      '<div class="meta-cell"><span class="meta-label">' + (v.po ? 'PO / Job No.' : 'Terms') + '</span><span class="meta-value">' + esc(v.po || t[1]) + '</span></div></div>' +
+    '<div class="bt" data-keep><div><div class="sh">Bill To</div><div class="sh-rule"></div><div class="who">' + billWho(co) + '</div></div>' +
+      '<div><div class="sh">From</div><div class="sh-rule"></div><div class="who">' + BILL_FROM + '</div></div></div>' +
+    itemsTable(v) +
+    '<div class="body"><div>' +
+      (v.note ? '<div class="section-block"><div class="sh">Notes</div><div class="sh-rule"></div><p class="para">' + richLine(v.note) + '</p></div>' : '') +
+      '<div class="section-block"><div class="sh">How to Pay</div><div class="sh-rule"></div><ul class="b-list">' +
+        '<li>Terms: ' + esc(t[1]) + '. Payment due by <b>' + longDate(v.due || v.date) + '</b>.</li>' +
+        '<li>Checks payable to <b>Agency Roofing Co. LLC</b>.</li>' +
+        '<li>Please include invoice <b>' + esc(v.num) + '</b> with your payment.</li></ul></div>' +
+    '</div><div><div class="pbox"><div class="pbox-title">Amount Due</div><div class="pbox-rule"></div>' +
+      '<div class="pr pr-sub"><span>Subtotal</span><span>' + fmt(k.sub) + '</span></div>' + taxRow +
+      (k.paid ? '<div class="pr pr-sub"><span>Invoice Total</span><span>' + fmt(k.total) + '</span></div><div class="pr pr-paid"><span>Payments Received</span><span>− ' + fmt(k.paid) + '</span></div>' : '') +
+      '<div class="pr pr-final"><span class="lbl">' + (k.paid ? 'Balance Due' : 'Total Due') + '</span><span class="amt">' + fmt(k.bal) + '</span></div>' +
+      payBlock(co, k.bal, 'Balance due', v.num) + '</div></div></div>';
+  var tail = '<div class="ty">Thank you for your business.</div><div class="ty-sub">Questions about this invoice: ' + ARC_PHONE + ' · ' + BILL_ME + '</div>';
+  return docShell({ title: 'Invoice ' + v.num + ' — ' + co.name, css: BILL_DOC_CSS, flow: flow, tail: tail });
+}
+function receiptDoc(v, co, p) {
+  var k = invCalc(v), upto = cents(v.payments.filter(function (x) { return x.n <= p.n; }).reduce(function (s, x) { return s + x.amount; }, 0));
+  var balAfter = cents(k.total - upto), full = balAfter <= 0.004, rno = v.num + '-R' + p.n;
+  var own = ARCSign.ownerSig();
+  var flow = ARC_DOC_HEAD + '<hr class="div-thin" data-keep>' +
+    '<div class="hero-title" data-keep>Receipt for <span class="name">' + esc(co.name) + '</span></div>' +
+    '<div class="hero-sub" data-keep><b>Payment received' + (v.job ? ' · ' + esc(v.job) : '') + '</b>' + (v.po ? ' · PO ' + esc(v.po) : '') + '</div>' +
+    '<div class="meta" data-keep>' +
+      '<div class="meta-cell"><span class="meta-label">Receipt No.</span><span class="meta-value">' + esc(rno) + '</span></div>' +
+      '<div class="meta-cell"><span class="meta-label">Payment Date</span><span class="meta-value">' + longDate(p.date) + '</span></div>' +
+      '<div class="meta-cell"><span class="meta-label">For Invoice</span><span class="meta-value">' + esc(v.num) + '</span></div>' +
+      '<div class="meta-cell"><span class="meta-label">Paid By</span><span class="meta-value">' + esc(p.method) + (p.ref ? ' #' + esc(p.ref) : '') + '</span></div></div>' +
+    '<div class="bt" data-keep><div><div class="sh">Received From</div><div class="sh-rule"></div><div class="who">' + billWho(co) + '</div></div>' +
+      '<div><div class="sh">Received By</div><div class="sh-rule"></div><div class="who">' + BILL_FROM + '</div></div></div>' +
+    itemsTable(v) +
+    '<div class="body"><div><div class="section-block"><div class="sh">Payment Record</div><div class="sh-rule"></div><ul class="b-list">' +
+      v.payments.filter(function (x) { return x.n <= p.n; }).map(function (x) { return '<li>' + longDate(x.date) + ' · ' + esc(x.method) + (x.ref ? ' #' + esc(x.ref) : '') + ' · <b>' + fmt(x.amount) + '</b></li>'; }).join('') +
+      '</ul></div><p class="para">' + (full ? 'This invoice is paid in full. Thank you.' : 'Thank you. The remaining balance of ' + fmt(balAfter) + ' is due by ' + longDate(v.due || v.date) + '.') + '</p></div>' +
+    '<div><div class="pbox"><span class="stamp' + (full ? ' full' : '') + '">' + (full ? 'PAID IN FULL' : 'PARTIAL PAYMENT') + '</span>' +
+      '<div class="pr pr-sub"><span>Invoice Total</span><span>' + fmt(k.total) + '</span></div>' +
+      '<div class="pr pr-paid"><span>This Payment</span><span>' + fmt(p.amount) + '</span></div>' +
+      '<div class="pr pr-sub"><span>Total Paid to Date</span><span>' + fmt(upto) + '</span></div>' +
+      '<div class="pr pr-final"><span class="lbl">Balance Due</span><span class="amt">' + fmt(Math.max(0, balAfter)) + '</span></div>' +
+      (full ? '' : payBlock(co, balAfter, 'Balance due', v.num)) + '</div></div></div>';
+  var tail = '<div class="rcv-sig">' + (own && own.img ? '<img src="' + own.img + '" alt="">' : '') + '<div class="ln">RECEIVED BY ORLANDO MONTANEZ, OWNER · ' + esc(shortDate(p.date)).toUpperCase() + '</div></div>';
+  return docShell({ title: 'Receipt ' + rno + ' — ' + co.name, css: BILL_DOC_CSS, flow: flow, tail: tail });
+}
+function billFileWho(co) { return String(co.name || 'Company').replace(/[\\/:*?"<>|]+/g, '').trim().slice(0, 60) || 'Company'; }
+function billDrive(co) { return { path: [{ tag: 'invoices', name: 'Invoices' }, { tag: 'ico:' + co.id, name: String(co.name || 'Company').replace(/[\/\\]/g, '-') }] }; }
+function billGreet(co) { return co.contact ? co.contact.trim().split(/\s+/)[0] : 'there'; }
+
+function previewInvoice() {
+  if (!invValid(true)) { showToast('ADD A COMPANY AND AT LEAST ONE PRICED LINE'); return; }
+  if (!commitInvoice()) return;
+  var v = billing.inv[bv.invId], co = billing.co[v.coId], k = invCalc(v);
+  openPreview({ html: invoiceDoc(v, co), word: 'Invoice', num: v.num, cust: null, ext: {
+    fileName: 'ARC Invoice - ' + billFileWho(co) + ' - ' + v.num + '.pdf',
+    drive: billDrive(co),
+    mail: function () {
+      var due = longDate(v.due || v.date);
+      return { to: co.email, cc: co.cc, bcc: BILL_ME,
+        subject: 'Agency Roofing Co. invoice ' + v.num + (v.job ? ' · ' + v.job : '') + ' · ' + fmt(k.bal) + ' due ' + due,
+        body: 'Hi ' + billGreet(co) + ',\n\nAttached is invoice ' + v.num + (v.job ? ' for ' + v.job : '') + (v.po ? ' (PO ' + v.po + ')' : '') + '.\n\n' +
+          'Amount due: ' + fmt(k.bal) + '\nDue by: ' + due + ' (' + termOf(v.terms)[1] + ')\n\n' +
+          'Checks can be made payable to Agency Roofing Co. LLC' + (payLinkFor(co) ? ', or pay online: ' + payLinkFor(co) : '') + '. Please include the invoice number with your payment.\n\n' +
+          'Thank you for the work. Let me know if you have any questions.\n\nBuilt with agency. Driven by obligation.\n\nOrlando\nAgency Roofing Co.\n' + ARC_PHONE };
+    },
+    onSent: function (r) {
+      var cur = billing.inv[v.id]; if (!cur) return;
+      if (cur.status === 'Draft') cur.status = 'Sent';
+      cur.sentAt = Date.now(); cur.sentTo = r.to; cur.upd = Date.now();
+      invLog(cur, (r.mailApp ? 'Opened in Mail to ' : 'Emailed to ') + r.to + (r.cc ? ', cc ' + r.cc : '') + (r.bcc ? ', copy to you' : ''));
+      saveBilling(); if (bv.invId === v.id && bv.view === 'inv') { bv.draft = normInvoice(JSON.parse(JSON.stringify(cur))); renderBilling(); }
+    },
+    onDrive: function (r) { var cur = billing.inv[v.id]; if (r.ok && cur) { invLog(cur, 'Saved to Google Drive › ' + r.folder); cur.upd = Date.now(); saveBilling(); if (bv.invId === v.id && bv.view === 'inv') { bv.draft.log = cur.log.slice(); } } },
+  } });
+}
+function previewReceipt(pid) {
+  if (!commitInvoice()) return;
+  var v = billing.inv[bv.invId], co = billing.co[v.coId], p = v.payments.find(function (x) { return x.id === pid; });
+  if (!p || !co) return;
+  var rno = v.num + '-R' + p.n, k = invCalc(v);
+  var upto = cents(v.payments.filter(function (x) { return x.n <= p.n; }).reduce(function (s, x) { return s + x.amount; }, 0)), bal = cents(k.total - upto);
+  openPreview({ html: receiptDoc(v, co, p), word: 'Receipt', num: rno, cust: null, ext: {
+    fileName: 'ARC Receipt - ' + billFileWho(co) + ' - ' + rno + '.pdf',
+    drive: billDrive(co),
+    mail: function () {
+      return { to: co.email, cc: co.cc, bcc: BILL_ME,
+        subject: 'Agency Roofing Co. receipt ' + rno + ' · ' + fmt(p.amount) + ' received' + (bal <= 0.004 ? ' · ' + v.num + ' paid in full' : ''),
+        body: 'Hi ' + billGreet(co) + ',\n\nThank you for your payment of ' + fmt(p.amount) + ' on ' + longDate(p.date) + ' (' + p.method + (p.ref ? ' #' + p.ref : '') + ') for invoice ' + v.num + '.\n\n' +
+          (bal <= 0.004 ? 'Invoice ' + v.num + ' is now paid in full. ' : 'Remaining balance: ' + fmt(bal) + ', due by ' + longDate(v.due || v.date) + '. ') + 'Your receipt (' + rno + ') is attached.\n\n' +
+          'Built with agency. Driven by obligation.\n\nOrlando\nAgency Roofing Co.\n' + ARC_PHONE };
+    },
+    onSent: function (r) {
+      var cur = billing.inv[v.id]; if (!cur) return;
+      var cp = cur.payments.find(function (x) { return x.id === pid; }); if (cp) cp.sentAt = Date.now();
+      invLog(cur, 'Receipt ' + rno + (r.mailApp ? ' opened in Mail to ' : ' emailed to ') + r.to + (r.bcc ? ', copy to you' : ''));
+      cur.upd = Date.now(); saveBilling(); if (bv.invId === v.id && bv.view === 'inv') { bv.draft = normInvoice(JSON.parse(JSON.stringify(cur))); renderBilling(); }
+    },
+    onDrive: function (r) { var cur = billing.inv[v.id]; if (r.ok && cur) { invLog(cur, 'Receipt ' + rno + ' saved to Google Drive'); cur.upd = Date.now(); saveBilling(); } },
+  } });
+}
+
+// ── Events ──
+(function wireBilling() {
+  var sheet = document.getElementById('inv-sheet'); if (!sheet) return;
+  document.getElementById('btn-invoices').addEventListener('click', function (e) { e.preventDefault(); openInvoices(); });
+  document.getElementById('inv-close').addEventListener('click', function (e) { e.preventDefault(); closeInvoices(); });
+  sheet.addEventListener('click', function (e) {
+    var t = e.target;
+    var f = t.closest('[data-filter]'); if (f) { bv.filter = f.dataset.filter; renderBilling(); return; }
+    var r = t.closest('[data-inv]'); if (r) { openInvoice(r.dataset.inv); return; }
+    var c = t.closest('[data-co]'); if (c) { bv.view = 'co'; bv.from = 'cos'; bv.draft = normCompany(JSON.parse(JSON.stringify(billing.co[c.dataset.co]))); renderBilling(); return; }
+    var rc = t.closest('[data-pay]'); if (rc) { if (!billing.co[bv.draft.coId] || !invValid(false)) { showToast('CHOOSE A COMPANY FIRST'); return; } previewReceipt(rc.dataset.pay); return; }
+    var up = t.closest('[data-unpay]');
+    if (up) {
+      if (up.dataset.armed !== '1') { up.dataset.armed = '1'; up.textContent = 'REMOVE?'; up.classList.add('armed'); return; }
+      invRead(); var v = bv.draft, p = v.payments.find(function (x) { return x.id === up.dataset.unpay; });
+      v.payments = v.payments.filter(function (x) { return x.id !== up.dataset.unpay; });
+      if (p) invLog(v, 'Payment ' + fmt(p.amount) + ' removed');
+      commitInvoice(); renderBilling(); return;
+    }
+    var rm = t.closest('#bi-items .rm');
+    if (rm) { var box = document.getElementById('bi-items'); if (box.children.length > 1) rm.closest('.bi-item').remove(); else { var it = rm.closest('.bi-item'); it.querySelector('.d').value = ''; it.querySelector('.p').value = ''; it.querySelector('.q').value = '1'; } invRecalc(); return; }
+    if (t.closest('#bi-additem')) { var bx = document.getElementById('bi-items'); bx.insertAdjacentHTML('beforeend', billItemRow({ d: '', q: 1, rate: 0 }, bx.children.length)); bx.lastElementChild.querySelector('.d').focus(); return; }
+    var b = t.closest('[data-b]'); if (!b) return;
+    var a = b.dataset.b;
+    if (a === 'cos') { bv.view = 'cos'; renderBilling(); }
+    else if (a === 'back') { bv.view = 'list'; renderBilling(); }
+    else if (a === 'newinv') { newInvoice(''); }
+    else if (a === 'newco') { bv.view = 'co'; bv.from = 'cos'; bv.draft = normCompany({}); renderBilling(); document.getElementById('co-name').focus(); }
+    else if (a === 'newco-inv') { commitInvoice(); bv.from = 'inv'; bv.view = 'co'; bv.draft = normCompany({}); renderBilling(); document.getElementById('co-name').focus(); }
+    else if (a === 'editco') { commitInvoice(); bv.from = 'inv'; bv.view = 'co'; bv.draft = normCompany(JSON.parse(JSON.stringify(billing.co[document.getElementById('bi-co').value]))); renderBilling(); }
+    else if (a === 'cancel') { bv.view = bv.from === 'inv' ? 'inv' : 'cos'; if (bv.view === 'inv') openInvoice(bv.invId); else renderBilling(); }
+    else if (a === 'saveco') {
+      if (!saveCompany()) return;
+      var cid = bv.draft.id;
+      if (bv.from === 'inv' && bv.invId) {
+        var iv = billing.inv[bv.invId], co = billing.co[cid];
+        if (iv && !iv.coId) { iv.coId = cid; iv.terms = co.terms; iv.due = isoAdd(iv.date, termOf(co.terms)[2]); iv.taxOn = !co.nttc; iv.taxCity = co.city || iv.taxCity; iv.upd = Date.now(); saveBilling(); }
+        openInvoice(bv.invId);
+      } else { bv.view = 'cos'; renderBilling(); }
+      showToast('COMPANY SAVED');
+    }
+    else if (a === 'delco') {
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'TAP TO DELETE'; b.classList.add('armed'); return; }
+      delete billing.co[bv.draft.id]; saveBilling(); bv.view = 'cos'; renderBilling();
+    }
+    else if (a === 'saveinv') { if (!billSaveCurrent(false)) return; bv.view = 'list'; renderBilling(); showToast('SAVED'); }
+    else if (a === 'previnv') previewInvoice();
+    else if (a === 'payopen') { var k = invCalc(invRead()); bv.payOpen = true; bv.payDraft = { amount: k.bal, date: localISODate(), method: 'Check', ref: '' }; commitInvoice(); renderBilling(); var pa = document.getElementById('bp-amount'); if (pa) pa.scrollIntoView({ block: 'center' }); }
+    else if (a === 'paycancel') { bv.payOpen = false; renderBilling(); }
+    else if (a === 'paysave') savePayment();
+    else if (a === 'void') {
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = bv.draft.status === 'Draft' && !bv.draft.payments.length ? 'TAP AGAIN TO DELETE THIS DRAFT' : 'TAP AGAIN TO VOID ' + bv.draft.num; b.classList.add('armed'); return; }
+      var dv = billing.inv[bv.invId];
+      if (dv && dv.status === 'Draft' && !dv.payments.length) { delete billing.inv[bv.invId]; saveBilling(); showToast(dv.num + ' DELETED · NUMBER NOT REUSED'); }
+      else if (dv) { invRead(); bv.draft.status = 'Void'; invLog(bv.draft, 'Voided'); commitInvoice(); showToast(dv.num + ' VOID'); }
+      bv.view = 'list'; renderBilling();
+    }
+  });
+  sheet.addEventListener('input', function (e) {
+    if (e.target.classList) e.target.classList.remove('bad');
+    if (bv.view === 'inv') invRecalc();
+  });
+  sheet.addEventListener('change', function (e) {
+    if (bv.view !== 'inv') return;
+    var id = e.target.id;
+    if (id === 'bi-co') {
+      var co = billing.co[e.target.value];
+      if (co) {   // a company's defaults fill in
+        document.getElementById('bi-terms').value = co.terms;
+        document.getElementById('bi-due').value = isoAdd(document.getElementById('bi-date').value, termOf(co.terms)[2]);
+        document.getElementById('bi-taxon').checked = !co.nttc;
+        if (co.city) document.getElementById('bi-taxcity').value = co.city;
+      }
+      invRead(); commitInvoice(); renderBilling();
+    } else if (id === 'bi-terms' || id === 'bi-date') {
+      document.getElementById('bi-due').value = isoAdd(document.getElementById('bi-date').value, termOf(document.getElementById('bi-terms').value)[2]);
+      invRecalc();
+    } else invRecalc();
+  });
+  loadBilling(); renderInvCount();
+})();
+
 // ── Events (addEventListener — iOS Safari safe) ──
 (function wireExtras() {
   const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
@@ -4806,7 +5441,7 @@ function syncCanApply() {
   if (formDirty) return false;
   const a = document.activeElement;
   if (a && a.closest && a.closest('#detail') && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return false;
-  return !document.querySelector('#am-sheet.on, #sg.on, #modal-overlay.active, #x-editor.active, #set-sheet.active, #exp-sheet.active, #pv-sheet.active, #ins-sheet.active');
+  return !document.querySelector('#am-sheet.on, #sg.on, #modal-overlay.active, #x-editor.active, #set-sheet.active, #exp-sheet.active, #inv-sheet.active, #pv-sheet.active, #ins-sheet.active');
 }
 function syncTime(ms) {
   if (!ms) return '';
@@ -4835,7 +5470,7 @@ function renderSyncStatusOnly(s) {
   const st = document.getElementById('sync-st');
   if (st && s.signedIn) st.textContent = s.waiting ? 'Changes from your other device will load when you close Settings.' :
     s.error ? s.error : s.busy ? 'Syncing…' : 'Last synced ' + (syncTime(s.lastSync) || 'not yet') + (s.pending ? ' · ' + s.pending + ' waiting to send' : '') + '.' +
-    (s.costsSetup ? ' Job costing isn’t syncing yet: run supabase/costs.sql in Supabase once.' : '');
+    (s.costsSetup || s.docsSetup ? ' ' + [s.costsSetup ? 'Job costing' : '', s.docsSetup ? 'Invoices' : ''].filter(Boolean).join(' and ') + ' aren’t syncing yet: run supabase/docs.sql in Supabase once.' : '');
 }
 function renderSyncSettings(errMsg) {
   const box = document.getElementById('set-sync');
@@ -5368,7 +6003,8 @@ function setPvStatus(t, bad) {
 }
 
 function openPreview(o) {
-  pv = { word: o.word, num: o.num, cust: o.cust, repair: !!o.repair, file: null, mailReady: false, token: Date.now() + Math.random() };
+  // o.ext (billing documents): { mail() → { to, cc, bcc, subject, body }, fileName, drive, onSent(r), onDrive(r) } — no customer record involved
+  pv = { word: o.word, num: o.num, cust: o.cust, repair: !!o.repair, ext: o.ext || null, file: null, mailReady: false, token: Date.now() + Math.random() };
   document.getElementById('pv-kind').textContent = o.word.toUpperCase() + ' PREVIEW';
   document.getElementById('pv-num').textContent = o.num;
   const send = document.getElementById('pv-send'), saveB = document.getElementById('pv-save');
@@ -5411,6 +6047,7 @@ window.arcDocLoaded = function (win) {
 };
 
 function pdfFileName(o) {
+  if (o.ext && o.ext.fileName) return o.ext.fileName;
   const who = String((o.cust && (o.cust.last || o.cust.first)) || 'Customer').replace(/[\\/:*?"<>|]+/g, '').trim() || 'Customer';
   return `ARC ${o.word} - ${who} - ${o.num}.pdf`;
 }
@@ -5464,6 +6101,7 @@ function pdfFallback(file, mail) {
 
 // The email Orlando has always sent (subject, body, signature), with the customer's address in To
 function pvMail() {
+  if (pv.ext && pv.ext.mail) return pv.ext.mail();
   const c = pv.cust || {};
   const name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer';
   const addr = c.address || 'your property';
@@ -5487,11 +6125,13 @@ ${ARC_PHONE}`;
 }
 
 function mailtoHref(m) {
-  return 'mailto:' + encodeURIComponent(m.to).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.body);
+  return 'mailto:' + encodeURIComponent(m.to).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.body) +
+    (m.cc ? '&cc=' + encodeURIComponent(m.cc) : '') + (m.bcc ? '&bcc=' + encodeURIComponent(m.bcc) : '');
 }
 
 function openMail() {
   const m = pvMail();
+  if (pv.ext) { if (pv.ext.onSent) pv.ext.onSent({ to: m.to, cc: m.cc || '', bcc: m.bcc || '', mailApp: true }); location.href = mailtoHref(m); return; }
   logActivity(pv.word + ' ' + pv.num + ' emailed' + (m.to ? ' to ' + m.to : ''));
   save(); renderActivityLog();
   location.href = mailtoHref(m);
@@ -5504,6 +6144,14 @@ function openMail() {
 // and the PDF attached, and SEND sends it from the business Gmail. Otherwise: the Mail-app flow.
 function pvSend() {
   if (!pv || !pv.file) { showToast('PDF IS STILL BUILDING…'); return; }
+  if (window.ARCMail && ARCMail.enabled && !pv.mailReady && pv.ext) {
+    const m = pvMail(), x = pv.ext;
+    ARCMail.compose({ kind: pv.word, to: m.to, cc: m.cc || '', bcc: m.bcc, subject: m.subject, body: m.body, file: pv.file, drive: x.drive || null,
+      onSent: r => { if (x.onSent) x.onSent(r); setPvStatus('Emailed to ' + r.to + (r.bcc ? ', copy to you' : '') + '. It’s in your Gmail Sent folder.'); showToast('SENT TO ' + r.to.toUpperCase()); },
+      onDrive: r => { if (x.onDrive) x.onDrive(r); setPvStatus(r.ok ? 'Emailed and saved to Google Drive › ' + r.folder + '.' : ARCMail.driveNote(r)); },
+      fallback: pvSendMailApp });
+    return;
+  }
   if (window.ARCMail && ARCMail.enabled && !pv.mailReady) {
     const m = pvMail(), word = pv.word, num = pv.num, cust = pv.cust || {};
     ARCMail.compose({ kind: word, to: m.to, subject: m.subject, body: m.body, file: pv.file,
@@ -5575,6 +6223,7 @@ function closePreview() {
 function reloadFromStorage() {
   const cur = currentId;
   load();
+  if (typeof loadBilling === 'function') { loadBilling(); renderInvCount(); }
   if (cur && customers.some(c => c.id === cur)) {
     currentId = cur;
     renderList();
@@ -5595,7 +6244,7 @@ function reloadFromStorage() {
 // Safari can show this page from its back/forward cache with old data in memory.
 // The Job Board saves edits, so always re-read storage when the page comes back.
 window.addEventListener('pageshow', e => { if (e.persisted) reloadFromStorage(); });
-window.addEventListener('storage', e => { if (e.key === STORAGE_KEY || e.key === EXT_KEY || e.key === FOLLOW_KEY || e.key === COSTS_KEY) reloadFromStorage(); });
+window.addEventListener('storage', e => { if (e.key === STORAGE_KEY || e.key === EXT_KEY || e.key === FOLLOW_KEY || e.key === COSTS_KEY || e.key === 'arc_billing') reloadFromStorage(); });
 
 function restoreReturn() {
   // Coming back from a document opened in this tab → reopen that customer

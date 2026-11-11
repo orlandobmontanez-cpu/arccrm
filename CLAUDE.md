@@ -46,6 +46,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   - `arc_costs` — job costing `{ [id]: [expense] }` (own key, never in `arc_v3`/`arc_ext`, so older versions can't drop it).
     Expense = `{ id, date, vendor, cat: materials|labor|other, ref, sub, tax, total, items: [{ d, q, p }], note, file: { id, name, link } | null, driveStale, at, upd }`
     (`normExpense`). Backups carry it as `arcCosts`; importing a backup without `arcCosts` keeps the job's expenses.
+  - `arc_billing` — Invoices screen `{ co: { [id]: company }, inv: { [id]: invoice }, seq }` (`normCompany` / `normInvoice`).
+    Backups carry it in `arcBackup.billing`; import merges (newer `upd` wins, nothing removed, `seq` only goes up).
 - `normalize(c)` whitelists customer fields. **Any new field must be added there**, or it is silently dropped on load. Same for `normQuote` / `normCO`.
   - Address: `address` (street + unit), `city`, `state` (default NM), `zip`. Old records with "NM 87120" in `zip` are split on load.
     Documents always print "City, NM ZIP" via `cityLine(c)`.
@@ -100,7 +102,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   The receipt page only pushes (`init({ pull: false })`).
 - Sign in: Settings → Cloud Sync (email + password, created in Supabase → Authentication → Users). Status line on the list.
 - Any **new stored key or field** must be inside one of the synced records (or added to `localRecords`/`applyRecords`).
-- Job costing syncs through its **own table `arc_costs`** (`supabase/costs.sql`, same shape + RLS; key = customer id, value `{ list }`,
+- Job costing syncs through its **own table `arc_costs`** (`supabase/costs.sql`, also in `supabase/docs.sql`, same shape + RLS; key = customer id, value `{ list }`,
   meta in `arc_sync_costs`). Never put new record types in `arc_records` under a new key prefix: an older `arcsync.js` pulls every
   row and then tombstones keys it can't produce locally. If `arc_costs` doesn't exist yet, main sync carries on and Settings says
   "run supabase/costs.sql" (`status.costsSetup`).
@@ -137,6 +139,24 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   Every change rewrites the **Agency Roofing Expenses** Google Sheet from the CRM (`expenseCsv`, formula-safe); its link is
   `settings.expSheet`. Offline/no Google pass: saved in the CRM with `driveStale`, Drive catches up on the next connect.
   Cancelling a new scan or deleting an expense moves the scan to Drive trash.
+
+## Invoices (billing roofing companies) — Invoices screen in `index.html` (`#inv-sheet`, button under Job Board)
+
+- Companies (name, contact, billing email, extra CC, address, default terms, **NTTC on file**, private notes) and invoices.
+- Numbers `INV-1001`, `INV-1002`… from `billing.seq` (starts 1000). A number is used up the moment an invoice is created:
+  a never-sent draft can be deleted, a sent invoice can only be **voided**; numbers never repeat. Two devices offline can
+  hand out the same number: on load the later never-sent draft is renumbered (`loadBilling`).
+- Line items (description, qty × rate), every amount editable. Tax switch per invoice (on by default, off for NTTC
+  companies), rate from the tax city via `ARCSign.cityRate`. Statuses: Draft, Sent, Partly paid, Paid, Overdue (past due
+  with a balance), Void (`invCalc`). Payments `{ n, date, amount, method, ref }`; each has a receipt `INV-1001-R<n>`.
+- Invoice and receipt documents use `docShell` + `BILL_DOC_CSS` (one Letter page; Pay Online QR for the balance).
+  Line items ARE shown on invoices (these are billed prices, not internal costs).
+- Email through the same `ARCMail.compose` panel via `openPreview({ ext })`: To = billing email, CC = company CC,
+  **"Send a copy to me" (Bcc orlando.montanez@agencyroofingco.com) on by default**. PDF also filed in Drive:
+  Agency Roofing / Invoices / <Company> (tags `invoices`, `ico:<companyId>`).
+- Syncs through table `arc_docs` (`supabase/docs.sql`): `co:<id>`, `inv:<id>`, `billing-seq` (merged as max). The channel
+  only touches keys it owns (`billOwns`), so new record types can be added to `arc_docs` later without older versions
+  deleting them — keep that rule (add an `owns` filter for any new channel).
 
 ## Documents (proposal, quote, change order, receipt)
 

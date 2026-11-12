@@ -6104,13 +6104,13 @@ function pvMail() {
   if (pv.ext && pv.ext.mail) return pv.ext.mail();
   const c = pv.cust || {};
   const name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer';
-  const addr = c.address || 'your property';
+  const addr = (c.address || '').trim();
   const what = pv.word === 'Proposal' ? (pv.repair ? 'repair quote' : 'proposal')
     : pv.word === 'Quote' ? (pv.repair ? 'repair quote' : 'quote') : pv.word.toLowerCase();
-  const subject = `${name}, your Agency Roofing Co. ${what} for ${addr} · ${pv.num}`;
+  const subject = `${name}, your Agency Roofing Co. ${what}${addr ? ' for ' + addr : ''} · ${pv.num}`;
   const body = `Hi ${c.first || name},
 
-Thank you for the opportunity to put together a ${what} for your property at ${addr}.
+Thank you for the opportunity to put together a ${what} for ${addr ? 'your property at ' + addr : 'your roof'}.
 
 I've attached your ${what} (${pv.num}) for your review. Please take your time — if you have any questions about the scope, materials, or pricing, don't hesitate to call me directly.
 

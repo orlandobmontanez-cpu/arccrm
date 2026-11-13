@@ -6985,7 +6985,7 @@ var _eib = document.getElementById('btn-export-icon');
 if (_eib) _eib.addEventListener('click', exportData);
 </script>
 <script>
-// ══ PREMIUM LAYER: motion, stage chips, menu, shield glint, haptic taps (Nov 2026) ══
+// ══ PREMIUM LAYER: motion, stage chips, menu, shield glint (Nov 2026) ══
 // Look and feel only. Reads and writes no stored data. Every piece is wrapped so a failure here can never block the CRM.
 (function () {
   'use strict';
@@ -6995,34 +6995,6 @@ if (_eib) _eib.addEventListener('click', exportData);
   var $ = function (id) { return document.getElementById(id); };
   var sidebar = $('sidebar'), main = $('main'), dim = $('list-dim');
   function isPhone() { return window.innerWidth <= 700; }
-
-  // ── Haptic tap ─────────────────────────────────────────
-  // iPhone Safari has no vibration command. Toggling a hidden native switch makes the phone give its own light tap
-  // (iOS 18+). Unofficial: if Apple removes it, taps simply stop and nothing else changes. Android uses vibrate().
-  function tap() {
-    try {
-      if (navigator.vibrate) { navigator.vibrate(8); return; }
-      var label = document.createElement('label');
-      label.setAttribute('aria-hidden', 'true');
-      label.style.display = 'none';
-      var input = document.createElement('input');
-      input.type = 'checkbox';
-      input.setAttribute('switch', '');
-      label.appendChild(input);
-      document.head.appendChild(label);
-      label.click();
-      document.head.removeChild(label);
-    } catch (e) {}
-  }
-  window.ARCTap = tap;
-  var TAPPABLE = 'button, a.proposal-btn, a.btn-ins, .customer-card, label.btn-footer, #mobile-back, .x-row, summary, [role="button"]';
-  document.addEventListener('click', function (e) {
-    try {
-      if (!e.isTrusted) return;
-      var t = e.target && e.target.closest ? e.target.closest(TAPPABLE) : null;
-      if (t && !t.disabled) tap();
-    } catch (err) {}
-  }, true);
 
   // ── Stage chips (drive the original stage <select>, which stays the source of truth) ──
   try {
@@ -7178,7 +7150,7 @@ if (_eib) _eib.addEventListener('click', exportData);
       setDrag(false);
       void main.offsetWidth;
       clear();
-      if (goBack) { tap(); window.mobileBack(); }
+      if (goBack) window.mobileBack();
     };
     main.addEventListener('pointerup', end);
     main.addEventListener('pointercancel', end);

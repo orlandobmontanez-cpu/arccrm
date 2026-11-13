@@ -254,9 +254,8 @@ documents and PDFs are untouched) and one `PREMIUM LAYER` `<script>` at the end 
   pages cross-fade (`@view-transition`). Nothing waits on an animation, and everything is skipped under Reduce Motion.
 - **Shield glint:** one band of light crosses the header shield **right to left**, once per browser session (`sessionStorage`
   `arc_glint`), then never again. The shield itself never moves. He wants it to "hold its ground".
-- **Haptic taps:** a light tap on every button press (`tap()` / `window.ARCTap`). iPhone Safari has no vibration API; this toggles
-  a hidden `<input type="checkbox" switch>` (iOS 18+), an unofficial trick Apple could remove. If it stops working nothing else
-  changes. Android uses `navigator.vibrate(8)`.
+- **Haptic taps: removed (Nov 13 2026).** Apple closed the scripted `<input switch>` trick in iOS 26.5, so it was silent on his
+  phone. He chose to skip haptics. Do not re-add without asking; the only method left needs an invisible switch over every button.
 - Not built, his call still open: "Dusk" dark variant (he said leave it for now).
 - When adding screens or buttons, style them inside the layer and keep to these rules.
 

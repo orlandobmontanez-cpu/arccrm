@@ -793,24 +793,12 @@ const ZIPS = {"87001":[35.389,-106.352,"Algodones"],"87002":[34.651,-106.695,"Be
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous"></script>
 <script>
-// ══ PREMIUM LAYER: page settle, numbers count up, haptic taps (Nov 2026). Look and feel only; touches no stored data. ══
+// ══ PREMIUM LAYER: page settle, numbers count up (Nov 2026). Look and feel only; touches no stored data. ══
 (function () {
   'use strict';
   var RM = false;
   try { RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
   var EASE = 'cubic-bezier(.22,1,.36,1)';
-  // iPhone Safari has no vibration command; toggling a hidden native switch gives the phone's own light tap (iOS 18+, unofficial).
-  function tap() {
-    try {
-      if (navigator.vibrate) { navigator.vibrate(8); return; }
-      var label = document.createElement('label'); label.setAttribute('aria-hidden', 'true'); label.style.display = 'none';
-      var input = document.createElement('input'); input.type = 'checkbox'; input.setAttribute('switch', '');
-      label.appendChild(input); document.head.appendChild(label); label.click(); document.head.removeChild(label);
-    } catch (e) {}
-  }
-  document.addEventListener('click', function (e) {
-    try { if (e.isTrusted && e.target.closest && e.target.closest('button, a.btn, a.back')) tap(); } catch (err) {}
-  }, true);
   if (RM) return;
   window.addEventListener('load', function () {
     try {

@@ -203,6 +203,14 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
     that customer is being edited. If the document was edited after sending, the signature is saved but shows "Edited after signing".
   - When a returned signature moves the job (Signed / Accepted / Approved), `celebrate()` drops brand-color confetti from the top
     (canvas, ~4 s, no taps blocked, skipped with Reduce Motion). Orlando asked for it; only automatic moves trigger it, not in-person signing.
+  - **Signed alerts + Drive copy (works with the CRM closed):** right after signing, `sign.html` fills the document's own
+    signature block (`info.sigTpl`, made by `rsSigTemplate` from `docSigSection` with ⟦NAME⟧ ⟦IMG⟧ ⟦DAY⟧ ⟦STAMP⟧ ⟦IP⟧ blanks,
+    swapped in between the `<!--arc-sig-->` markers in `docShell`), renders the signed PDF with html2canvas + jsPDF and saves it
+    with `arc_sign_attach` (once, ≤30 min after signing); the customer also gets DOWNLOAD YOUR SIGNED COPY.
+    `apps-script/SignedAlerts.gs` runs every minute in Orlando's Google account: reads `arc_sign_outbox(ARC_KEY)` (waits up to
+    3 min for the PDF), files it in Drive › Agency Roofing › Customers › `info.driveFolder` (found by name: Apps Script can't see the
+    CRM's appProperties), emails orlando.montanez@agencyroofingco.com from a no-reply agencyroofingco.com address with the PDF,
+    then `arc_sign_notified`. ARC_KEY lives in `arc_secret` (no API access) and in the script's Script Properties, never in the repo.
   - Signing in person voids open links for that document (`rsVoid`). Nothing new is stored on the phone; requests live in Supabase.
   - `sign.html` contains a copy of `ARCSign` — keep it in step with `index.html`.
 - Pay Online: Stripe Payment Link from Settings (or per-customer `payLink`). A QR code (bundled MIT `qrcode-generator`) prints for the 50% deposit, change order amount, or receipt balance due. No QR on credits.
@@ -228,6 +236,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - Receipt reader unit tests: `node tests/read-receipt.test.js` (text as Google returns it). Add a sample when you fix a case.
 - Online signing: `python3 tests/online-sign.test.py` (fake Supabase + Gmail; needs html2canvas/jsPDF and the brand fonts served locally
   when cdnjs/Google Fonts are blocked — see the top of the file).
+- Signed alerts (Apps Script with fake Gmail/Drive/Supabase): `node tests/signed-alerts.test.js`.
 - Run the flows you touched end to end, check there are zero JavaScript errors, and print-render each affected document to confirm it is still one page.
 - Tell Orlando in one line what changed and what to tap on his phone to check it.
 
@@ -235,7 +244,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 - Confirm the gross receipts tax rate; add the NM license number to documents once issued.
 - Have an attorney review the warranty exclusions and e-signature consent wording.
-- Online signing is built; a push/email alert to Orlando the moment a customer signs would need a Supabase Edge Function.
+- Signed alerts need the one-time Apps Script setup (steps at the top of `apps-script/SignedAlerts.gs`).
 - Scheduled / automatic follow-up emails (no tap) would need server-side sending (Supabase Edge Function + stored Google
   refresh token). Not built; current sending is tap → review → Send from the browser.
 

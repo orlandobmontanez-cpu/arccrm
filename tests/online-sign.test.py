@@ -60,7 +60,14 @@ def supabase(route):
         else:
             r['status'] = 'signed'
             r['sig'] = {'name': b['p_name'], 'img': b['p_img'], 'at': '2026-11-12T20:10:00.000Z', 'tz': b['p_tz'], 'consent': True, 'ackRead': b['p_ack'], 'method': 'Signed online', 'ip': '203.0.113.9'}
-            out = {'ok': True, 'name': b['p_name'], 'at': r['sig']['at']}
+            out = {'ok': True, 'name': b['p_name'], 'at': r['sig']['at'], 'ip': '203.0.113.9'}
+        return route.fulfill(status=200, headers=hdr, content_type='application/json', body=json.dumps(out))
+    if path == '/rest/v1/rpc/arc_sign_attach':
+        b = json.loads(req.post_data); r = SIGN.get(b['p_token'])
+        if not r or r['status'] != 'signed': out = {'ok': False, 'why': 'not-signed'}
+        elif r.get('pdf'): out = {'ok': False, 'why': 'already'}
+        elif not b['p_pdf'].startswith('JVBER'): out = {'ok': False, 'why': 'bad'}
+        else: r['pdf'] = b['p_pdf']; out = {'ok': True}
         return route.fulfill(status=200, headers=hdr, content_type='application/json', body=json.dumps(out))
     if path == '/rest/v1/arc_sign':
         LOG.append((req.method, req.url))
@@ -170,6 +177,7 @@ with sync_playwright() as p:
     # ── Customer side: new device, no CRM data ──
     cctx = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, has_touch=True)
     cctx.route('https://xndcntpxhzfaqtmzcuje.supabase.co/**', supabase)
+    cctx.route('https://cdnjs.cloudflare.com/**', cdn)
     fontroute.install(cctx)
     cp = cctx.new_page(); ccons = []
     cp.on('pageerror', lambda e: ccons.append('pageerror ' + str(e)))
@@ -195,7 +203,14 @@ with sync_playwright() as p:
     cp.screenshot(path='/tmp/c2-sign.png')
     cp.click('#sg-ok'); cp.wait_for_timeout(1200)
     ok('Signed. Thank you, Ray!' in cp.inner_text('main'), 'customer sees the thank-you screen')
+    ok('<!--arc-sig-->' in row['info']['html'] and '⟦NAME⟧' in row['info']['sigTpl'] and row['info']['driveFolder'] == 'Scott, Ray · ARC-00015', 'request carries the signature block + Drive folder name')
+    cp.wait_for_selector('#copy-box a[download]', timeout=40000)
+    ok('DOWNLOAD YOUR SIGNED COPY' in cp.inner_text('#copy-box'), 'customer can download their signed copy')
     cp.screenshot(path='/tmp/c3-done.png')
+    pdf = base64.b64decode(SIGN[tok].get('pdf') or '')
+    ok(pdf[:5] == b'%PDF-', 'signed PDF saved for Orlando (Drive + email)')
+    open('/tmp/signed_copy.pdf', 'wb').write(pdf)
+    ok(pdf.count(b'/Type /Page') - pdf.count(b'/Type /Pages') == 1, 'signed copy is one page')
     cp.reload(); cp.wait_for_timeout(1200)
     ok('signed by' in cp.inner_text('main'), 'reopening the link shows it is already signed')
     ok(not ccons, 'customer page: zero JS errors ' + str(ccons))

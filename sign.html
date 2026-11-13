@@ -448,7 +448,7 @@
     showState(CHECK, 'Signed. Thank you' + (i.first ? ', ' + i.first : '') + '!',
       'Your ' + esc(i.what || 'document') + ' <b>' + esc((doc && doc.num) || '') + '</b> was signed by <b>' + esc(name) + '</b> on ' + esc(stamp(at)) +
       ' and sent to Agency Roofing Co. Orlando will countersign it and email you a copy for your records.',
-      img ? '<img class="sigimg" src="' + esc(img) + '" alt="Your signature">' : '');
+      (img ? '<img class="sigimg" src="' + esc(img) + '" alt="Your signature">' : '') + '<div id="copy-box"></div>');
   }
 
   function load() {
@@ -519,6 +519,7 @@
   }
   // The document calls this once its fonts and pages are laid out
   window.arcDocLoaded = function (win) {
+    if (pdfFrame && pdfFrame.contentWindow === win && pdfDone) { var f = pdfDone; pdfDone = null; f(win); return; }
     var fr = document.querySelector('#doc-stage iframe');
     if (!fr || fr.contentWindow !== win) return;
     fr.style.height = win.document.documentElement.scrollHeight + 'px';
@@ -554,7 +555,7 @@
     rpc('arc_sign_submit', { p_token: token, p_name: res.name, p_img: res.img, p_ack: res.ackRead || null, p_tz: tz, p_ua: navigator.userAgent || '' })
       .then(function (r) {
         sending = false;
-        if (r && r.ok) { doc.status = 'signed'; ARCSign.close(); showSigned(r.name, r.at, res.img); return; }
+        if (r && r.ok) { doc.status = 'signed'; ARCSign.close(); showSigned(r.name, r.at, res.img); makeSignedCopy(res, r); return; }
         var why = r && r.why;
         if (why === 'signed') { ARCSign.close(); doc.status = 'signed'; showSigned(r.name, r.at, null); return; }
         if (why === 'void' || why === 'expired' || why === 'missing') { ARCSign.close(); load(); return; }
@@ -567,6 +568,82 @@
       if (ok) { ok.disabled = false; ok.textContent = 'SIGN ' + String((doc.info && doc.info.what) || 'document').toUpperCase(); }
       if (hint) { hint.textContent = msg; hint.style.color = '#8A2E26'; hint.style.fontWeight = '600'; }
     }
+  }
+
+  // ── Signed copy: the same document with their signature, as a PDF (same renderer as the CRM).
+  // Saved to Agency Roofing Co. (Orlando's Drive + email come from it) and offered as a download.
+  var pdfLibs = null;
+  function loadPdfLibs() {
+    if (window.jspdf && window.html2canvas) return Promise.resolve();
+    if (pdfLibs) return pdfLibs;
+    var urls = ['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
+    pdfLibs = Promise.all(urls.map(function (u) { return new Promise(function (res, rej) {
+      var sc = document.createElement('script'); sc.src = u; sc.onload = res; sc.onerror = function () { rej(new Error('load')); }; document.head.appendChild(sc);
+    }); })).catch(function (e) { pdfLibs = null; throw e; });
+    return pdfLibs;
+  }
+  function signedHtml(res, r) {
+    var i = doc.info || {};
+    if (!i.html || !i.sigTpl || i.html.indexOf('<!--arc-sig-->') < 0) return '';
+    var at = r.at || new Date().toISOString();
+    var sig = i.sigTpl.split('⟦IMG⟧').join(res.img).split('⟦NAME⟧').join(esc(r.name || res.name))
+      .split('⟦DAY⟧').join(esc(ARCSign.day(at))).split('⟦STAMP⟧').join(esc(stamp(at)));
+    sig = r.ip ? sig.split('⟦IP⟧').join(esc(r.ip)) : sig.split(' (IP ⟦IP⟧)').join('').split('⟦IP⟧').join('');
+    return i.html.replace(/<!--arc-sig-->[\s\S]*?<!--\/arc-sig-->/, function () { return sig; });
+  }
+  var pdfFrame = null, pdfDone = null;
+  function renderPdf(html) {
+    return new Promise(function (resolve, reject) {
+      pdfFrame = document.createElement('iframe');
+      pdfFrame.setAttribute('aria-hidden', 'true'); pdfFrame.tabIndex = -1;
+      pdfFrame.style.cssText = 'position:fixed;left:-10000px;top:0;width:816px;height:1056px;border:0;visibility:hidden';
+      document.body.appendChild(pdfFrame);
+      var timer = setTimeout(function () { reject(new Error('timeout')); }, 25000);
+      pdfDone = function (win) {
+        clearTimeout(timer);
+        loadPdfLibs().then(function () {
+          return Promise.all(['400 12px Inter', '500 12px Inter', '600 12px Inter', '700 12px Inter', '12px Anton', '12px "Bebas Neue"']
+            .map(function (f) { return document.fonts ? document.fonts.load(f).catch(function () {}) : null; }));
+        }).then(function () {
+          var pages = Array.prototype.slice.call(win.document.querySelectorAll('.page'));
+          var pdf = new window.jspdf.jsPDF({ unit: 'in', format: 'letter', orientation: 'portrait', compress: true });
+          return pages.reduce(function (p, pg, n) {
+            return p.then(function () {
+              return window.html2canvas(pg, { scale: 2, backgroundColor: '#EAE4DA', logging: false, useCORS: true, windowWidth: 816, windowHeight: 1056 });
+            }).then(function (canvas) {
+              if (n) pdf.addPage('letter', 'portrait');
+              pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 8.5, 11, undefined, 'FAST');
+            });
+          }, Promise.resolve()).then(function () {
+            pdf.setProperties({ title: (doc.info.pdfName || doc.num || 'Signed document').replace(/\.pdf$/, ''), author: 'Agency Roofing Co.', creator: 'ARC CRM' });
+            resolve(pdf.output('blob'));
+          });
+        }).catch(reject);
+      };
+      pdfFrame.srcdoc = html;
+    });
+  }
+  function blobB64(b) {
+    return new Promise(function (res, rej) { var f = new FileReader(); f.onload = function () { res(String(f.result).split(',')[1] || ''); }; f.onerror = rej; f.readAsDataURL(b); });
+  }
+  function copyBox(html) { var el = document.getElementById('copy-box'); if (el) el.innerHTML = html; }
+  function makeSignedCopy(res, r, tries) {
+    var html = signedHtml(res, r);
+    if (!html) return;
+    tries = tries || 0;
+    copyBox('<p class="muted" style="margin-top:6px">Saving your signed copy…</p>');
+    renderPdf(html).then(function (blob) {
+      if (pdfFrame) { pdfFrame.remove(); pdfFrame = null; }
+      var name = (doc.info && doc.info.pdfName) || ('Agency Roofing Co. ' + (doc.num || '') + ' - Signed.pdf');
+      var url = URL.createObjectURL(new File([blob], name, { type: 'application/pdf' }));
+      copyBox('<a class="btn sec" href="' + url + '" download="' + esc(name) + '" style="margin-top:6px">⬇ DOWNLOAD YOUR SIGNED COPY</a>');
+      return blobB64(blob).then(function (b64) { return rpc('arc_sign_attach', { p_token: token, p_pdf: b64 }); });
+    }).catch(function () {
+      if (pdfFrame) { pdfFrame.remove(); pdfFrame = null; }
+      if (tries < 1) return makeSignedCopy(res, r, tries + 1);
+      copyBox('<p class="muted" style="margin-top:6px">Orlando will email you your signed copy.</p>');
+    });
   }
 
   window.addEventListener('hashchange', function () { token = String(location.hash || '').replace(/^#/, '').replace(/^t=/, '').trim(); load(); });

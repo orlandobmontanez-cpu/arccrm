@@ -2755,7 +2755,7 @@ ${o.css || ''}
   <div class="flow">
   ${o.flow}
   </div>
-  <div class="tail"><div class="tail-sig">${o.tail}</div>${POPPY_SVG}</div>
+  <div class="tail"><div class="tail-sig"><!--arc-sig-->${o.tail}<!--/arc-sig--></div>${POPPY_SVG}</div>
   ${ARC_DOC_FOOT}
 </div></div>
 <script>${ARC_DOC_PAGINATE}<\/script>
@@ -5435,7 +5435,28 @@ function rsInfo(c, t, info, html) {
       : ['Valid for 30 days from the date on the ' + what + '.', '50% deposit due when you sign; the balance is due on completion.'],
     noticeTitle: ack ? 'About This Repair' : '', noticeParas: ack ? ABOUT_REPAIR.slice() : [], ack,
     phone: ARC_PHONE, taxRate: c.taxRate, taxCity: c.city || '', html: html || '',
+    docId: ARCSign.docId(info.content), sigTpl: rsSigTemplate(c, t, info, !!ack),
+    // For the signed copy filed in Google Drive (Apps Script) and emailed to Orlando
+    driveFolder: driveFolderName(c), pdfName: rsPdfName(c, t, info), cid: c.id,
   };
+}
+
+// The documents' own signature block, with blanks the customer's page fills in (⟦NAME⟧ ⟦IMG⟧ ⟦DAY⟧ ⟦STAMP⟧ ⟦IP⟧),
+// so the signed copy made on their phone is the same layout the CRM prints. Countersigned with the saved signature
+// when "Countersign automatically" is on, same as when the CRM applies it.
+const RS_SENT = '2001-02-03T04:05:06.000Z';
+function rsSigTemplate(c, t, info, repairAck) {
+  const st = ARCSign.settings(), own = ARCSign.ownerSig();
+  const sig = { customer: { name: '⟦NAME⟧', img: '⟦IMG⟧', at: RS_SENT, method: 'Signed online', ip: '⟦IP⟧' },
+    contractor: own && st.autoCountersign ? { name: own.name, img: own.img, at: RS_SENT, owner: true } : null, docId: ARCSign.docId(info.content) };
+  if (repairAck) sig.customer.ackRead = ABOUT_ACK;
+  const html = t.kind === 'co' ? docSigSection(sig, true, 'Orlando Montanez, Owner') : docSigSection(sig, false, '', repairAck);
+  return html.split(esc(ARCSign.stamp(RS_SENT))).join('⟦STAMP⟧').split(ARCSign.day(RS_SENT)).join('⟦DAY⟧');
+}
+function rsPdfName(c, t, info) {
+  const who = String(c.last || c.first || 'Customer').replace(/[\\/:*?"<>|]+/g, '').trim() || 'Customer';
+  const word = t.kind === 'co' ? 'Change Order' : t.kind === 'quote' ? 'Quote' : 'Proposal';
+  return `ARC ${word} - ${who} - ${info.num} - Signed.pdf`;
 }
 
 // Get this document's open sign link, or make one. Older versions' links are switched off.

@@ -164,6 +164,27 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   only touches keys it owns (`billOwns`), so new record types can be added to `arc_docs` later without older versions
   deleting them — keep that rule (add an `owns` filter for any new channel).
 
+## Hours tracker (hourly consulting billed through Invoices) — added Nov 13 2026
+
+Orlando consults by the hour (first client: Solarworks, invoiced every Thursday morning). Lives inside the Invoices screen.
+
+- **A company becomes hourly when it has a rate** (`co.rate`, set in the company form). The rate is **private**: it only turns
+  hours into a total and is **never printed** on an invoice or the hours log, and the tracker shows only the running total.
+  He doesn't mind that total ÷ hours reveals it; he just doesn't want it displayed. Keep it off every document.
+- `co.time` = hours not yet invoiced: `{ id, date, a: 'HH:MM', b: 'HH:MM', who, note, at }`. `who` is the customer's last name or
+  "Training". No finish time = in progress (0 hours, not invoiced). A finish earlier than the start means past midnight (`timeMin`).
+- Hourly companies show a dark card at the top of the Invoices list → the tracker (`bv.view === 'time'`): running total, add/edit
+  form with NOW buttons, entries, and past invoiced periods.
+- **BUILD INVOICE** (two taps) moves every finished entry onto a new Draft invoice (`inv.time`), one line
+  "<hrLabel>, <date range> (<hours> hours)" with qty 1 and rate = the total, tax from `co.hrTax`. The tracker is then fresh.
+  **The reset is tied to building the invoice, not to the calendar**, so late sends and forgotten entries never split or double-bill.
+- Deleting that draft puts its hours back on the tracker (never lost). The company form never overwrites `co.time`.
+- The invoice document for a time invoice shows Description + Amount only (no Qty/Rate columns) and an **Hours Log** table
+  (`hoursLog`). Still one Letter page.
+- No new storage key or sync channel: the fields ride on the existing `co:` / `inv:` records, so sync and backups carry them.
+- He sends it himself on Thursdays (a reminder comes from elsewhere); the CRM does not auto-send.
+- Tax: he chose **not** to charge Solarworks GRT (`hrTax` off for them) and absorbs it; other contractors are charged.
+
 ## Documents (proposal, quote, change order, receipt)
 
 - Proposal, quote and change order share one style: `ARC_DOC_CSS` + `ARC_DOC_HEAD` + `docShell()` in `index.html`. Change it there, not per document.

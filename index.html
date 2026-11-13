@@ -755,6 +755,30 @@
   .b-void { display: block; width: 100%; min-height: 48px; margin-top: 18px; border: 1px solid rgba(139,32,32,0.3); border-radius: 6px; background: transparent; color: var(--danger); font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.12em; cursor: pointer; }
   .b-void.armed { background: var(--danger); color: var(--white); }
   .b-void.b-restore { border-color: var(--copper); color: var(--copper); }
+  /* Hours tracker */
+  .tm-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left; cursor: pointer; margin-bottom: 12px;
+    padding: 14px 16px; min-height: 72px; border: 0; border-radius: 16px; background: var(--ink); color: var(--stone-light); font-family: 'Inter', sans-serif; }
+  .tm-card .x-num { color: var(--copper-mid); } .tm-card .x-title { color: var(--stone-light); }
+  .tm-card .x-amt { font-family: 'Anton', sans-serif; font-size: 20px; color: var(--stone-light); }
+  .tm-card .tm-sub { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.12em; color: var(--copper-light); margin-top: 4px; white-space: nowrap; }
+  .tm-sum { background: var(--ink); border-radius: 20px; padding: 20px 18px; margin-bottom: 14px; }
+  .tm-k { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.2em; color: var(--copper-mid); }
+  .tm-total { font-family: 'Anton', sans-serif; font-size: 44px; line-height: 1.05; color: var(--stone-light); margin-top: 6px; }
+  .tm-meta { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 14px; color: var(--copper-light); margin-top: 6px; }
+  .tm-form, .tm-set, .tm-inv { background: var(--white); border: 1px solid var(--stone-dark); border-radius: 16px; padding: 16px 14px; }
+  .tm-set { margin-top: 4px; } .tm-inv { margin: 12px 0; }
+  .tm-set-t { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.2em; color: var(--copper); margin-bottom: 10px; }
+  .tm-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tm-t { display: flex; gap: 6px; align-items: stretch; }
+  .tm-t input { flex: 1; min-width: 0; min-height: 48px; }
+  .tm-now { flex: none; min-height: 48px; padding: 2px 10px 0; border: 1px solid var(--stone-dark); border-radius: 12px; background: transparent; color: var(--copper);
+    font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.12em; cursor: pointer; }
+  .tm-live { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 13px; color: var(--copper); min-height: 18px; margin: -4px 0 10px; }
+  .tm-btns { display: grid; grid-template-columns: auto 1fr 1.4fr; gap: 8px; }
+  .x-row.tm-on { border-color: var(--copper); }
+  .tm-line { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; padding: 6px 0; border-bottom: 1px solid rgba(28,26,24,0.08); color: var(--ink-soft); }
+  .tm-line b { font-weight: 600; color: var(--ink); white-space: nowrap; }
+  #inv-sheet input.bad { border-color: var(--danger); }
   .b-void.b-restore.armed { background: var(--copper); color: var(--white); }
   #inv-foot:empty { display: none; }
 
@@ -4792,8 +4816,39 @@ function normCompany(x) {
   var s = function (v, n) { return String(v == null ? '' : v).slice(0, n || 200); };
   return { id: s(x.id, 40) || billId('co'), name: s(x.name, 120), contact: s(x.contact, 120), email: s(x.email, 160).trim(), cc: s(x.cc, 300).trim(),
     phone: s(x.phone, 40), address: s(x.address, 160), city: s(x.city, 80), state: s(x.state, 4) || 'NM', zip: s(x.zip, 12),
-    terms: termOf(x.terms)[0], nttc: !!x.nttc, notes: s(x.notes, 600), at: +x.at || Date.now(), upd: +x.upd || +x.at || Date.now() };
+    terms: termOf(x.terms)[0], nttc: !!x.nttc, notes: s(x.notes, 600),
+    // Hourly billing: the rate is private (never printed), hrTax = charge GRT on hourly invoices, time = hours not yet invoiced
+    rate: num2(x.rate) > 0 ? num2(x.rate) : 0, hrTax: x.hrTax !== false, hrLabel: s(x.hrLabel, 80).trim() || 'Consulting services', time: normTime(x.time),
+    at: +x.at || Date.now(), upd: +x.upd || +x.at || Date.now() };
 }
+
+// ── HOURS: time tracked for a company billed by the hour ──
+// Open hours live on the company (`co.time`). BUILD INVOICE moves the finished ones onto a new draft invoice (`inv.time`),
+// which leaves a fresh page. The hourly rate only ever turns hours into a total; it is never shown on a document.
+function hhmm(x) { return /^([01]\d|2[0-3]):[0-5]\d$/.test(x || '') ? x : ''; }
+function normTime(list) {
+  var s = function (v, n) { return String(v == null ? '' : v).slice(0, n || 200); };
+  return (Array.isArray(list) ? list : []).filter(Boolean).slice(0, 500).map(function (t) {
+    return { id: s(t.id, 40) || billId('t'), date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || '') ? t.date : localISODate(), a: hhmm(t.a), b: hhmm(t.b),
+      who: s(t.who, 80), note: s(t.note, 200), at: +t.at || Date.now() };
+  });
+}
+function timeMin(t) {   // minutes worked; a finish earlier than the start means it ran past midnight
+  if (!t || !t.a || !t.b) return 0;
+  var a = +t.a.slice(0, 2) * 60 + +t.a.slice(3), b = +t.b.slice(0, 2) * 60 + +t.b.slice(3), m = b - a;
+  return m < 0 ? m + 1440 : m;
+}
+function timeSum(list) { var m = 0, n = 0; (list || []).forEach(function (t) { var x = timeMin(t); if (x > 0) { m += x; n++; } }); return { min: m, n: n }; }
+function hrsTxt(min) { return (min / 60).toFixed(2); }
+function timeAmt(min, rate) { return cents(min / 60 * rate); }
+function clock12(hm) { if (!hm) return ''; var h = +hm.slice(0, 2), m = hm.slice(3); return (h % 12 || 12) + ':' + m + (h < 12 ? ' AM' : ' PM'); }
+function timeSort(list) { return list.slice().sort(function (x, y) { return x.date === y.date ? (x.a < y.a ? -1 : x.a > y.a ? 1 : 0) : (x.date < y.date ? -1 : 1); }); }
+function timeRange(list) {
+  var d = list.map(function (t) { return t.date; }).sort(); if (!d.length) return '';
+  var a = d[0], b = d[d.length - 1], md = function (iso) { return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+  return a === b ? shortDate(a) : (a.slice(0, 4) === b.slice(0, 4) ? md(a) : shortDate(a)) + ' – ' + shortDate(b);
+}
+function dayDate(iso) { return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
 function normInvoice(x) {
   x = x || {};
   var s = function (v, n) { return String(v == null ? '' : v).slice(0, n || 200); };
@@ -4805,6 +4860,7 @@ function normInvoice(x) {
       .map(function (i) { return { d: s(i.d, 300), q: +i.q > 0 ? +i.q : 1, rate: num2(i.rate) }; }),
     taxOn: !!x.taxOn, taxCity: s(x.taxCity, 80), taxRate: isFinite(+x.taxRate) && x.taxRate !== '' && x.taxRate != null ? +x.taxRate : null,
     note: s(x.note, 1000), status: ['Draft', 'Sent', 'Void'].indexOf(x.status) > -1 ? x.status : 'Draft',
+    time: normTime(x.time),   // hours billed on this invoice (built from the tracker)
     sentAt: +x.sentAt || 0, sentTo: s(x.sentTo, 300),
     payments: (Array.isArray(x.payments) ? x.payments : []).filter(Boolean).map(function (p, i) {
       return { id: s(p.id, 40) || billId('p'), n: +p.n || i + 1, date: /^\d{4}-\d{2}-\d{2}$/.test(p.date || '') ? p.date : localISODate(),
@@ -4856,7 +4912,7 @@ function coList() { return Object.keys(billing.co).map(function (k) { return bil
 function coName(id) { var c = billing.co[id]; return c ? c.name || 'Unnamed company' : 'No company'; }
 
 // ── Screen state ──
-var bv = { view: 'list', filter: 'open', invId: null, coId: null, draft: null, payOpen: false, payDraft: null, del: false, from: 'list' };
+var bv = { view: 'list', filter: 'open', invId: null, coId: null, draft: null, payOpen: false, payDraft: null, del: false, from: 'list', tEdit: null, tDraft: null };
 
 function openInvoices() {
   saveCustomer(false);
@@ -4879,6 +4935,7 @@ function renderBilling() {
   if (bv.view === 'list') { kind.textContent = 'AGENCY ROOFING CO.'; head.textContent = 'Invoices'; body.innerHTML = billListHtml(); foot.innerHTML = billListFoot(); }
   else if (bv.view === 'cos') { kind.textContent = 'INVOICES'; head.textContent = 'Companies'; body.innerHTML = coListHtml(); foot.innerHTML = '<div class="xe-foot-in bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="back">← INVOICES</button><button type="button" class="proposal-btn proposal-btn-primary" data-b="newco">+ NEW COMPANY</button></div>'; }
   else if (bv.view === 'co') { var c = bv.draft; kind.textContent = 'COMPANY'; head.textContent = c.name || 'New company'; body.innerHTML = coFormHtml(c); foot.innerHTML = coFoot(); }
+  else if (bv.view === 'time') { var tc = billing.co[bv.coId]; if (!tc) { bv.view = 'list'; return renderBilling(); } kind.textContent = 'HOURS'; head.textContent = tc.name || 'Company'; body.innerHTML = timeHtml(tc); foot.innerHTML = timeFoot(tc); timeLive(); }
   else if (bv.view === 'inv') { var v = bv.draft; kind.textContent = 'INVOICE · ' + invCalc(v).status.toUpperCase(); head.textContent = v.num; body.innerHTML = invFormHtml(v); foot.innerHTML = invFoot(v); invRecalc(); }
 }
 
@@ -4896,7 +4953,12 @@ function billListHtml() {
   var y = String(new Date().getFullYear());
   var paidYr = cents(all.reduce(function (s, x) { return s + x.v.payments.filter(function (p) { return p.date.slice(0, 4) === y; }).reduce(function (t, p) { return t + p.amount; }, 0); }, 0));
   var chip = function (k, l) { return '<button type="button" class="bl-chip' + (f === k ? ' on' : '') + '" data-filter="' + k + '">' + l + '</button>'; };
-  return '<div class="bl-sum"><div><b>OPEN</b><span>' + fmt(owed) + '</span><small>' + open.length + ' invoice' + (open.length === 1 ? '' : 's') + '</small></div>' +
+  var hourly = coList().filter(function (c) { return c.rate > 0; }).map(function (c) {
+    var sm = timeSum(c.time);
+    return '<button class="tm-card" type="button" data-time="' + esc(c.id) + '"><span><span class="x-num">HOURS · THIS PERIOD</span><span class="x-title">' + esc(c.name || 'Unnamed company') + '</span></span>' +
+      '<span class="x-right"><span class="x-amt">' + fmt(timeAmt(sm.min, c.rate)) + '</span><span class="tm-sub">' + hrsTxt(sm.min) + ' hrs · LOG HOURS ›</span></span></button>';
+  }).join('');
+  return hourly + '<div class="bl-sum"><div><b>OPEN</b><span>' + fmt(owed) + '</span><small>' + open.length + ' invoice' + (open.length === 1 ? '' : 's') + '</small></div>' +
       '<div class="' + (late > 0 ? 'late' : '') + '"><b>OVERDUE</b><span>' + fmt(late) + '</span><small>past the due date</small></div>' +
       '<div><b>PAID ' + y + '</b><span>' + fmt(paidYr) + '</span><small>payments received</small></div></div>' +
     '<div class="bl-chips">' + chip('open', 'OPEN') + chip('overdue', 'OVERDUE') + chip('paid', 'PAID') + chip('all', 'ALL') + '</div>' +
@@ -4920,7 +4982,7 @@ function coListHtml() {
   return '<p class="xsec-note">Roofing companies you bill. Their email, terms and tax status fill in on each new invoice.</p><div class="x-list">' +
     (list.length ? list.map(function (c) {
       var n = invList().filter(function (v) { return v.coId === c.id; }), owed = cents(n.reduce(function (s, v) { var k = invCalc(v); return s + (['Sent', 'Partly paid', 'Overdue'].indexOf(k.status) > -1 ? k.bal : 0); }, 0));
-      return '<button class="x-row" type="button" data-co="' + esc(c.id) + '"><span><span class="x-num">' + n.length + ' invoice' + (n.length === 1 ? '' : 's') + ' · ' + esc(termOf(c.terms)[1]) + (c.nttc ? ' · NTTC' : '') + '</span>' +
+      return '<button class="x-row" type="button" data-co="' + esc(c.id) + '"><span><span class="x-num">' + n.length + ' invoice' + (n.length === 1 ? '' : 's') + ' · ' + esc(termOf(c.terms)[1]) + (c.nttc ? ' · NTTC' : '') + (c.rate > 0 ? ' · HOURLY' : '') + '</span>' +
         '<span class="x-title">' + esc(c.name || 'Unnamed company') + (c.contact ? ' <small>· ' + esc(c.contact) + '</small>' : '') + '</span></span>' +
         '<span class="x-right"><span class="x-amt">' + (owed ? fmt(owed) + ' <small>open</small>' : '') + '</span></span></button>';
     }).join('') : '<div class="x-empty">No companies yet.</div>') + '</div>';
@@ -4937,7 +4999,14 @@ function coFormHtml(c) {
       bf('co-zip', 'ZIP', c.zip, 'type="text" inputmode="numeric" maxlength="10"') + '</div>' +
     '<div class="ex-f"><label for="co-terms">DEFAULT TERMS</label><select id="co-terms" class="b-sel">' + BILL_TERMS.map(function (t) { return '<option value="' + t[0] + '"' + (c.terms === t[0] ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') + '</select></div>' +
     '<label class="b-check"><input type="checkbox" id="co-nttc"' + (c.nttc ? ' checked' : '') + '><span><b>NTTC on file</b> New invoices to this company start with gross receipts tax off.</span></label>' +
-    '<div class="ex-f"><label for="co-notes">NOTES (ONLY YOU SEE THESE)</label><textarea id="co-notes" placeholder="Vendor #, who approves invoices, how they pay">' + esc(c.notes) + '</textarea></div>';
+    '<div class="ex-f"><label for="co-notes">NOTES (ONLY YOU SEE THESE)</label><textarea id="co-notes" placeholder="Vendor #, who approves invoices, how they pay">' + esc(c.notes) + '</textarea></div>' +
+    '<div class="tm-set"><div class="tm-set-t">HOURLY BILLING (OPTIONAL)</div>' +
+      '<p class="xsec-note" style="margin:0 0 10px;">Fill in a rate to track hours for this company. The rate is only ever used to work out the total. It never prints on an invoice or the hours log.</p>' +
+      bf('co-rate', 'HOURLY RATE $ (ONLY YOU SEE THIS)', c.rate ? c.rate.toFixed(2) : '', 'type="text" inputmode="decimal" autocomplete="off" placeholder="Leave blank if you don&#39;t bill them by the hour"') +
+      bf('co-hrlabel', 'WHAT THE INVOICE CALLS THE WORK', c.hrLabel, 'type="text" placeholder="Consulting services"') +
+      '<label class="b-check"><input type="checkbox" id="co-hrtax"' + (c.hrTax ? ' checked' : '') + '><span><b>Charge gross receipts tax on hourly invoices</b> Turn off if you are not collecting it from this company.</span></label>' +
+      (c.rate > 0 && billing.co[c.id] ? '<button type="button" class="proposal-btn proposal-btn-secondary" style="width:100%;" data-b="opentime">OPEN HOURS TRACKER</button>' : '') +
+    '</div>';
 }
 function coFoot() {
   var used = bv.draft && invList().some(function (v) { return v.coId === bv.draft.id; });
@@ -4951,6 +5020,7 @@ function coRead() {
   c.name = g('co-name'); c.contact = g('co-contact'); c.email = g('co-email'); c.cc = g('co-cc'); c.phone = g('co-phone');
   c.address = g('co-address'); c.city = g('co-city'); c.state = (g('co-state') || 'NM').toUpperCase(); c.zip = g('co-zip');
   c.terms = g('co-terms') || 'net30'; c.nttc = document.getElementById('co-nttc').checked; c.notes = g('co-notes');
+  c.rate = num2(g('co-rate')) > 0 ? num2(g('co-rate')) : 0; c.hrLabel = g('co-hrlabel') || 'Consulting services'; c.hrTax = document.getElementById('co-hrtax').checked;
   return c;
 }
 function saveCompany() {
@@ -4958,9 +5028,101 @@ function saveCompany() {
   if (!c.name) { nm.classList.add('bad'); nm.focus(); return false; }
   var em = document.getElementById('co-email');
   if (c.email && !/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/.test(c.email)) { em.classList.add('bad'); em.focus(); return false; }
+  if (billing.co[c.id]) c.time = billing.co[c.id].time;   // open hours are owned by the tracker, never by this form
   c.upd = Date.now(); billing.co[c.id] = normCompany(c);
   if (!saveBilling()) return false;
   return true;
+}
+
+// ── Hours tracker ──
+function openTime(coId) { bv.view = 'time'; bv.coId = coId; bv.tEdit = null; bv.tDraft = null; renderBilling(); }
+function timeDraft() { return bv.tDraft || { date: localISODate(), a: '', b: '', who: '', note: '' }; }
+function timeHtml(co) {
+  var d = timeDraft(), list = timeSort(co.time).reverse(), ed = !!bv.tEdit;
+  var tf = function (id, label, val, now) {
+    return '<div class="ex-f"><label for="' + id + '">' + label + '</label><div class="tm-t"><input id="' + id + '" type="time" value="' + esc(val) + '">' +
+      '<button type="button" class="tm-now" data-b="' + now + '">NOW</button></div></div>';
+  };
+  var h = '<div class="tm-sum"><div class="tm-k">THIS PERIOD · NOT YET INVOICED</div><div class="tm-total" id="tm-total"></div><div class="tm-meta" id="tm-meta"></div></div>' +
+    '<div class="tm-form"><div class="tm-set-t">' + (ed ? 'EDIT ENTRY' : 'ADD HOURS') + '</div>' +
+      bf('tm-date', 'DATE', d.date, 'type="date"') +
+      '<div class="tm-2">' + tf('tm-a', 'START', d.a, 'now-a') + tf('tm-b', 'FINISH', d.b, 'now-b') + '</div>' +
+      '<div class="tm-live" id="tm-live"></div>' +
+      '<div class="ex-f"><label for="tm-who">CUSTOMER LAST NAME, OR TRAINING</label><div class="tm-t"><input id="tm-who" type="text" autocapitalize="words" autocomplete="off" value="' + esc(d.who) + '" placeholder="Garcia">' +
+        '<button type="button" class="tm-now" data-b="who-training">TRAINING</button></div></div>' +
+      bf('tm-note', 'NOTE (OPTIONAL, PRINTS ON THE HOURS LOG)', d.note, 'type="text" autocomplete="off" placeholder="Site visit, ride-along, crew training"') +
+      (ed ? '<div class="tm-btns"><button type="button" class="proposal-btn xe-del" data-b="tm-del">DELETE</button><button type="button" class="proposal-btn proposal-btn-secondary" data-b="tm-cancel">CANCEL</button>' +
+              '<button type="button" class="proposal-btn proposal-btn-primary" data-b="tm-save">SAVE CHANGES</button></div>'
+          : '<button type="button" class="proposal-btn proposal-btn-primary" style="width:100%;" data-b="tm-save">ADD ENTRY</button>') +
+    '</div>' +
+    '<div class="tm-set-t" style="margin-top:18px;">ENTRIES THIS PERIOD</div><div class="x-list">' +
+    (list.length ? list.map(function (t) {
+      var m = timeMin(t);
+      return '<button class="x-row' + (bv.tEdit === t.id ? ' tm-on' : '') + '" type="button" data-tedit="' + esc(t.id) + '"><span><span class="x-num">' + esc(dayDate(t.date)) + ' · ' + esc(clock12(t.a) || 'No start') + ' – ' + esc(clock12(t.b) || '…') + '</span>' +
+        '<span class="x-title">' + esc(t.who || 'No name') + (t.note ? ' <small>· ' + esc(t.note) + '</small>' : '') + '</span></span>' +
+        '<span class="x-right">' + (m > 0 ? '<span class="x-amt">' + hrsTxt(m) + ' <small>hrs</small></span>' : '<span class="bs-pill">IN PROGRESS</span>') + '</span></button>';
+    }).join('') : '<div class="x-empty">No hours logged yet. Add your first entry above.</div>') + '</div>';
+  var past = invList().filter(function (v) { return v.coId === co.id && v.time.length; }).sort(function (a, b) { return b.seq - a.seq; });
+  if (past.length) h += '<div class="tm-set-t" style="margin-top:18px;">INVOICED PERIODS</div><div class="x-list">' + past.map(function (v) {
+    var k = invCalc(v), cls = k.status.toLowerCase().replace(/\s+/g, '-');
+    return '<button class="x-row" type="button" data-inv="' + esc(v.id) + '"><span><span class="x-num">' + esc(v.num) + ' · ' + esc(timeRange(v.time)) + '</span>' +
+      '<span class="x-title">' + hrsTxt(timeSum(v.time).min) + ' hours</span></span>' +
+      '<span class="x-right"><span class="bs-pill ' + cls + '">' + k.status.toUpperCase() + '</span><span class="x-amt">' + fmt(k.total) + '</span></span></button>';
+  }).join('') + '</div>';
+  return h;
+}
+function timeFoot(co) {
+  var n = timeSum(co.time).n;
+  return '<div class="xe-foot-in bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="back">← INVOICES</button>' +
+    '<button type="button" class="proposal-btn proposal-btn-primary" data-b="tm-build"' + (n ? '' : ' disabled') + '>BUILD INVOICE</button></div>';
+}
+function timeRead() {
+  var g = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  if (!document.getElementById('tm-date')) return timeDraft();
+  return { date: /^\d{4}-\d{2}-\d{2}$/.test(g('tm-date')) ? g('tm-date') : '', a: hhmm(g('tm-a')), b: hhmm(g('tm-b')), who: g('tm-who'), note: g('tm-note') };
+}
+// The running total: everything logged this period, plus the entry being typed
+function timeLive() {
+  var co = billing.co[bv.coId]; if (!co || !document.getElementById('tm-total')) return;
+  var d = timeRead(), rest = co.time.filter(function (t) { return t.id !== bv.tEdit; });
+  var sm = timeSum(rest.concat([d])), m = timeMin(d);
+  document.getElementById('tm-total').textContent = fmt(timeAmt(sm.min, co.rate));
+  document.getElementById('tm-meta').textContent = hrsTxt(sm.min) + ' hours · ' + sm.n + ' entr' + (sm.n === 1 ? 'y' : 'ies') + (co.rate > 0 ? '' : ' · set an hourly rate on the company to see a total');
+  document.getElementById('tm-live').textContent = m > 0 ? 'This entry: ' + hrsTxt(m) + ' hours' : d.a && !d.b ? 'In progress. Add a finish time when you wrap up.' : '';
+}
+function timeSave() {
+  var co = billing.co[bv.coId]; if (!co) return;
+  var d = timeRead(), bad = !d.date ? 'tm-date' : !d.a ? 'tm-a' : null;
+  if (bad) { var el = document.getElementById(bad); el.classList.add('bad'); el.focus(); showToast(bad === 'tm-a' ? 'ADD A START TIME' : 'CHOOSE A DATE'); return; }
+  var m = timeMin(d);
+  if (bv.tEdit) { co.time = co.time.map(function (t) { return t.id === bv.tEdit ? { id: t.id, date: d.date, a: d.a, b: d.b, who: d.who, note: d.note, at: t.at } : t; }); }
+  else co.time.push({ id: billId('t'), date: d.date, a: d.a, b: d.b, who: d.who, note: d.note, at: Date.now() });
+  co.time = normTime(co.time); co.upd = Date.now();
+  if (!saveBilling()) return;
+  showToast(bv.tEdit ? 'ENTRY SAVED' : m > 0 ? 'ADDED · ' + hrsTxt(m) + ' HRS' : 'STARTED · ADD A FINISH TIME LATER');
+  bv.tEdit = null; bv.tDraft = null; renderBilling();
+}
+function timeBuild() {
+  var co = billing.co[bv.coId]; if (!co) return;
+  if (!(co.rate > 0)) { showToast('SET AN HOURLY RATE ON THE COMPANY FIRST'); return; }
+  var done = timeSort(co.time.filter(function (t) { return timeMin(t) > 0; })), open = co.time.filter(function (t) { return !(timeMin(t) > 0); });
+  if (!done.length) { showToast('NO FINISHED HOURS TO INVOICE'); return; }
+  var sm = timeSum(done), total = timeAmt(sm.min, co.rate), range = timeRange(done), label = co.hrLabel || 'Consulting services';
+  var v = normInvoice({ id: billId('inv'), seq: nextInvoiceNumber(), coId: co.id, date: localISODate(), terms: co.terms, job: label + ' · ' + range,
+    items: [{ d: label + ', ' + range + ' (' + hrsTxt(sm.min) + ' hours)', q: 1, rate: total }], taxOn: co.hrTax, taxCity: co.city || 'Albuquerque', status: 'Draft', time: done });
+  v.due = isoAdd(v.date, termOf(v.terms)[2]); v.num = 'INV-' + v.seq;
+  invLog(v, 'Invoice ' + v.num + ' built from ' + hrsTxt(sm.min) + ' tracked hours');
+  billing.inv[v.id] = v; co.time = open; co.upd = Date.now();
+  if (!saveBilling()) return;
+  bv.tEdit = null; bv.tDraft = null; bv.from = 'list';
+  openInvoice(v.id);
+  showToast(v.num + ' BUILT · TRACKER IS FRESH');
+}
+function invTimeHtml(v) {
+  if (!v.time.length) return '';
+  return '<div class="tm-inv"><div class="tm-set-t">HOURS ON THIS INVOICE · ' + hrsTxt(timeSum(v.time).min) + '</div>' + timeSort(v.time).map(function (t) {
+    return '<div class="tm-line"><span>' + esc(dayDate(t.date)) + ' · ' + esc(clock12(t.a)) + ' – ' + esc(clock12(t.b)) + (t.who ? ' · ' + esc(t.who) : '') + '</span><b>' + hrsTxt(timeMin(t)) + '</b></div>';
+  }).join('') + '<p class="xsec-note" style="margin:8px 0 0;">The hours log prints on the invoice.' + (v.status === 'Draft' && !v.payments.length ? ' To change hours, delete this draft: they go back to the tracker.' : '') + '</p></div>';
 }
 
 // ── Invoice editor ──
@@ -5003,7 +5165,7 @@ function invFormHtml(v) {
     '<div class="ex-2">' + bf('bi-due', 'DUE DATE', v.due, 'type="date"') + bf('bi-po', 'PO / JOB #', v.po, 'type="text" autocomplete="off" placeholder="Optional"') + '</div>' +
     bf('bi-job', 'JOB / PROJECT', v.job, 'type="text" autocomplete="off" placeholder="e.g. 4410 Menaul Blvd NE — TPO tear-off"') +
     '<div class="ex-f"><label>SERVICES</label><div class="ex-items" id="bi-items">' + v.items.map(billItemRow).join('') + '</div>' +
-      '<button type="button" class="ex-add" id="bi-additem">+ ADD LINE</button></div>' +
+      '<button type="button" class="ex-add" id="bi-additem">+ ADD LINE</button></div>' + invTimeHtml(v) +
     '<div class="bi-tax"><label class="b-check"><input type="checkbox" id="bi-taxon"' + (v.taxOn ? ' checked' : '') + '><span><b>Charge gross receipts tax</b> Turn off when they gave you an NTTC.</span></label>' +
       '<div class="bi-taxcity"' + (v.taxOn ? '' : ' hidden') + '>' + bf('bi-taxcity', 'TAX CITY (WHERE THE WORK IS)', v.taxCity, 'type="text" placeholder="Albuquerque"') + '<div class="bi-rate" id="bi-rate"></div></div></div>' +
     '<div class="xe-calc" id="bi-calc"></div>' +
@@ -5024,7 +5186,7 @@ function invFormHtml(v) {
     h += '<button type="button" class="proposal-btn proposal-btn-secondary x-add" data-b="payopen">+ RECORD A PAYMENT</button>';
   }
   if (v.log.length) h += '<div class="form-section-title" style="margin-top:22px;">History</div><div class="bi-log">' + v.log.map(function (l) { return '<div><span>' + esc(l.ts) + '</span>' + esc(l.msg) + '</div>'; }).join('') + '</div>';
-  if (v.status !== 'Void') h += '<button type="button" class="b-void" data-b="void">' + (v.status === 'Draft' && !v.payments.length ? 'DELETE THIS DRAFT' : 'VOID THIS INVOICE') + '</button>';
+  if (v.status !== 'Void') h += '<button type="button" class="b-void" data-b="void">' + (v.status === 'Draft' && !v.payments.length ? (v.time.length ? 'DELETE THIS DRAFT (HOURS GO BACK TO THE TRACKER)' : 'DELETE THIS DRAFT') : 'VOID THIS INVOICE') + '</button>';
   else h += '<button type="button" class="b-void b-restore" data-b="unvoid">RESTORE THIS INVOICE (UNDO VOID)</button>';
   return h;
 }
@@ -5115,6 +5277,11 @@ var BILL_DOC_CSS = `<style>
   .it td { padding: 7px 0; border-bottom: 0.6px solid rgba(28,26,24,0.18); vertical-align: top; line-height: 1.45; }
   .it .n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; padding-left: 14px; }
   .it .q { width: 46px; } .it .r { width: 84px; } .it .a { width: 92px; font-weight: 600; }
+  .hl { margin-top: 16px; }
+  .hlt td { padding: 5px 10px 5px 0; white-space: nowrap; }
+  .hlt td:nth-child(4) { white-space: normal; width: 46%; }
+  .hlt .hl-n { color: #3A3734; }
+  .hlt .hl-tot td { font-weight: 600; border-bottom: 0; border-top: 1.2px solid #1C1A18; }
   .body { margin-top: 16px; }
   .pr > span:last-child { padding-left: 12px; white-space: nowrap; align-self: flex-start; }
   .para { font-size: 10.5px; line-height: 1.6; color: #1C1A18; }
@@ -5133,9 +5300,24 @@ function billWho(co) {
 }
 var BILL_FROM = '<b>Agency Roofing Co. LLC</b><br>Orlando Montanez, Owner<br>Albuquerque, New Mexico<br>' + ARC_PHONE + '<br>' + BILL_ME;
 function itemsTable(v) {
+  // An invoice built from tracked hours shows the work and the amount only: no quantity or rate columns
+  if (v.time && v.time.length) return '<table class="it" data-keep><thead><tr><th>Description</th><th class="n a">Amount</th></tr></thead><tbody>' +
+    v.items.map(function (i) { return '<tr><td>' + richLine(i.d) + '</td><td class="n a">' + fmt(cents(i.q * i.rate)) + '</td></tr>'; }).join('') + '</tbody></table>';
   return '<table class="it" data-keep><thead><tr><th>Description</th><th class="n q">Qty</th><th class="n r">Rate</th><th class="n a">Amount</th></tr></thead><tbody>' +
     v.items.map(function (i) { return '<tr><td>' + richLine(i.d) + '</td><td class="n q">' + (+i.q).toLocaleString('en-US', { maximumFractionDigits: 2 }) + '</td><td class="n r">' + fmt(i.rate) + '</td><td class="n a">' + fmt(cents(i.q * i.rate)) + '</td></tr>'; }).join('') +
     '</tbody></table>';
+}
+// The hours log that rides on an hourly invoice: date, start, finish, who it was for, hours. Never a rate.
+function hoursLog(v) {
+  if (!v.time || !v.time.length) return '';
+  var list = timeSort(v.time);
+  return '<div class="hl"><div class="sh">Hours Log · ' + esc(timeRange(list)) + '</div><div class="sh-rule"></div>' +
+    '<table class="it hlt"><thead><tr><th>Date</th><th>Start</th><th>Finish</th><th>Customer / Training</th><th class="n">Hours</th></tr></thead><tbody>' +
+    list.map(function (t) {
+      return '<tr><td>' + esc(dayDate(t.date)) + '</td><td>' + esc(clock12(t.a)) + '</td><td>' + esc(clock12(t.b)) + '</td><td>' + esc(t.who || '') +
+        (t.note ? (t.who ? ' · ' : '') + '<span class="hl-n">' + esc(t.note) + '</span>' : '') + '</td><td class="n">' + hrsTxt(timeMin(t)) + '</td></tr>';
+    }).join('') +
+    '<tr class="hl-tot"><td colspan="4">Total hours</td><td class="n">' + hrsTxt(timeSum(list).min) + '</td></tr></tbody></table></div>';
 }
 function invoiceDoc(v, co) {
   var k = invCalc(v), t = termOf(v.terms);
@@ -5151,7 +5333,7 @@ function invoiceDoc(v, co) {
       '<div class="meta-cell"><span class="meta-label">' + (v.po ? 'PO / Job No.' : 'Terms') + '</span><span class="meta-value">' + esc(v.po || t[1]) + '</span></div></div>' +
     '<div class="bt" data-keep><div><div class="sh">Bill To</div><div class="sh-rule"></div><div class="who">' + billWho(co) + '</div></div>' +
       '<div><div class="sh">From</div><div class="sh-rule"></div><div class="who">' + BILL_FROM + '</div></div></div>' +
-    itemsTable(v) +
+    itemsTable(v) + hoursLog(v) +
     '<div class="body"><div>' +
       (v.note ? '<div class="section-block"><div class="sh">Notes</div><div class="sh-rule"></div><p class="para">' + richLine(v.note) + '</p></div>' : '') +
       '<div class="section-block"><div class="sh">How to Pay</div><div class="sh-rule"></div><ul class="b-list">' +
@@ -5208,7 +5390,8 @@ function previewInvoice() {
       var due = longDate(v.due || v.date);
       return { to: co.email, cc: co.cc, bcc: BILL_ME,
         subject: 'Agency Roofing Co. invoice ' + v.num + (v.job ? ' · ' + v.job : '') + ' · ' + fmt(k.bal) + ' due ' + due,
-        body: 'Hi ' + billGreet(co) + ',\n\nAttached is invoice ' + v.num + (v.job ? ' for ' + v.job : '') + (v.po ? ' (PO ' + v.po + ')' : '') + '.\n\n' +
+        body: 'Hi ' + billGreet(co) + ',\n\nAttached is invoice ' + v.num + (v.job ? ' for ' + v.job : '') + (v.po ? ' (PO ' + v.po + ')' : '') + '.' +
+          (v.time.length ? ' The hours log for the period is included on it.' : '') + '\n\n' +
           'Amount due: ' + fmt(k.bal) + '\nDue by: ' + due + ' (' + termOf(v.terms)[1] + ')\n\n' +
           'Checks can be made payable to Agency Roofing Co. LLC' + (payLinkFor(co) ? ', or pay online: ' + payLinkFor(co) : '') + '. Please include the invoice number with your payment.\n\n' +
           'Thank you for the work. Let me know if you have any questions.\n\nBuilt with agency. Driven by obligation.\n\nOrlando\nAgency Roofing Co.\n' + ARC_PHONE };
@@ -5257,7 +5440,10 @@ function previewReceipt(pid) {
   sheet.addEventListener('click', function (e) {
     var t = e.target;
     var f = t.closest('[data-filter]'); if (f) { bv.filter = f.dataset.filter; renderBilling(); return; }
-    var r = t.closest('[data-inv]'); if (r) { openInvoice(r.dataset.inv); return; }
+    var tmc = t.closest('[data-time]'); if (tmc) { openTime(tmc.dataset.time); return; }
+    var te = t.closest('[data-tedit]');
+    if (te) { var tco = billing.co[bv.coId], tt = tco && tco.time.find(function (x) { return x.id === te.dataset.tedit; }); if (tt) { bv.tEdit = tt.id; bv.tDraft = { date: tt.date, a: tt.a, b: tt.b, who: tt.who, note: tt.note }; renderBilling(); document.getElementById('inv-body').scrollTop = 0; } return; }
+    var r = t.closest('[data-inv]'); if (r) { bv.from = bv.view === 'time' ? 'time' : 'list'; openInvoice(r.dataset.inv); return; }
     var c = t.closest('[data-co]'); if (c) { bv.view = 'co'; bv.from = 'cos'; bv.draft = normCompany(JSON.parse(JSON.stringify(billing.co[c.dataset.co]))); renderBilling(); return; }
     var rc = t.closest('[data-pay]'); if (rc) { if (!billing.co[bv.draft.coId] || !invValid(false)) { showToast('CHOOSE A COMPANY FIRST'); return; } previewReceipt(rc.dataset.pay); return; }
     var up = t.closest('[data-unpay]');
@@ -5273,7 +5459,22 @@ function previewReceipt(pid) {
     if (t.closest('#bi-additem')) { var bx = document.getElementById('bi-items'); bx.insertAdjacentHTML('beforeend', billItemRow({ d: '', q: 1, rate: 0 }, bx.children.length)); bx.lastElementChild.querySelector('.d').focus(); return; }
     var b = t.closest('[data-b]'); if (!b) return;
     var a = b.dataset.b;
-    if (a === 'cos') { bv.view = 'cos'; renderBilling(); }
+    if (a === 'now-a' || a === 'now-b') { var nw = new Date(), ni = document.getElementById(a === 'now-a' ? 'tm-a' : 'tm-b'); ni.value = String(nw.getHours()).padStart(2, '0') + ':' + String(nw.getMinutes()).padStart(2, '0'); ni.classList.remove('bad'); timeLive(); }
+    else if (a === 'who-training') { document.getElementById('tm-who').value = 'Training'; }
+    else if (a === 'tm-save') timeSave();
+    else if (a === 'tm-cancel') { bv.tEdit = null; bv.tDraft = null; renderBilling(); }
+    else if (a === 'tm-del') {
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'TAP TO DELETE'; b.classList.add('armed'); return; }
+      var dco = billing.co[bv.coId]; if (dco) { dco.time = dco.time.filter(function (x) { return x.id !== bv.tEdit; }); dco.upd = Date.now(); saveBilling(); }
+      bv.tEdit = null; bv.tDraft = null; renderBilling(); showToast('ENTRY DELETED');
+    }
+    else if (a === 'tm-build') {
+      var bco = billing.co[bv.coId], bsm = bco ? timeSum(bco.time) : { min: 0, n: 0 };
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'TAP AGAIN · ' + hrsTxt(bsm.min) + ' HRS'; b.classList.add('armed'); return; }
+      timeBuild();
+    }
+    else if (a === 'opentime') { if (!saveCompany()) return; openTime(bv.draft.id); }
+    else if (a === 'cos') { bv.view = 'cos'; renderBilling(); }
     else if (a === 'back') { bv.view = 'list'; renderBilling(); }
     else if (a === 'newinv') { newInvoice(''); }
     else if (a === 'newco') { bv.view = 'co'; bv.from = 'cos'; bv.draft = normCompany({}); renderBilling(); document.getElementById('co-name').focus(); }
@@ -5294,7 +5495,7 @@ function previewReceipt(pid) {
       if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'TAP TO DELETE'; b.classList.add('armed'); return; }
       delete billing.co[bv.draft.id]; saveBilling(); bv.view = 'cos'; renderBilling();
     }
-    else if (a === 'saveinv') { if (!billSaveCurrent(false)) return; bv.view = 'list'; renderBilling(); showToast('SAVED'); }
+    else if (a === 'saveinv') { if (!billSaveCurrent(false)) return; bv.view = bv.from === 'time' && billing.co[bv.coId] ? 'time' : 'list'; bv.from = 'list'; renderBilling(); showToast('SAVED'); }
     else if (a === 'previnv') previewInvoice();
     else if (a === 'payopen') { var k = invCalc(invRead()); bv.payOpen = true; bv.payDraft = { amount: k.bal, date: localISODate(), method: 'Check', ref: '' }; commitInvoice(); renderBilling(); var pa = document.getElementById('bp-amount'); if (pa) pa.scrollIntoView({ block: 'center' }); }
     else if (a === 'paycancel') { bv.payOpen = false; renderBilling(); }
@@ -5302,7 +5503,11 @@ function previewReceipt(pid) {
     else if (a === 'void') {
       if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = bv.draft.status === 'Draft' && !bv.draft.payments.length ? 'TAP AGAIN TO DELETE THIS DRAFT' : 'TAP AGAIN TO VOID ' + bv.draft.num; b.classList.add('armed'); return; }
       var dv = billing.inv[bv.invId];
-      if (dv && dv.status === 'Draft' && !dv.payments.length) { delete billing.inv[bv.invId]; saveBilling(); showToast(dv.num + ' DELETED · NUMBER NOT REUSED'); }
+      if (dv && dv.status === 'Draft' && !dv.payments.length) {
+        var tco = dv.time.length ? billing.co[dv.coId] : null;   // tracked hours are never lost with a deleted draft
+        if (tco) { tco.time = normTime(tco.time.concat(dv.time)); tco.upd = Date.now(); }
+        delete billing.inv[bv.invId]; saveBilling(); showToast(dv.num + (tco ? ' DELETED · HOURS BACK ON THE TRACKER' : ' DELETED · NUMBER NOT REUSED'));
+      }
       else if (dv) { invRead(); bv.draft.status = 'Void'; invLog(bv.draft, 'Voided'); commitInvoice(); showToast(dv.num + ' VOID'); }
       bv.view = 'list'; renderBilling();
     }
@@ -5320,6 +5525,7 @@ function previewReceipt(pid) {
   });
   sheet.addEventListener('input', function (e) {
     if (e.target.classList) e.target.classList.remove('bad');
+    if (bv.view === 'time') timeLive();
     if (bv.view === 'inv') invRecalc();
   });
   sheet.addEventListener('change', function (e) {

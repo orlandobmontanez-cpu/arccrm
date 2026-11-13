@@ -125,6 +125,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   plus an HTML copy (`htmlBody`) where the link line becomes a copper **REVIEW & SIGN ONLINE** button.
 - "Use the Mail app instead" in the sheet runs the older flow below. Sends are logged in the customer's activity log
   (the receipt page writes the log entry straight into `arc_v3`).
+- **One inbox only:** everything goes to and from orlando.montanez@agencyroofingco.com (Orlando's choice, Nov 2026). Never route
+  customers, DocuSign or notifications to agencyroofingco@gmail.com.
 - Proposal subject/message wording comes from `pvMail` (don't change without asking). Receipt subject:
   "[Name], your Agency Roofing Co. receipt for [address] · [number]".
 
@@ -199,6 +201,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   - `rsPoll` (load, every 45 s, after sync, on return to the app) applies signed requests exactly like in-person signing
     (stage → Signed / Accepted / Approved, auto-countersign), logs it, shows a banner, then sets `applied = true`. It waits while
     that customer is being edited. If the document was edited after sending, the signature is saved but shows "Edited after signing".
+  - When a returned signature moves the job (Signed / Accepted / Approved), `celebrate()` drops brand-color confetti from the top
+    (canvas, ~4 s, no taps blocked, skipped with Reduce Motion). Orlando asked for it; only automatic moves trigger it, not in-person signing.
   - Signing in person voids open links for that document (`rsVoid`). Nothing new is stored on the phone; requests live in Supabase.
   - `sign.html` contains a copy of `ARCSign` — keep it in step with `index.html`.
 - Pay Online: Stripe Payment Link from Settings (or per-customer `payLink`). A QR code (bundled MIT `qrcode-generator`) prints for the 50% deposit, change order amount, or receipt balance due. No QR on credits.
@@ -242,5 +246,5 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - `forms/insurance-repair-agreement.docusign.json` holds the tab layout (points, top-left origin). Always give text tabs
   an explicit `width`/`height` from that file; without them DocuSign shrinks them to a tiny square over the label.
 - Send: Gerald-style envelope = customer signer (routing 1: text tabs on page 1, signHere + dateSigned on the Homeowner
-  line, page 2) then Orlando `agencyroofingco@gmail.com` (routing 2: signHere + dateSigned on the contractor line).
+  line, page 2) then Orlando `orlando.montanez@agencyroofingco.com` (routing 2: signHere + dateSigned on the contractor line).
   Pre-fill Homeowner, Email and Company Representative = "Orlando Montanez" as locked tabs.

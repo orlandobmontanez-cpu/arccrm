@@ -915,6 +915,7 @@
     background: #1C1A18; color: #EAE4DA; border-left: 4px solid #974930; border-radius: 8px; padding: 10px 10px 10px 14px; display: flex; align-items: center; gap: 10px;
     box-shadow: 0 8px 24px rgba(28,26,24,.35); font-size: 14px; line-height: 1.4; }
   #rs-banner[hidden] { display: none; }
+  #confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 10000; pointer-events: none; }
   #rs-banner span { flex: 1; min-width: 0; }
   #rs-banner b { color: #F0C8C2; }
   #rs-banner button { min-height: 48px; min-width: 48px; border: 0; border-radius: 6px; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: .12em; cursor: pointer; }
@@ -1898,7 +1899,7 @@ const STAGES = ['Lead','Inspected','Proposed','Signed','In Production','Closed',
 // Signed documents keep the rate they were signed at (sig.taxRate). Every signature made before
 // per-job rates existed was at 7.3125%, and every existing customer keeps 7.3125%.
 const LEGACY_TAX = 7.3125;
-const ARC_EMAIL = 'agencyroofingco@gmail.com';
+const ARC_EMAIL = 'orlando.montanez@agencyroofingco.com';
 const ARC_PHONE = '(505) 900-1711';
 
 let customers = [];
@@ -5506,7 +5507,7 @@ function rsApply(row) {
   rsLog(c, info.word + ' ' + info.num + ' signed online by ' + s.name + (contractor ? ', countersigned' : '') +
     (matches ? '' : ' — it was edited after the link was sent, so check the scope and price with the customer'));
   c.updatedAt = Date.now();
-  RS.fresh.push({ cid: c.id, name: s.name, num: info.num, word: info.word, matches });
+  RS.fresh.push({ cid: c.id, name: s.name, num: info.num, word: row.what || info.word.toLowerCase(), matches });
   return true;
 }
 
@@ -5516,13 +5517,13 @@ async function rsPoll() {
   if (ARCSync.status().waiting) return;                              // other-device changes first
   RS.busy = true;
   try {
-    const rows = await ARCSync.rest('arc_sign?select=token,cid,kind,item,num,doc_id,status,sig,applied,viewed_at,last_viewed_at,views,created_at,signed_at,taxRate:info->>taxRate,taxCity:info->>taxCity' +
+    const rows = await ARCSync.rest('arc_sign?select=token,cid,kind,item,num,doc_id,status,sig,applied,viewed_at,last_viewed_at,views,created_at,signed_at,taxRate:info->>taxRate,taxCity:info->>taxCity,what:info->>what' +
       '&or=(status.eq.open,and(status.eq.signed,applied.is.false))&order=created_at.desc&limit=300', { method: 'GET' });
     RS.setup = false;
     const open = {};
     (rows || []).forEach(r => { if (r.status === 'open') { const k = rsKey(r.cid, r.kind, r.item); if (!open[k]) open[k] = r; } });
     RS.open = open;
-    const done = [];
+    const done = [], seen = RS.fresh.length;
     (rows || []).filter(r => r.status === 'signed' && !r.applied).reverse().forEach(r => { if (rsApply(r)) done.push(r.token); });
     if (done.length) {
       save();
@@ -5530,10 +5531,55 @@ async function rsPoll() {
       renderList();
       await ARCSync.rest('arc_sign?token=in.(' + done.join(',') + ')', { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ applied: true }) }).catch(() => {});
       rsBanner();
+      if (RS.fresh.slice(seen).some(f => f.matches)) celebrate();   // only when it actually moved to Signed / Accepted / Approved
     } else if (currentId) { renderSignStatus(); if (xe) renderEditorSign(); }
   } catch (e) {
     if (rsMissing(e)) RS.setup = true;
   } finally { RS.busy = false; }
+}
+
+// Confetti from the top of the CRM when a customer's online signature moves a job to Signed (brand colors, ~4 s).
+// Never blocks taps; skipped when the phone is set to Reduce Motion.
+function celebrate() {
+  try { if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch (e) {}
+  const old = document.getElementById('confetti'); if (old) old.remove();
+  const cv = document.createElement('canvas');
+  cv.id = 'confetti'; cv.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(cv);
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  let W = 0, H = 0;
+  const size = () => { W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; };
+  size(); addEventListener('resize', size);
+  const ctx = cv.getContext('2d');
+  const COLORS = ['#974930', '#C97E78', '#F0C8C2', '#EAE4DA', '#1C1A18', '#974930', '#C97E78'];
+  const N = Math.round(Math.min(220, Math.max(110, W / 3)));
+  const bits = Array.from({ length: N }, (_, i) => ({
+    x: Math.random() * W, y: -20 - Math.random() * H * 0.9,
+    w: 6 + Math.random() * 6, h: 9 + Math.random() * 8,
+    vy: 2.2 + Math.random() * 2.8, vx: (Math.random() - 0.5) * 1.4,
+    rot: Math.random() * Math.PI * 2, vr: (Math.random() - 0.5) * 0.25,
+    sway: Math.random() * Math.PI * 2, c: COLORS[i % COLORS.length], round: Math.random() < 0.18,
+  }));
+  const start = performance.now(), STOP = 3200, END = 4600;
+  (function frame(now) {
+    const t = now - start;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    let live = 0;
+    bits.forEach(b => {
+      b.sway += 0.05; b.x += b.vx + Math.sin(b.sway) * 0.8; b.y += b.vy; b.rot += b.vr;
+      if (b.y > H + 20) { if (t < STOP) { b.y = -20; b.x = Math.random() * W; } else return; }
+      live++;
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot);
+      ctx.globalAlpha = t > END - 800 ? Math.max(0, (END - t) / 800) : 1;
+      ctx.fillStyle = b.c;
+      if (b.round) { ctx.beginPath(); ctx.arc(0, 0, b.w / 2, 0, Math.PI * 2); ctx.fill(); }
+      else ctx.fillRect(-b.w / 2, -b.h / 2 * Math.abs(Math.cos(b.sway)), b.w, b.h * Math.abs(Math.cos(b.sway)) + 1);
+      ctx.restore();
+    });
+    if (t < END && live) requestAnimationFrame(frame);
+    else { removeEventListener('resize', size); cv.remove(); }
+  })(start);
 }
 
 function rsBanner() {
@@ -5541,7 +5587,7 @@ function rsBanner() {
   const f = RS.fresh[RS.fresh.length - 1];
   if (!b || !f) { if (b) b.hidden = true; return; }
   const more = RS.fresh.length > 1 ? ` (+${RS.fresh.length - 1} more)` : '';
-  document.getElementById('rs-msg').innerHTML = `✍ <b>${esc(f.name)}</b> signed ${esc(f.word.toLowerCase())} ${esc(f.num)} online${more}.` +
+  document.getElementById('rs-msg').innerHTML = `✍ <b>${esc(f.name)}</b> signed ${esc(f.word)} ${esc(f.num)} online${more}.` +
     (f.matches ? '' : ' It was edited after you sent it, so check it.');
   b.hidden = false;
 }

@@ -65,7 +65,7 @@ def supabase(route):
     if path == '/rest/v1/arc_sign':
         LOG.append((req.method, req.url))
         if req.method == 'GET':
-            rows = [dict(r, taxRate=str(r['info'].get('taxRate')), taxCity=r['info'].get('taxCity')) for r in SIGN.values() if match(r, qs)]
+            rows = [dict(r, taxRate=str(r['info'].get('taxRate')), taxCity=r['info'].get('taxCity'), what=r['info'].get('what')) for r in SIGN.values() if match(r, qs)]
             rows.sort(key=lambda r: r['created_at'], reverse=True)
             return route.fulfill(status=200, headers=hdr, content_type='application/json', body=json.dumps(rows))
         if req.method == 'POST':
@@ -201,19 +201,26 @@ with sync_playwright() as p:
     ok(not ccons, 'customer page: zero JS errors ' + str(ccons))
 
     # ── Back in the CRM: signature arrives ──
-    page.evaluate("rsPoll()"); page.wait_for_timeout(1500)
+    page.evaluate("rsPoll()"); page.wait_for_timeout(700)
+    ok(page.locator('#confetti').count() == 1, 'confetti falls when the signature moves the job to Signed')
+    page.screenshot(path='/tmp/s5-confetti.png')
+    ok(page.evaluate("getComputedStyle(document.getElementById('confetti')).pointerEvents") == 'none', 'confetti never blocks taps')
+    page.wait_for_timeout(4600)
+    ok(page.locator('#confetti').count() == 0, 'confetti clears itself')
     c = page.evaluate("customers.find(x => x.id === 'c15')")
     ok(c['sig'] and c['sig']['customer']['method'] == 'Signed online' and c['sig']['contractor'], 'signature on the record, countersigned with saved signature')
     ok(c['stage'] == 'Signed', 'stage moved to Signed')
     ok(any('signed online by Ray Scott' in a['msg'] for a in c['activityLog']), 'activity log entry')
     ok(SIGN[tok]['applied'] is True, 'request marked applied')
-    ok(page.locator('#rs-banner').is_visible(), 'banner: Ray signed online')
+    ok(page.locator('#rs-banner').is_visible() and 'signed repair quote ARC-00015' in page.inner_text('#rs-banner'), 'banner: Ray signed repair quote online')
     page.screenshot(path='/tmp/s5-banner.png')
     stored = page.evaluate("JSON.parse(localStorage.getItem('arc_v3'))[0].sig")
     ok(stored and stored['customer']['name'] == 'Ray Scott', 'signature saved to phone storage (syncs)')
     page.click('#rs-open'); page.wait_for_timeout(400)
     ok('signed online' in page.inner_text('#sign-status-proposal'), 'status: SIGNED · signed online')
     ok(not page.locator('#btn-rsign-proposal').is_visible(), 'Sign on their phone hidden once signed')
+    page.evaluate("rsPoll()"); page.wait_for_timeout(500)
+    ok(page.locator('#confetti').count() == 0, 'no repeat confetti on the next check')
     # Signed document: one page, audit line says online
     page.evaluate("generateProposal()")
     page.wait_for_function("(() => { const f = document.querySelector('#pv-stage iframe'); const d = f && f.contentDocument; return d && d.documentElement && d.documentElement.getAttribute('data-pages'); })()", timeout=20000)

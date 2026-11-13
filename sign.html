@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#EAE4DA">
+<title>Review &amp; Sign · Agency Roofing Co.</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<!--
+  Customer signing page for ARC CRM. Opened from the link in a proposal / quote / change order email
+  (sign.html#<token>) or from the QR code on Orlando's phone.
+  - Standalone on purpose: it never loads arcsync.js or arcmail.js and never reads or writes localStorage,
+    so opening it on any device can't touch CRM data that shares this site's storage.
+  - It can only call the two Supabase functions in supabase/sign.sql with the token: read this one document, sign it once.
+-->
+<style>
+  :root { --stone:#EAE4DA; --stone-l:#F2EDE6; --ink:#1C1A18; --ink2:#3A3734; --muted:#6B6560; --copper:#974930; --mid:#C97E78; --hi:#F0C8C2; --paper:#FDFCFA; --line:#D8D0C4; --danger:#8A2E26; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--stone-l); color: var(--ink); font-family: Inter, -apple-system, Helvetica, Arial, sans-serif; -webkit-text-size-adjust: 100%; }
+  body { min-height: 100vh; min-height: 100dvh; }
+  .top { background: var(--stone); border-bottom: 2px solid var(--copper); padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px; }
+  .top-in { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .top svg { width: 46px; height: 46px; flex: none; }
+  .wm-a { font-family: Anton, Impact, sans-serif; font-size: 24px; line-height: 1; letter-spacing: .02em; display: block; color: var(--ink); }
+  .wm-r { font-family: "Bebas Neue", sans-serif; font-size: 13px; letter-spacing: .22em; color: var(--copper); display: block; margin-top: 2px; }
+  .top-tag { margin-left: auto; font-family: Lora, Georgia, serif; font-style: italic; font-size: 12px; color: var(--ink2); text-align: right; max-width: 11em; line-height: 1.35; }
+  main { max-width: 720px; margin: 0 auto; padding: 18px 16px calc(110px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 14px; }
+  .kick { font-family: "Bebas Neue", sans-serif; font-size: 15px; letter-spacing: .18em; color: var(--copper); }
+  h1 { font-family: Anton, Impact, sans-serif; font-weight: 400; font-size: 30px; line-height: 1.1; margin: 2px 0 0; letter-spacing: .01em; }
+  .lead { font-size: 16px; line-height: 1.55; color: var(--ink2); margin: 6px 0 0; }
+  .card { background: var(--paper); border: 1px solid rgba(151,73,48,.35); border-radius: 8px; padding: 16px; }
+  .card h2 { font-family: "Bebas Neue", sans-serif; font-weight: 400; font-size: 17px; letter-spacing: .16em; color: var(--copper); margin: 0 0 8px; }
+  .addr { font-size: 15px; color: var(--ink2); margin: 0 0 10px; line-height: 1.4; }
+  .scope { margin: 0; padding: 0 0 0 20px; font-size: 16px; line-height: 1.55; color: var(--ink); }
+  .scope li + li { margin-top: 6px; }
+  .scope b { font-weight: 600; }
+  .amt { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-top: 1px solid rgba(28,26,24,.12); margin-top: 14px; padding-top: 12px; }
+  .amt-l { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--copper); }
+  .amt-v { font-family: Anton, Impact, sans-serif; font-size: 30px; color: var(--copper); white-space: nowrap; }
+  .terms { margin: 10px 0 0; padding: 0 0 0 20px; font-size: 14px; line-height: 1.5; color: var(--ink2); }
+  .notice p { font-size: 15px; line-height: 1.6; color: var(--ink2); margin: 0 0 10px; }
+  .notice p:last-child { margin: 0; }
+  .doc-wrap { overflow: hidden; border-radius: 6px; border: 1px solid var(--line); background: var(--stone); margin-top: 4px; }
+  .doc-wrap.zoom { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .doc-stage { transform-origin: 0 0; }
+  .doc-stage iframe { display: block; border: 0; width: 816px; height: 1056px; background: var(--stone); }
+  .row-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 18px; border-radius: 8px; border: 0; font-family: "Bebas Neue", sans-serif; font-size: 19px; letter-spacing: .14em; cursor: pointer; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+  .btn.pri { background: var(--copper); color: #fff; }
+  .btn.sec { background: var(--stone); color: var(--ink); border: 1px solid var(--line); }
+  .btn.small { min-height: 48px; font-size: 16px; flex: 1; }
+  .btn:disabled { opacity: .6; }
+  .foot { position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 50; }
+  .foot-in { max-width: 720px; margin: 0 auto; }
+  .foot .btn { width: 100%; min-height: 58px; font-size: 22px; }
+  .foot-note { text-align: center; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .help { text-align: center; font-size: 14px; color: var(--ink2); line-height: 1.5; }
+  .help a { color: var(--copper); font-weight: 600; }
+  .state { text-align: center; padding: 30px 8px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .state svg { width: 84px; height: 84px; }
+  .state h1 { font-size: 30px; }
+  .state p { font-size: 16px; line-height: 1.55; color: var(--ink2); margin: 0; max-width: 28em; }
+  .state img.sigimg { max-width: 280px; max-height: 90px; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--copper); animation: sp 0.9s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .err { color: var(--danger); font-weight: 600; font-size: 14px; text-align: center; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <svg aria-hidden="true" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="1.8" opacity="0.85"/>
+        <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.2"/>
+        <line x1="50" y1="7.5" x2="50" y2="12.5" stroke="#C97E78" stroke-width="1.2" opacity="0.8"/>
+        <path d="M 34 70 C 33 56, 37 40, 43 28 C 46 21, 50 16, 50 16" fill="none" stroke="#C97E78" stroke-width="5" stroke-linecap="round"/>
+        <path d="M 32.5 69 C 31.5 55, 35.2 38.5, 41.5 26.5 C 44.5 19.5, 48.7 15, 48.7 15" fill="none" stroke="#F0C8C2" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M 36 70.5 C 35.2 57, 39 41, 45 29 C 47.5 22.5, 51 17, 51 17" fill="none" stroke="#974930" stroke-width="0.9" stroke-linecap="round" opacity="0.8"/>
+        <path d="M 50 16 C 50 16, 54 21, 57 28 C 63 40, 67 56, 66 70" fill="none" stroke="#974930" stroke-width="5" stroke-linecap="round"/>
+        <path d="M 50.8 17.5 C 50.8 17.5, 53.8 22.5, 56.5 29.5 C 62 41.5, 65.5 57, 64.5 70" fill="none" stroke="#C97E78" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M 51.5 19 C 51.5 19, 54 23.5, 56.5 30.5 C 61.5 42.5, 65 57.5, 64 70" fill="none" stroke="#F0C8C2" stroke-width="0.5" stroke-linecap="round" opacity="0.5"/>
+        <line x1="36.5" y1="49" x2="63.5" y2="49" stroke="#C97E78" stroke-width="3.2" stroke-linecap="round"/>
+        <line x1="37" y1="47.7" x2="63" y2="47.7" stroke="#F0C8C2" stroke-width="1" stroke-linecap="round"/>
+        <line x1="37" y1="50.5" x2="63" y2="50.5" stroke="#974930" stroke-width="0.75" stroke-linecap="round"/>
+        <circle cx="50" cy="16" r="4" fill="#974930"/>
+        <circle cx="50" cy="16" r="2.8" fill="#C97E78"/>
+        <circle cx="48.5" cy="14.6" r="1.4" fill="#F0C8C2"/>
+        <circle cx="48.1" cy="14.2" r="0.55" fill="#FDE8E4"/>
+        <line x1="31" y1="76" x2="69" y2="76" stroke="#1C1A18" stroke-width="0.9" opacity="0.28"/>
+        <line x1="31" y1="74.5" x2="31" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"/>
+        <line x1="69" y1="74.5" x2="69" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"/>
+      </svg>
+    <div><span class="wm-a">AGENCY</span><span class="wm-r">ROOFING CO.</span></div>
+    <div class="top-tag">Built with agency. Driven by obligation.</div>
+  </div>
+</header>
+
+<main id="main">
+  <div class="state"><div class="spin" aria-hidden="true"></div><p>Loading your document…</p></div>
+</main>
+
+<div class="foot" id="foot" hidden>
+  <div class="foot-in">
+    <button type="button" class="btn pri" id="go-sign">✍ REVIEW &amp; SIGN</button>
+    <div class="foot-note">Secure link from Agency Roofing Co. · No account or printing needed</div>
+  </div>
+</div>
+
+<script>
+// Copy of ARCSign from index.html (same signing screen the customer sees in person). Keep in step with index.html.
+// ── ARC SIGN — in-person electronic signature pad (shared by CRM + receipt) ──
+// Captures a finger/stylus signature, printed name and consent to sign
+// electronically, and returns them with a timestamp for the audit record.
+(function () {
+  if (window.ARCSign) return;
+  var C = { stone: '#EAE4DA', stoneL: '#F2EDE6', ink: '#1C1A18', ink2: '#3A3734', muted: '#6B6560', copper: '#974930', mid: '#C97E78', hi: '#F0C8C2', paper: '#FDFCFA', line: '#D8D0C4' };
+
+  var css = [
+    '#sg{display:none;position:fixed;inset:0;z-index:1500;background:' + C.stoneL + ';flex-direction:column;height:100vh;height:100dvh;font-family:Inter,-apple-system,Helvetica,Arial,sans-serif;color:' + C.ink + '}',
+    '#sg.on{display:flex}',
+    '#sg *{box-sizing:border-box}',
+    '.sg-head{background:' + C.ink + ';color:' + C.stone + ';padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;border-bottom:2px solid ' + C.copper + ';flex-shrink:0;display:flex;align-items:center;gap:12px}',
+    '.sg-kick{font-family:"Bebas Neue",Oswald,sans-serif;font-size:12px;letter-spacing:.18em;color:' + C.mid + ';display:block}',
+    '.sg-num{font-family:Anton,Impact,sans-serif;font-size:20px;letter-spacing:.02em;display:block;line-height:1.1}',
+    '.sg-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px}',
+    '.sg-in{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:14px}',
+    '.sg-card{background:' + C.paper + ';border:1px solid rgba(151,73,48,.35);border-radius:6px;padding:14px 16px}',
+    '.sg-title{font-size:17px;font-weight:600;line-height:1.25}',
+    '.sg-title span{color:' + C.copper + '}',
+    '.sg-amt{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(28,26,24,.12);margin-top:10px;padding-top:10px}',
+    '.sg-amt-l{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + C.copper + '}',
+    '.sg-amt-v{font-family:Anton,Impact,sans-serif;font-size:22px;color:' + C.copper + '}',
+    '.sg-list{margin:8px 0 0;padding:0 0 0 16px;font-size:12.5px;line-height:1.5;color:' + C.ink2 + '}',
+    '.sg-lbl{font-family:"Bebas Neue",Oswald,sans-serif;font-size:14px;letter-spacing:.16em;color:' + C.copper + ';display:flex;justify-content:space-between;align-items:center}',
+    '.sg-name{width:100%;min-height:48px;border:1px solid ' + C.line + ';border-radius:6px;background:' + C.paper + ';font:500 16px Inter,-apple-system,sans-serif;padding:10px 12px;color:' + C.ink + ';-webkit-appearance:none}',
+    '.sg-name:focus{outline:none;border-color:' + C.mid + ';box-shadow:0 0 0 2px rgba(201,126,120,.15)}',
+    '.sg-pad{position:relative;height:clamp(160px,27vh,260px);background:#fff;border:1.5px solid ' + C.line + ';border-radius:8px;overflow:hidden;touch-action:none}',
+    '.sg-pad.inked{border-color:' + C.mid + '}',
+    '.sg-pad canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}',
+    '.sg-base{position:absolute;left:18px;right:18px;bottom:28%;border-bottom:1.5px solid ' + C.ink + ';opacity:.55;pointer-events:none}',
+    '.sg-x{position:absolute;left:18px;bottom:calc(28% + 6px);font:600 18px Inter,sans-serif;color:' + C.copper + ';pointer-events:none}',
+    '.sg-ph{position:absolute;left:0;right:0;top:34%;text-align:center;font-family:Lora,Georgia,serif;font-style:italic;font-size:16px;color:#B9B0A6;pointer-events:none}',
+    '.sg-pad.inked .sg-ph{display:none}',
+    '.sg-clear{min-height:40px;padding:0 14px;border:1px solid ' + C.line + ';background:' + C.paper + ';border-radius:5px;font-family:"Bebas Neue",Oswald,sans-serif;font-size:13px;letter-spacing:.12em;color:' + C.ink2 + ';cursor:pointer}',
+    '.sg-check{display:flex;gap:12px;align-items:flex-start;min-height:48px;padding:10px 12px;background:' + C.paper + ';border:1px solid ' + C.line + ';border-radius:6px;cursor:pointer;font-size:12.5px;line-height:1.5;color:' + C.ink2 + '}',
+    '#sg label.sg-check{text-transform:none;letter-spacing:0;font-weight:400;font-size:12.5px;color:' + C.ink2 + '}',
+    '#sg label.sg-lbl{text-transform:none}',
+    '.sg-check input{width:22px;height:22px;flex:none;margin:1px 0 0;accent-color:' + C.copper + '}',
+    '.sg-foot{flex-shrink:0;background:' + C.paper + ';border-top:1px solid ' + C.line + ';padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}',
+    '.sg-foot-in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr 2fr;gap:8px}',
+    '.sg-btn{min-height:52px;border-radius:6px;border:none;font-family:"Bebas Neue",Oswald,sans-serif;font-size:17px;letter-spacing:.12em;cursor:pointer}',
+    '.sg-btn.sec{background:' + C.stone + ';color:' + C.ink + '}',
+    '.sg-btn.pri{background:' + C.copper + ';color:#fff}',
+    '.sg-btn.pri:disabled{background:' + C.line + ';color:' + C.muted + ';cursor:not-allowed}',
+    '.sg-hint{font-size:11px;color:' + C.muted + ';text-align:center}',
+    '.sg-done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 8px}',
+    '.sg-done svg{width:84px;height:84px}',
+    '.sg-done h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:30px;letter-spacing:.02em;margin:4px 0 0}',
+    '.sg-done p{font-size:14px;line-height:1.55;color:' + C.ink2 + ';max-width:30em;margin:0}',
+    '.sg-done img{max-width:260px;max-height:80px;margin-top:6px}',
+    '.sg-acts{display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;margin-top:8px}',
+    '.sg-notice{font-size:12.5px;line-height:1.55;color:' + C.ink2 + '}',
+    '.sg-notice b{display:block;font-family:"Bebas Neue",Oswald,sans-serif;font-weight:400;font-size:15px;letter-spacing:.16em;color:' + C.copper + ';margin-bottom:6px}',
+    '.sg-notice p{margin:0 0 8px}',
+    '.sg-notice p:last-child{margin:0}',
+    '@media (min-width:700px){.sg-body{padding:24px}}'
+  ].join('\n');
+
+  var root, pad, canvas, ctx, strokes = [], cur = null, opts = {}, lastW = 0, lastH = 0;
+
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function escH(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  function build() {
+    if (root) return;
+    var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+    root = el('div'); root.id = 'sg'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true');
+    document.body.appendChild(root);
+  }
+
+  function tzName() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } }
+
+  // ── Canvas drawing ──
+  function sizeCanvas() {
+    if (!canvas) return;
+    var r = pad.getBoundingClientRect(), dpr = Math.max(1, window.devicePixelRatio || 1);
+    if (!r.width || !r.height) return;
+    if (lastW && lastH && (r.width !== lastW || r.height !== lastH)) {
+      var sx = r.width / lastW, sy = r.height / lastH;
+      strokes.forEach(function (s) { s.forEach(function (p) { p.x *= sx; p.y *= sy; }); });
+    }
+    lastW = r.width; lastH = r.height;
+    canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
+    ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    redraw();
+  }
+  function styleCtx(c, w) { c.strokeStyle = C.ink; c.fillStyle = C.ink; c.lineWidth = w; c.lineCap = 'round'; c.lineJoin = 'round'; }
+  function drawStroke(c, s) {
+    if (!s.length) return;
+    if (s.length < 3) { c.beginPath(); c.arc(s[0].x, s[0].y, c.lineWidth / 2, 0, Math.PI * 2); c.fill(); if (s.length === 1) return; }
+    c.beginPath(); c.moveTo(s[0].x, s[0].y);
+    for (var i = 1; i < s.length - 1; i++) {
+      var mx = (s[i].x + s[i + 1].x) / 2, my = (s[i].y + s[i + 1].y) / 2;
+      c.quadraticCurveTo(s[i].x, s[i].y, mx, my);
+    }
+    var l = s[s.length - 1]; c.lineTo(l.x, l.y); c.stroke();
+  }
+  function redraw() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, lastW, lastH); styleCtx(ctx, 2.6);
+    strokes.forEach(function (s) { drawStroke(ctx, s); });
+    pad.classList.toggle('inked', strokes.length > 0);
+    validate();
+  }
+  function pt(e) { var r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+  function down(e) { e.preventDefault(); try { canvas.setPointerCapture(e.pointerId); } catch (x) {} cur = [pt(e)]; strokes.push(cur); redraw(); }
+  function move(e) {
+    if (!cur) return; e.preventDefault();
+    var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    for (var i = 0; i < evs.length; i++) cur.push(pt(evs[i]));
+    redraw();
+  }
+  function up() { cur = null; validate(); }
+
+  function inkBox() {
+    var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9, n = 0;
+    strokes.forEach(function (s) { s.forEach(function (p) { n++; if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y; }); });
+    return { n: n, x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+  }
+  function hasInk() { var b = inkBox(); return b.n >= 6 && (b.w > 24 || b.h > 24); }
+
+  // Trimmed, transparent PNG of the signature
+  function exportPng() {
+    var b = inkBox(), padPx = 6, w = b.w + padPx * 2, h = b.h + padPx * 2;
+    var scale = Math.min(2, 900 / w, 300 / h);
+    var off = document.createElement('canvas');
+    off.width = Math.max(1, Math.round(w * scale)); off.height = Math.max(1, Math.round(h * scale));
+    var c = off.getContext('2d');
+    c.setTransform(scale, 0, 0, scale, (padPx - b.x) * scale, (padPx - b.y) * scale);
+    styleCtx(c, 2.6);
+    strokes.forEach(function (s) { drawStroke(c, s); });
+    return off.toDataURL('image/png');
+  }
+
+  function validate() {
+    if (!root) return;
+    var btn = root.querySelector('#sg-ok'); if (!btn) return;
+    var name = root.querySelector('#sg-name'), chk = root.querySelector('#sg-consent');
+    var ack = root.querySelector('#sg-ack');
+    var ok = hasInk() && name && name.value.trim().length > 1 && chk && chk.checked && (!ack || ack.checked);
+    btn.disabled = !ok;
+    var hint = root.querySelector('#sg-hint');
+    if (hint) hint.textContent = ok ? '' : (ack && !ack.checked ? 'Check the box: ' + opts.ack : !hasInk() ? 'Sign in the box above.' : (!name.value.trim() ? 'Enter the signer’s full name.' : 'Check the box to agree to sign electronically.'));
+  }
+
+  // ── Public API ──
+  function open(o) {
+    build(); opts = o || {}; strokes = []; cur = null; lastW = lastH = 0;
+    var list = (opts.summary || []).filter(Boolean);
+    var more = list.length > 4;
+    root.innerHTML =
+      '<div class="sg-head"><div><span class="sg-kick">' + escH(opts.kicker || 'SIGN') + '</span><span class="sg-num">' + escH(opts.num || '') + '</span></div></div>' +
+      '<div class="sg-body"><div class="sg-in">' +
+        (opts.title ? '<div class="sg-card"><div class="sg-title">' + opts.title + '</div>' +
+          (list.length ? '<ul class="sg-list">' + list.slice(0, 4).map(function (l) { return '<li>' + escH(l) + '</li>'; }).join('') + (more ? '<li>…and ' + (list.length - 4) + ' more</li>' : '') + '</ul>' : '') +
+          (opts.amount ? '<div class="sg-amt"><span class="sg-amt-l">' + escH(opts.amountLabel || 'Total') + '</span><span class="sg-amt-v">' + escH(opts.amount) + '</span></div>' : '') +
+        '</div>' : '') +
+        (opts.notice ? '<div class="sg-card sg-notice">' + opts.notice + '</div>' : '') +
+        (opts.ack ? '<label class="sg-check"><input type="checkbox" id="sg-ack"><span>' + escH(opts.ack) + '</span></label>' : '') +
+        '<div class="sg-lbl"><span>' + escH(opts.role || 'Signature') + '</span><button type="button" class="sg-clear" id="sg-clear">CLEAR</button></div>' +
+        '<div class="sg-pad" id="sg-pad"><div class="sg-ph">Sign here with your finger</div><div class="sg-base"></div><div class="sg-x">✕</div><canvas id="sg-canvas" aria-label="Signature area"></canvas></div>' +
+        '<label class="sg-lbl" for="sg-name" style="margin-top:2px"><span>Printed name</span></label>' +
+        '<input class="sg-name" id="sg-name" type="text" autocomplete="name" autocapitalize="words" value="' + escH(opts.name || '') + '" placeholder="Full name">' +
+        '<label class="sg-check"><input type="checkbox" id="sg-consent"><span>' + escH(opts.consent || 'I agree to sign this document electronically. My electronic signature has the same legal effect as my handwritten signature.') + '</span></label>' +
+        (opts.offerSave ? '<label class="sg-check"><input type="checkbox" id="sg-save" checked><span>Save as my signature and use it to countersign future documents.</span></label>' : '') +
+        '<div class="sg-hint" id="sg-hint"></div>' +
+      '</div></div>' +
+      '<div class="sg-foot"><div class="sg-foot-in">' +
+        '<button type="button" class="sg-btn sec" id="sg-cancel">' + escH(opts.skipLabel || 'CANCEL') + '</button>' +
+        '<button type="button" class="sg-btn pri" id="sg-ok" disabled>' + escH(opts.confirmLabel || 'SIGN') + '</button>' +
+      '</div></div>';
+    root.classList.add('on');
+    document.documentElement.style.overflow = 'hidden';
+    pad = root.querySelector('#sg-pad'); canvas = root.querySelector('#sg-canvas');
+    canvas.addEventListener('pointerdown', down);
+    canvas.addEventListener('pointermove', move);
+    canvas.addEventListener('pointerup', up);
+    canvas.addEventListener('pointercancel', up);
+    canvas.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+    root.querySelector('#sg-clear').addEventListener('click', function () { strokes = []; redraw(); });
+    root.querySelector('#sg-name').addEventListener('input', validate);
+    root.querySelector('#sg-consent').addEventListener('change', validate);
+    if (opts.ack) root.querySelector('#sg-ack').addEventListener('change', validate);
+    root.querySelector('#sg-cancel').addEventListener('click', function () {
+      if (opts.onSkip) { var f = opts.onSkip; f(); } else close();
+    });
+    root.querySelector('#sg-ok').addEventListener('click', function () {
+      if (this.disabled) return;
+      var res = {
+        name: root.querySelector('#sg-name').value.trim(),
+        img: exportPng(),
+        at: new Date().toISOString(),
+        tz: tzName(),
+        consent: true,
+        method: 'Signed on screen in person'
+      };
+      if (opts.ack) res.ackRead = opts.ack;
+      if (opts.offerSave) res.saveAsMine = !!(root.querySelector('#sg-save') || {}).checked;
+      if (opts.onSign) opts.onSign(res);
+    });
+    requestAnimationFrame(sizeCanvas);
+    validate();
+  }
+
+  function done(o) {
+    build(); o = o || {};
+    root.innerHTML =
+      '<div class="sg-head"><div><span class="sg-kick">' + escH(o.kicker || 'SIGNED') + '</span><span class="sg-num">' + escH(o.num || '') + '</span></div></div>' +
+      '<div class="sg-body"><div class="sg-in"><div class="sg-done">' +
+        '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="' + C.stone + '" stroke="' + C.ink + '" stroke-width="2.5"/><path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="' + C.mid + '" stroke-width="1.6"/><path d="M33 51 L45 63 L68 38" fill="none" stroke="' + C.copper + '" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '<h2>' + escH(o.title || 'Signed') + '</h2>' +
+        (o.message ? '<p>' + o.message + '</p>' : '') +
+        (o.img ? '<img src="' + o.img + '" alt="Signature">' : '') +
+        '<div class="sg-acts" id="sg-acts"></div>' +
+      '</div></div></div>';
+    var acts = root.querySelector('#sg-acts');
+    (o.actions || [{ label: 'DONE' }]).forEach(function (a) {
+      var b = el('button', 'sg-btn ' + (a.primary ? 'pri' : 'sec'), escH(a.label));
+      b.type = 'button';
+      b.addEventListener('click', function () { if (a.fn) a.fn(); else close(); });
+      acts.appendChild(b);
+    });
+    root.classList.add('on');
+  }
+
+  function close() {
+    if (!root) return;
+    root.classList.remove('on'); root.innerHTML = '';
+    document.documentElement.style.overflow = '';
+    strokes = []; canvas = null; ctx = null; pad = null;
+  }
+
+  window.addEventListener('resize', function () { if (root && root.classList.contains('on') && canvas) sizeCanvas(); });
+
+  // Short fingerprint of a document's contents — changes if scope or price changes
+  function docId(str) {
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0; i < str.length; i++) { var ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    var n = 4294967296 * (2097151 & h2) + (h1 >>> 0);
+    return n.toString(16).toUpperCase().padStart(14, '0').slice(-12).replace(/(.{4})(?=.)/g, '$1-');
+  }
+
+  function stamp(iso) {
+    try { return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }); }
+    catch (e) { return iso; }
+  }
+  function day(iso) {
+    try { return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
+  }
+
+  // QR code as inline SVG (uses the bundled qrcode-generator)
+  function qrSvg(text) {
+    try {
+      var q = qrcode(0, 'M'); q.addData(text); q.make();
+      return q.createSvgTag({ cellSize: 2, margin: 0, scalable: true })
+        .replace(/fill="black"/g, 'fill="' + C.ink + '"').replace(/fill="white"/g, 'fill="' + C.paper + '"');
+    } catch (e) { return ''; }
+  }
+
+  function settings() {
+    var d = { payLink: '', showPay: true, autoCountersign: true, taxRates: [{ city: 'Albuquerque', rate: 7.3125 }] };
+    try { var s = JSON.parse(localStorage.getItem('arc_settings') || '{}'); for (var k in s) d[k] = s[k]; } catch (e) {}
+    return d;
+  }
+  function saveSettings(s) { try { localStorage.setItem('arc_settings', JSON.stringify(s)); } catch (e) {} }
+  function ownerSig() { try { return JSON.parse(localStorage.getItem('arc_owner_sig') || 'null'); } catch (e) { return null; } }
+  function saveOwnerSig(v) { try { if (v) localStorage.setItem('arc_owner_sig', JSON.stringify(v)); else localStorage.removeItem('arc_owner_sig'); } catch (e) {} }
+
+  // NM gross receipts tax by job city (Settings → Tax rates). Unknown city → Albuquerque's rate, known: false.
+  function cityKey(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, ' ').trim(); }
+  function taxRates() {
+    var t = settings().taxRates;
+    return Array.isArray(t) && t.length ? t : [{ city: 'Albuquerque', rate: 7.3125 }];
+  }
+  function cityRate(city) {
+    var t = taxRates(), k = cityKey(city), abq = 7.3125, hit = null;
+    t.forEach(function (r) { if (cityKey(r.city) === 'albuquerque' && isFinite(+r.rate)) abq = +r.rate; if (k && cityKey(r.city) === k && isFinite(+r.rate)) hit = +r.rate; });
+    return hit != null ? { rate: hit, known: true } : { rate: abq, known: !k };
+  }
+
+  window.ARCSign = { open: open, done: done, close: close, docId: docId, stamp: stamp, day: day, qrSvg: qrSvg,
+    settings: settings, saveSettings: saveSettings, ownerSig: ownerSig, saveOwnerSig: saveOwnerSig, tz: tzName, taxRates: taxRates, cityRate: cityRate };
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  var SB_URL = 'https://xndcntpxhzfaqtmzcuje.supabase.co';
+  var SB_KEY = 'sb_publishable_KuUPSNQGagKSNL2_GDLbZw_eEPwlTWc';   // publishable (public) key, same as arcsync.js
+  var PHONE = '(505) 900-1711', TEL = '+15059001711';
+  var token = String(location.hash || '').replace(/^#/, '').replace(/^t=/, '').trim();
+  var main = document.getElementById('main'), foot = document.getElementById('foot');
+  var doc = null;
+
+  var CHECK = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="#EAE4DA" stroke="#1C1A18" stroke-width="2.5"/><path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.6"/><path d="M33 51 L45 63 L68 38" fill="none" stroke="#974930" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var INFO = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="#EAE4DA" stroke="#1C1A18" stroke-width="2.5"/><path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.6"/><circle cx="50" cy="33" r="4.5" fill="#974930"/><path d="M50 46 L50 68" stroke="#974930" stroke-width="7" stroke-linecap="round"/></svg>';
+
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+  // Scope lines may carry **bold** (same as the documents)
+  function rich(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\\([*_#\-])/g, '$1'); }
+  function stamp(iso) { try { return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }); } catch (e) { return iso || ''; } }
+  function phoneOf() { return (doc && doc.info && doc.info.phone) || PHONE; }
+  function telOf() { var d = phoneOf().replace(/\D/g, ''); return d.length === 10 ? '+1' + d : (d ? '+' + d : TEL); }
+  function helpHTML() {
+    return '<p class="help">Questions? Call or text Orlando at <a href="tel:' + telOf() + '">' + esc(phoneOf()) + '</a>.</p>';
+  }
+
+  function rpc(name, body) {
+    return fetch(SB_URL + '/rest/v1/rpc/' + name, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) { var e = new Error('HTTP ' + r.status); e.detail = t; throw e; });
+      return r.json();
+    });
+  }
+
+  function showState(icon, title, msg, extra) {
+    foot.hidden = true;
+    main.innerHTML = '<div class="state">' + icon + '<h1>' + esc(title) + '</h1>' + (msg ? '<p>' + msg + '</p>' : '') + (extra || '') + '</div>' + helpHTML();
+    window.scrollTo(0, 0);
+  }
+
+  function showSigned(name, at, img) {
+    var i = (doc && doc.info) || {};
+    showState(CHECK, 'Signed. Thank you' + (i.first ? ', ' + i.first : '') + '!',
+      'Your ' + esc(i.what || 'document') + ' <b>' + esc((doc && doc.num) || '') + '</b> was signed by <b>' + esc(name) + '</b> on ' + esc(stamp(at)) +
+      ' and sent to Agency Roofing Co. Orlando will countersign it and email you a copy for your records.',
+      img ? '<img class="sigimg" src="' + esc(img) + '" alt="Your signature">' : '');
+  }
+
+  function load() {
+    if (token.length < 32) {
+      showState(INFO, 'Link not found', 'This signing link looks incomplete. Open it again from the email Orlando sent you, or ask him for a new one.');
+      return;
+    }
+    rpc('arc_sign_get', { p_token: token }).then(function (d) {
+      doc = d || {};
+      var i = doc.info || {};
+      if (doc.status === 'missing') return showState(INFO, 'Link not found', 'We couldn’t find this document. Open the link again from Orlando’s email, or ask him for a new one.');
+      if (doc.status === 'void') return showState(INFO, 'This version was replaced', 'Orlando sent an updated version of ' + esc(doc.num || 'this document') + '. Please use the link in his most recent email.');
+      if (doc.status === 'expired') return showState(INFO, 'This link has expired', 'Pricing on ' + esc(doc.num || 'this document') + ' is past its valid date. Orlando can send you an updated copy.');
+      if (doc.status === 'signed') return showSigned(doc.signed && doc.signed.name, doc.signed && doc.signed.at, doc.signed && doc.signed.img);
+      render();
+    }, function () {
+      showState(INFO, 'Couldn’t load your document', navigator.onLine === false
+        ? 'You appear to be offline. Check your connection and reload this page.'
+        : 'Please reload this page in a moment.', '<button type="button" class="btn pri" id="retry">TRY AGAIN</button>');
+      var b = document.getElementById('retry'); if (b) b.addEventListener('click', function () { location.reload(); });
+    });
+  }
+
+  function render() {
+    var i = doc.info || {};
+    var scope = (i.summary || []).filter(Boolean);
+    main.innerHTML =
+      '<div><div class="kick">' + esc((i.what || 'document').toUpperCase()) + ' · ' + esc(doc.num || '') + '</div>' +
+      '<h1>Hi ' + esc(i.first || 'there') + ',</h1>' +
+      '<p class="lead">Here’s your ' + esc(i.what || 'document') + ' from Agency Roofing Co. Look it over, then tap <b>Review &amp; Sign</b> at the bottom. It takes about a minute.</p></div>' +
+      '<div class="card"><h2>' + esc(i.heading || 'Scope of work') + '</h2>' +
+        (i.address ? '<p class="addr">' + esc(i.address) + '</p>' : '') +
+        (scope.length ? '<ul class="scope">' + scope.map(function (s) { return '<li>' + rich(s) + '</li>'; }).join('') + '</ul>' : '') +
+        '<div class="amt"><span class="amt-l">' + esc(i.amountLabel || 'Total') + '</span><span class="amt-v">' + esc(i.amount || '') + '</span></div>' +
+        ((i.terms || []).length ? '<ul class="terms">' + i.terms.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' : '') +
+      '</div>' +
+      ((i.noticeParas || []).length ? '<div class="card notice"><h2>' + esc(i.noticeTitle || 'Please read') + '</h2>' + i.noticeParas.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') + '</div>' : '') +
+      (i.html ? '<div class="card"><h2>Full document</h2><p class="muted" style="margin:0">This is the same ' + esc(i.what || 'document') + ' attached to your email.</p>' +
+        '<div class="doc-wrap" id="doc-wrap"><div class="doc-stage" id="doc-stage"></div></div>' +
+        '<div class="row-btns"><button type="button" class="btn sec small" id="zoom">🔍 ENLARGE</button></div></div>' : '') +
+      helpHTML();
+    foot.hidden = false;
+    if (i.html) {
+      var fr = document.createElement('iframe');
+      fr.title = (i.what || 'Document') + ' ' + (doc.num || '');
+      fr.setAttribute('scrolling', 'no');
+      document.getElementById('doc-stage').appendChild(fr);
+      fr.srcdoc = i.html;
+      fit();
+      document.getElementById('zoom').addEventListener('click', function () {
+        var w = document.getElementById('doc-wrap'); w.classList.toggle('zoom');
+        this.textContent = w.classList.contains('zoom') ? '↙ FIT TO SCREEN' : '🔍 ENLARGE';
+        fit();
+      });
+    }
+  }
+
+  var zoomed = function () { var w = document.getElementById('doc-wrap'); return w && w.classList.contains('zoom'); };
+  function fit() {
+    var fr = document.querySelector('#doc-stage iframe'), wrap = document.getElementById('doc-wrap'), st = document.getElementById('doc-stage');
+    if (!fr || !wrap) return;
+    var h = parseFloat(fr.style.height) || 1056;
+    var s = zoomed() ? Math.max(0.75, Math.min(1, (wrap.clientWidth) / 816 * 1.9)) : Math.min(1, wrap.clientWidth / 816);
+    st.style.transform = 'scale(' + s + ')';
+    st.style.width = (816 * s) + 'px';
+    st.style.height = (h * s) + 'px';
+    fr.parentNode.style.height = (h * s) + 'px';
+  }
+  // The document calls this once its fonts and pages are laid out
+  window.arcDocLoaded = function (win) {
+    var fr = document.querySelector('#doc-stage iframe');
+    if (!fr || fr.contentWindow !== win) return;
+    fr.style.height = win.document.documentElement.scrollHeight + 'px';
+    fit();
+  };
+  window.addEventListener('resize', fit);
+
+  document.getElementById('go-sign').addEventListener('click', function () {
+    if (!doc || doc.status !== 'open') return;
+    var i = doc.info || {};
+    ARCSign.open({
+      kicker: 'SIGN · ' + String(i.what || 'document').toUpperCase(), num: doc.num,
+      title: esc(i.heading || 'Your ' + (i.what || 'document')) + (i.name ? ' <span>for ' + esc(i.name) + '</span>' : ''),
+      summary: (i.summary || []).map(function (s) { return String(s).replace(/\*\*/g, ''); }),
+      amountLabel: i.amountLabel, amount: i.amount,
+      notice: (i.noticeParas || []).length ? '<b>' + esc(i.noticeTitle || 'Please read') + '</b>' + i.noticeParas.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') : '',
+      ack: i.ack || '',
+      role: 'Your signature', name: i.name || '',
+      confirmLabel: 'SIGN ' + String(i.what || 'document').toUpperCase(), skipLabel: 'BACK',
+      onSkip: function () { ARCSign.close(); },
+      onSign: submit
+    });
+  });
+
+  var sending = false;
+  function submit(res) {
+    if (sending) return;
+    sending = true;
+    var ok = document.getElementById('sg-ok'), hint = document.getElementById('sg-hint');
+    if (ok) { ok.disabled = true; ok.textContent = 'SENDING…'; }
+    if (hint) { hint.textContent = ''; hint.className = 'sg-hint'; }
+    var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    rpc('arc_sign_submit', { p_token: token, p_name: res.name, p_img: res.img, p_ack: res.ackRead || null, p_tz: tz, p_ua: navigator.userAgent || '' })
+      .then(function (r) {
+        sending = false;
+        if (r && r.ok) { doc.status = 'signed'; ARCSign.close(); showSigned(r.name, r.at, res.img); return; }
+        var why = r && r.why;
+        if (why === 'signed') { ARCSign.close(); doc.status = 'signed'; showSigned(r.name, r.at, null); return; }
+        if (why === 'void' || why === 'expired' || why === 'missing') { ARCSign.close(); load(); return; }
+        fail(why === 'name' ? 'Enter your full name.' : why === 'ack' ? 'Check the box: ' + (doc.info.ack || '') : why === 'image' ? 'Please sign again in the box above.' : 'That didn’t go through. Tap Sign again.');
+      }, function () {
+        sending = false;
+        fail(navigator.onLine === false ? 'No connection. Check your signal and tap Sign again.' : 'That didn’t go through. Tap Sign again.');
+      });
+    function fail(msg) {
+      if (ok) { ok.disabled = false; ok.textContent = 'SIGN ' + String((doc.info && doc.info.what) || 'document').toUpperCase(); }
+      if (hint) { hint.textContent = msg; hint.style.color = '#8A2E26'; hint.style.fontWeight = '600'; }
+    }
+  }
+
+  window.addEventListener('hashchange', function () { token = String(location.hash || '').replace(/^#/, '').replace(/^t=/, '').trim(); load(); });
+  load();
+})();
+</script>
+</body>
+</html>

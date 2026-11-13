@@ -1204,9 +1204,10 @@
     .proposal-btn { border-radius: 14px; min-height: 50px; font-size: 15px; letter-spacing: .14em; padding: 12px 18px 10px; justify-content: center; }
     .x-row, .jc-card, .ins-card { border-radius: 16px; border-color: rgba(28,26,24,.1); }
     .sort-toggle { border-radius: 14px; min-height: 52px; background: rgba(240,200,194,.18); letter-spacing: .18em; }
-    #calc-total { font-size: 26px !important; }
+    #calc-total { font-size: clamp(20px, 6.2vw, 26px) !important; width: auto !important; min-width: 0; white-space: nowrap; text-align: right; flex-shrink: 0; }
     /* The form must never slide sideways: nothing in it may be wider than the screen */
-    #form-area { overflow-x: hidden; overscroll-behavior-x: none; }
+    #form-area { overflow-x: hidden; overscroll-behavior-x: none; touch-action: pan-y; }
+    #detail, #main { overflow-x: hidden; }
     #pipeline, .form-section { min-width: 0; max-width: 100%; }
     .price-row { min-width: 0; }
     .price-row .price-amount[style*="margin-left:auto"] { width: auto; min-width: 68px; text-align: right; white-space: nowrap; flex-shrink: 0; }

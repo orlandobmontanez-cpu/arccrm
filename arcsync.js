@@ -375,6 +375,9 @@
     syncNow: function () { return cycle(); },
     applyWhenReady: function () { schedule(50); },
     status: getStatus,
-    onStatus: function (f) { listeners.push(f); try { f(getStatus()); } catch (e) {} }
+    onStatus: function (f) { listeners.push(f); try { f(getStatus()); } catch (e) {} },
+    // Signed-in REST call for other tables (online signing: arc_sign). Rejects 'signed-out' when not signed in.
+    rest: function (path, opts) { return api(path, opts); },
+    missingTable: missingTable
   };
 })();

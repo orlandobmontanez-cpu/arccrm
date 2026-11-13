@@ -109,22 +109,52 @@
       r.readAsDataURL(file);
     });
   }
+  // HTML version of the message: same words, paragraphs kept, the sign-online link shown as a button
+  function htmlBody(text, signUrl) {
+    function e(x) { return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function link(x) { return e(x).replace(/https?:\/\/[^\s<]+/g, function (u) { return '<a href="' + u + '" style="color:#974930">' + u + '</a>'; }); }
+    var url = e(signUrl);
+    var button = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 6px"><tr>' +
+      '<td style="background:#974930;border-radius:6px"><a href="' + url + '" style="display:inline-block;padding:15px 28px;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;letter-spacing:1.5px;color:#ffffff;text-decoration:none">REVIEW &amp; SIGN ONLINE</a></td>' +
+      '</tr></table><div style="font-size:12px;color:#6B6560;margin-bottom:4px">Button not working? Open this link: <a href="' + url + '" style="color:#974930;word-break:break-all">' + url + '</a></div>';
+    var paras = String(text).replace(/\r\n/g, '\n').split(/\n{2,}/).map(function (p) {
+      var lines = p.split('\n');
+      if (lines.some(function (l) { return l.trim() === signUrl; })) {
+        var rest = lines.filter(function (l) { return l.trim() !== signUrl; });
+        return (rest.length ? '<p style="margin:0 0 8px">' + rest.map(link).join('<br>') + '</p>' : '') + button;
+      }
+      return '<p style="margin:0 0 14px">' + lines.map(link).join('<br>') + '</p>';
+    });
+    return '<!DOCTYPE html><html><body style="margin:0;padding:0"><div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#1C1A18;max-width:600px">' +
+      paras.join('') + '</div></body></html>';
+  }
   function buildRaw(m) {
     return fileB64(m.file).then(function (pdf) {
       var bd = 'arc_' + Date.now().toString(36) + Math.random().toString(36).slice(2);
       var name = (m.file.name || 'document.pdf').replace(/[\r\n"]/g, '');
       var asciiName = name.replace(/[^\x20-\x7E]/g, '-');
+      var text = ['Content-Type: text/plain; charset="UTF-8"', 'Content-Transfer-Encoding: base64', '', wrap76(b64utf8(m.body))];
+      // With a sign-online link: plain text + an HTML version where the link is a REVIEW & SIGN button
+      var html = m.signUrl && m.body.indexOf(m.signUrl) > -1 ? htmlBody(m.body, m.signUrl) : '';
+      var alt = bd + '_alt';
+      var bodyPart = html ? [
+        'Content-Type: multipart/alternative; boundary="' + alt + '"',
+        '',
+        '--' + alt].concat(text, [
+        '--' + alt,
+        'Content-Type: text/html; charset="UTF-8"',
+        'Content-Transfer-Encoding: base64',
+        '',
+        wrap76(b64utf8(html)),
+        '--' + alt + '--',
+        '']) : text;
       var mime = [
         'To: ' + m.to].concat(m.cc ? ['Cc: ' + m.cc] : [], m.bcc ? ['Bcc: ' + m.bcc] : [], [
         'Subject: ' + hdr(m.subject),
         'MIME-Version: 1.0',
         'Content-Type: multipart/mixed; boundary="' + bd + '"',
         '',
-        '--' + bd,
-        'Content-Type: text/plain; charset="UTF-8"',
-        'Content-Transfer-Encoding: base64',
-        '',
-        wrap76(b64utf8(m.body)),
+        '--' + bd], bodyPart, [
         '--' + bd,
         'Content-Type: application/pdf;',
         ' name="' + asciiName + '"',
@@ -325,6 +355,7 @@
       '<label class="am-l" for="am-body">MESSAGE</label>' +
       '<textarea class="am-f" id="am-body">' + esc(o.body || '') + '</textarea>' +
       '<div class="am-att">📎 <span>' + esc(o.file.name) + '</span><em style="font-style:normal;color:#6B655E">' + kb(o.file.size) + '</em></div>' +
+      (o.signUrl ? '<div class="am-att" style="border-style:solid;background:#FDFBF8">✍ <span>Includes a <b>Review &amp; Sign Online</b> button. Their signature comes back to the CRM.</span></div>' : '') +
       '<div class="am-msg" id="am-msg" role="status" aria-live="polite">' + (o.to ? '' : 'No email on file for this customer. Type it above.') + '</div>' +
       '<button type="button" class="am-send" data-am="send" id="am-send">SEND</button>' +
       '<button type="button" class="am-alt" data-am="alt">Use the Mail app instead</button>';
@@ -369,7 +400,7 @@
     var pass = null;
     requestToken().then(function (p) {
       pass = p;
-      return buildRaw({ to: addr, cc: cc.join(', '), bcc: bcc, subject: su.value.trim(), body: bo.value, file: o.file }).then(function (raw) { return gmailSend(p.token, raw); });
+      return buildRaw({ to: addr, cc: cc.join(', '), bcc: bcc, subject: su.value.trim(), body: bo.value, file: o.file, signUrl: o.signUrl || '' }).then(function (raw) { return gmailSend(p.token, raw); });
     }).then(function (res) {
       close();
       if (o.onSent) o.onSent({ to: addr, cc: cc.join(', '), bcc: bcc, subject: su.value.trim(), id: res && res.id });

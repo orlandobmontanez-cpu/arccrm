@@ -14,6 +14,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   street map); everything else on it works offline. ZIP centers for the 870/871/875 areas are bundled in the page.
   Close rate = Signed + In Production + Closed ÷ (those + Declined). Amounts are before tax: (materials+labor+other)×(1+margin) − discount.
   Tapping a job opens `./?open=<customer id>` in the CRM.
+- `sign.html` is the **customer signing page** (online signing, below). It is standalone on purpose: it never loads
+  `arcsync.js`/`arcmail.js` and never reads or writes localStorage, so a customer opening it can't touch CRM data.
 - Never add copies of the app to this repo (old ones were deleted): any page on this site shares `localStorage` with the live app
   and an old copy would overwrite `arc_v3` in an old format if opened.
 - `manifest.webmanifest` **must keep `"display": "browser"`. Never change it to `"standalone"`**: on iOS a standalone home-screen app
@@ -119,8 +121,12 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   `requestAccessToken` must run inside the tap (pop-up rules), so the PDF and the Google script are prepared beforehand.
   No client secret or refresh token anywhere. If `CLIENT_ID` is empty, `ARCMail.enabled` is false and the Mail-app flow runs.
 - Message = RFC 822 multipart/mixed built by hand (base64 body + PDF, RFC 2047 folded subject) → `users/me/messages/send` `{ raw }`.
+  When `compose` gets `signUrl` and the message still contains that link, the body is multipart/alternative: the plain text
+  plus an HTML copy (`htmlBody`) where the link line becomes a copper **REVIEW & SIGN ONLINE** button.
 - "Use the Mail app instead" in the sheet runs the older flow below. Sends are logged in the customer's activity log
   (the receipt page writes the log entry straight into `arc_v3`).
+- **One inbox only:** everything goes to and from orlando.montanez@agencyroofingco.com (Orlando's choice, Nov 2026). Never route
+  customers, DocuSign or notifications to agencyroofingco@gmail.com.
 - Proposal subject/message wording comes from `pvMail` (don't change without asking). Receipt subject:
   "[Name], your Agency Roofing Co. receipt for [address] · [number]".
 
@@ -164,7 +170,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   Layout is locked: stone page edge to edge, 1.2pt Ink rule 0.25in in + 0.6pt #C97E78 rule inside it, content 0.6in in,
   signatures + footer pinned to the bottom, poppy bottom-right above the footer rule.
 - Every document must print on **one US Letter page**. Check with a print render after any change. If content truly overflows,
-  `ARC_DOC_PAGINATE` moves whole blocks/bullets to page 2 (never splits a line item, the pricing card or signatures).
+  `ARC_DOC_PAGINATE` first tries About This Repair in the scope column, then `html.tight` (slightly smaller spacing), then moves whole blocks/bullets to page 2 (never splits a line item, the pricing card or signatures).
 - Documents open in the inline preview (`openPreview`), which builds the PDF in the background so **Email** and **Save PDF** work in one tap.
   Both call `navigator.share({ files })` with the PDF only — any title/text makes iOS "Save to Files" add a stray .txt.
   **Email** = Orlando's original email, restored on purpose: after the PDF is saved it opens `mailto:` with To = customer email,
@@ -184,6 +190,29 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - `ARCSign` (shared by both pages) = in-person signature pad: ink + printed name + consent checkbox required.
 - Each signed item stores `sig: { customer, contractor, docId }`. `docId` fingerprints the scope and price. If they change, the signature no longer prints and the UI shows "Edited after signing". Keep this rule.
 - Signing sets status: proposal → stage Signed, quote → Accepted, change order → Approved.
+- **Online signing** (`supabase/sign.sql` + `sign.html` + the ONLINE SIGNING section in `index.html`, `rs*` functions):
+  - Previewing an unsigned proposal/quote/change order while signed in to Cloud Sync makes (or reuses, same `docId`) a request in
+    table **`arc_sign`**: 48-hex random token, `cid`, `kind` (proposal|quote|co), `item`, `num`, `doc_id`, `info` (customer-facing only:
+    the document HTML, scope bullets, amount, terms, About This Repair + ack). Older open requests for that document are set `void`.
+  - The email (`pvMail`) then says they can review and sign online and includes `sign.html#<token>`; without a link it keeps the
+    original wording. Preview also has **SIGN ON THEIR PHONE** (QR + Text link + Copy) and so does each signature area.
+  - The public page can't read the table (RLS, `anon` revoked). It only calls `arc_sign_get(token)` (also records views) and
+    `arc_sign_submit(...)` (once; checks name, PNG, ack; server sets time + IP; `method: 'Signed online'`).
+  - `rsPoll` (load, every 45 s, after sync, on return to the app) applies signed requests exactly like in-person signing
+    (stage → Signed / Accepted / Approved, auto-countersign), logs it, shows a banner, then sets `applied = true`. It waits while
+    that customer is being edited. If the document was edited after sending, the signature is saved but shows "Edited after signing".
+  - When a returned signature moves the job (Signed / Accepted / Approved), `celebrate()` drops brand-color confetti from the top
+    (canvas, ~4 s, no taps blocked, skipped with Reduce Motion). Orlando asked for it; only automatic moves trigger it, not in-person signing.
+  - **Signed alerts + Drive copy (works with the CRM closed):** right after signing, `sign.html` fills the document's own
+    signature block (`info.sigTpl`, made by `rsSigTemplate` from `docSigSection` with ⟦NAME⟧ ⟦IMG⟧ ⟦DAY⟧ ⟦STAMP⟧ ⟦IP⟧ blanks,
+    swapped in between the `<!--arc-sig-->` markers in `docShell`), renders the signed PDF with html2canvas + jsPDF and saves it
+    with `arc_sign_attach` (once, ≤30 min after signing); the customer also gets DOWNLOAD YOUR SIGNED COPY.
+    `apps-script/SignedAlerts.gs` runs every minute in Orlando's Google account: reads `arc_sign_outbox(ARC_KEY)` (waits up to
+    3 min for the PDF), files it in Drive › Agency Roofing › Customers › `info.driveFolder` (found by name: Apps Script can't see the
+    CRM's appProperties), emails orlando.montanez@agencyroofingco.com from a no-reply agencyroofingco.com address with the PDF,
+    then `arc_sign_notified`. ARC_KEY lives in `arc_secret` (no API access) and in the script's Script Properties, never in the repo.
+  - Signing in person voids open links for that document (`rsVoid`). Nothing new is stored on the phone; requests live in Supabase.
+  - `sign.html` contains a copy of `ARCSign` — keep it in step with `index.html`.
 - Pay Online: Stripe Payment Link from Settings (or per-customer `payLink`). A QR code (bundled MIT `qrcode-generator`) prints for the 50% deposit, change order amount, or receipt balance due. No QR on credits.
 
 ## iPhone Safari rules (learned the hard way)
@@ -205,6 +234,9 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - Playwright with Chromium at 390×844 (phone). Chromium is at `/opt/pw-browsers/chromium`.
 - Paste-to-Sort parser unit tests: `node tests/sort-it.test.js`. Add a sample when you fix a parsing case.
 - Receipt reader unit tests: `node tests/read-receipt.test.js` (text as Google returns it). Add a sample when you fix a case.
+- Online signing: `python3 tests/online-sign.test.py` (fake Supabase + Gmail; needs html2canvas/jsPDF and the brand fonts served locally
+  when cdnjs/Google Fonts are blocked — see the top of the file).
+- Signed alerts (Apps Script with fake Gmail/Drive/Supabase): `node tests/signed-alerts.test.js`.
 - Run the flows you touched end to end, check there are zero JavaScript errors, and print-render each affected document to confirm it is still one page.
 - Tell Orlando in one line what changed and what to tap on his phone to check it.
 
@@ -212,7 +244,9 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 - Confirm the gross receipts tax rate; add the NM license number to documents once issued.
 - Have an attorney review the warranty exclusions and e-signature consent wording.
-- Remote (not in-person) signing: build on the Supabase project (multi-device sync is done).
+- Signed alerts are LIVE (set up Nov 12 2026): `supabase/sign.sql` run in Supabase; Apps Script project **ARC Signed Alerts** in
+  orlando.montanez@agencyroofingco.com's Google account, every-minute trigger on `checkSigned`, ARC_KEY in its Script Properties.
+  Tested end to end (email from noreply@agencyroofingco.com + Drive filing). If the code changes, paste the new file into that project.
 - Scheduled / automatic follow-up emails (no tap) would need server-side sending (Supabase Edge Function + stored Google
   refresh token). Not built; current sending is tap → review → Send from the browser.
 
@@ -223,5 +257,5 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - `forms/insurance-repair-agreement.docusign.json` holds the tab layout (points, top-left origin). Always give text tabs
   an explicit `width`/`height` from that file; without them DocuSign shrinks them to a tiny square over the label.
 - Send: Gerald-style envelope = customer signer (routing 1: text tabs on page 1, signHere + dateSigned on the Homeowner
-  line, page 2) then Orlando `agencyroofingco@gmail.com` (routing 2: signHere + dateSigned on the contractor line).
+  line, page 2) then Orlando `orlando.montanez@agencyroofingco.com` (routing 2: signHere + dateSigned on the contractor line).
   Pre-fill Homeowner, Email and Company Representative = "Orlando Montanez" as locked tabs.

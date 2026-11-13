@@ -244,7 +244,9 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 - Confirm the gross receipts tax rate; add the NM license number to documents once issued.
 - Have an attorney review the warranty exclusions and e-signature consent wording.
-- Signed alerts need the one-time Apps Script setup (steps at the top of `apps-script/SignedAlerts.gs`).
+- Signed alerts are LIVE (set up Nov 12 2026): `supabase/sign.sql` run in Supabase; Apps Script project **ARC Signed Alerts** in
+  orlando.montanez@agencyroofingco.com's Google account, every-minute trigger on `checkSigned`, ARC_KEY in its Script Properties.
+  Tested end to end (email from noreply@agencyroofingco.com + Drive filing). If the code changes, paste the new file into that project.
 - Scheduled / automatic follow-up emails (no tap) would need server-side sending (Supabase Edge Function + stored Google
   refresh token). Not built; current sending is tap → review → Send from the browser.
 

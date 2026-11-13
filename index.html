@@ -754,6 +754,8 @@
   .bi-log span { display: block; font-size: 10.5px; color: var(--ink-muted); }
   .b-void { display: block; width: 100%; min-height: 48px; margin-top: 18px; border: 1px solid rgba(139,32,32,0.3); border-radius: 6px; background: transparent; color: var(--danger); font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.12em; cursor: pointer; }
   .b-void.armed { background: var(--danger); color: var(--white); }
+  .b-void.b-restore { border-color: var(--copper); color: var(--copper); }
+  .b-void.b-restore.armed { background: var(--copper); color: var(--white); }
   #inv-foot:empty { display: none; }
 
   /* ── SIGNATURES & SETTINGS ── */
@@ -5023,6 +5025,7 @@ function invFormHtml(v) {
   }
   if (v.log.length) h += '<div class="form-section-title" style="margin-top:22px;">History</div><div class="bi-log">' + v.log.map(function (l) { return '<div><span>' + esc(l.ts) + '</span>' + esc(l.msg) + '</div>'; }).join('') + '</div>';
   if (v.status !== 'Void') h += '<button type="button" class="b-void" data-b="void">' + (v.status === 'Draft' && !v.payments.length ? 'DELETE THIS DRAFT' : 'VOID THIS INVOICE') + '</button>';
+  else h += '<button type="button" class="b-void b-restore" data-b="unvoid">RESTORE THIS INVOICE (UNDO VOID)</button>';
   return h;
 }
 function invFoot(v) {
@@ -5302,6 +5305,17 @@ function previewReceipt(pid) {
       if (dv && dv.status === 'Draft' && !dv.payments.length) { delete billing.inv[bv.invId]; saveBilling(); showToast(dv.num + ' DELETED · NUMBER NOT REUSED'); }
       else if (dv) { invRead(); bv.draft.status = 'Void'; invLog(bv.draft, 'Voided'); commitInvoice(); showToast(dv.num + ' VOID'); }
       bv.view = 'list'; renderBilling();
+    }
+    else if (a === 'unvoid') {
+      // Undo a void: the invoice goes back to Sent (or Draft if it was never sent). Payments and history are kept.
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'TAP AGAIN TO RESTORE ' + bv.draft.num; b.classList.add('armed'); return; }
+      var rv = billing.inv[bv.invId];
+      if (rv && rv.status === 'Void') {
+        bv.draft.status = bv.draft.sentAt ? 'Sent' : 'Draft';
+        invLog(bv.draft, 'Restored (void undone)');
+        commitInvoice(); showToast(rv.num + ' RESTORED');
+      }
+      renderBilling();
     }
   });
   sheet.addEventListener('input', function (e) {

@@ -229,6 +229,37 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - Tagline: "Built with agency. Driven by obligation."
 - Shield mark: double hexagon, three-tone copper A, apex bead, **solid** base bar. Always paired with the wordmark on documents; full color; no background box behind it.
 
+## Premium look + motion layer (Nov 13 2026) — restyle only, no feature or data changes
+
+Orlando approved a design canvas and a motion demo, then asked for them built. The whole thing is a **layer on top**:
+one `PREMIUM LAYER` CSS block at the end of the main `<style>` in `index.html` and `board.html` (inside `@media screen`, so printed
+documents and PDFs are untouched) and one `PREMIUM LAYER` `<script>` at the end of each page. It reads and writes **no stored data**.
+
+- **Stone is the main ground** (he finds it calming). Customers screen: full-color lockup + tagline on stone, the dark list rises
+  below it as a rounded sheet (`#list-sheet`). Stage filter is tap chips (`#stage-chips`) that drive the original `#stage-select`,
+  which stays in the page as the source of truth. Job Board / Inspections / Invoices are three tiles. New Customer floats at the bottom.
+- **Export Backup, Settings, Import** are the same three `#sidebar-footer` controls, now a menu that rises when you tap the
+  top-right button (`#btn-menu`). The old ⬇ ⬆ icon buttons are still in the page but hidden.
+- Customer rows show the before-tax price (`priceOf(c, 0).sub`) and a stage pill (`sp-<stage>`); rows carry `data-id`.
+- Customer file: name in Anton caps, `#pipeline` moved **inside `#form-area`** so it scrolls with the form (the name + SAVE stay
+  pinned). Pipeline is a six-step bar (`.pip-seg`); Declined is shown as a state, not a step. NEXT reads "NEXT: SIGNED →".
+  Form sections are white cards. Emoji were removed from button labels (text unchanged otherwise).
+- **Topographic lines:** one top-right corner of the customer file only, faint copper. **Sandia ridge:** only on the Job Board
+  greeting card. Do not add either anywhere else (he finds more too busy). Buttons stay flat copper, no metal sheen.
+- **Motion** (flowing water: quick start, soft settle, `cubic-bezier(.22,1,.36,1)`, about half a second):
+  phone only, the customer file glides in from the right over the list (`#main` is always `display:flex` now and slides with
+  `transform`; `#sidebar.hidden` shifts back 28% and dims via `#list-dim`); the tapped name flows up into the title (`morphName`);
+  cards ripple in; swipe right to go back (starts 24px+ from the edge so it never fights Safari's own back swipe; ignored on
+  inputs, canvases/signature pads and anything that scrolls sideways); sheets and pop-ups rise; Job Board numbers count up;
+  pages cross-fade (`@view-transition`). Nothing waits on an animation, and everything is skipped under Reduce Motion.
+- **Shield glint:** one band of light crosses the header shield **right to left**, once per browser session (`sessionStorage`
+  `arc_glint`), then never again. The shield itself never moves. He wants it to "hold its ground".
+- **Haptic taps:** a light tap on every button press (`tap()` / `window.ARCTap`). iPhone Safari has no vibration API; this toggles
+  a hidden `<input type="checkbox" switch>` (iOS 18+), an unofficial trick Apple could remove. If it stops working nothing else
+  changes. Android uses `navigator.vibrate(8)`.
+- Not built, his call still open: "Dusk" dark variant (he said leave it for now).
+- When adding screens or buttons, style them inside the layer and keep to these rules.
+
 ## Testing before every push
 
 - Playwright with Chromium at 390×844 (phone). Chromium is at `/opt/pw-browsers/chromium`.

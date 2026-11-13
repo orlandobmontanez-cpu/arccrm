@@ -1025,6 +1025,238 @@
     border-left: 3px solid var(--copper);
   }
   #toast.show { transform: translateX(-50%) translateY(0); }
+
+  @view-transition { navigation: auto; }
+  /* ══ PREMIUM LAYER (Nov 2026) ══════════════════════════════════════════
+     Look + motion only. No feature or data changes. Brand colors and fonts
+     only. Everything here is screen-only so printed documents are untouched. */
+  @media screen {
+    :root {
+      --ease: cubic-bezier(.22, 1, .36, 1);
+      --t-push: .48s;
+      --mut: #5E5852;
+      --mutd: #A8A198;
+      --card-shadow: 0 1px 2px rgba(28,26,24,.05), 0 12px 28px rgba(28,26,24,.06);
+    }
+
+    /* ── Customers: lockup on stone, dark list rising as a sheet ── */
+    #sidebar { background: var(--stone); }
+    #sidebar-header {
+      position: relative; border-bottom: 0; overflow: hidden;
+      padding: calc(22px + env(safe-area-inset-top, 0px)) 20px 16px;
+      display: grid; grid-template-columns: 1fr auto; gap: 10px 12px; align-items: center;
+    }
+    .brand-lockup, .hd-btn, .brand-tag { position: relative; z-index: 1; }
+    .shield-mark { width: 46px; height: 46px; filter: none; }
+    .brand-agency { color: var(--ink); font-size: 28px; line-height: 1; }
+    .brand-roofing { font-size: 12.5px; letter-spacing: .34em; margin-top: 3px; }
+    .brand-tag { grid-column: 1 / -1; font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 14px; color: var(--mut); line-height: 1.3; }
+    .hd-btn {
+      width: 46px; height: 46px; border-radius: 999px; border: 1px solid var(--stone-dark); background: var(--white); color: var(--ink);
+      display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 1px 2px rgba(28,26,24,.06);
+    }
+    .hd-btn svg { width: 20px; height: 20px; display: block; }
+    .topo { position: absolute; top: 0; right: 0; width: 200px; height: 183px; pointer-events: none; z-index: 0; opacity: .2; }
+
+    #list-sheet {
+      flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden;
+      background: var(--ink); border-radius: 26px 26px 0 0; padding-top: 18px; box-shadow: 0 -10px 30px rgba(28,26,24,.18);
+    }
+    #sidebar-actions {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; pointer-events: none;
+      padding: 40px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+      background: linear-gradient(to bottom, rgba(28,26,24,0), var(--ink) 46%);
+    }
+    #sidebar-actions .btn-new {
+      pointer-events: auto; height: 58px; min-height: 58px; border-radius: 18px; font-size: 18px; letter-spacing: .2em;
+      display: flex; align-items: center; justify-content: center; gap: 10px; padding: 2px 12px 0;
+      box-shadow: 0 10px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(240,200,194,.35);
+    }
+    #sidebar-actions .btn-new svg { width: 18px; height: 18px; margin-top: -2px; }
+    #sidebar-actions .btn-icon { display: none; }
+    #backup-banner, .sync-line { border-radius: 14px; }
+    #search { min-height: 50px; border-radius: 14px; font-size: 15px; padding: 0 16px; }
+    #search::placeholder { color: var(--mutd); }
+    #stage-filter { display: none; }
+    #stage-chips { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 12px; flex-shrink: 0; scrollbar-width: none; }
+    #stage-chips::-webkit-scrollbar { display: none; }
+    .stage-chip {
+      font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: .14em; height: 44px; padding: 2px 16px 0; border-radius: 999px;
+      white-space: nowrap; flex-shrink: 0; cursor: pointer; background: transparent; color: var(--stone-light);
+      border: 1px solid rgba(234,228,218,.22); transition: background-color .3s, color .3s, border-color .3s, transform .18s var(--ease);
+    }
+    .stage-chip.on { background: var(--stone); color: var(--ink); border-color: var(--stone); }
+    #ins-wrap { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0 16px 14px; }
+    .btn-ins, .btn-inv {
+      grid-column: auto; position: relative; flex-direction: column; align-items: flex-start; justify-content: space-between;
+      height: 76px; min-height: 76px; padding: 12px 12px 10px; border-radius: 16px; text-decoration: none; gap: 0;
+      font-size: 14px; letter-spacing: .14em; line-height: 1; background: rgba(234,228,218,.06);
+    }
+    .btn-ins svg { width: 20px; height: 20px; color: var(--copper-mid); display: block; }
+    .btn-ins .ins-count { position: absolute; top: 10px; right: 10px; letter-spacing: .04em; }
+    #customer-list { padding: 0 0 130px; }
+    .customer-card {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 80px;
+      padding: 14px 18px; border-bottom: 1px solid rgba(234,228,218,.09); transition: background-color .2s;
+    }
+    .cc-l { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .cc-r { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+    .card-name { font-size: 16px; font-weight: 600; color: var(--stone-light); line-height: 1.2; }
+    .card-address { font-size: 13px; color: var(--mutd); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+    .card-meta { margin-top: 2px; }
+    .card-tag, .in-progress-tag { font-size: 11px; }
+    .card-tag.follow-tag { border-radius: 999px; padding: 4px 8px 3px; color: var(--stone-light); }
+    .cc-amt { font-family: 'Anton', sans-serif; font-size: 19px; color: var(--stone); line-height: 1; letter-spacing: .01em; }
+    .cc-nq { font-size: 13px; color: var(--mutd); line-height: 19px; }
+    .stage-pill {
+      font-size: 12px; letter-spacing: .14em; line-height: 1; padding: 6px 9px 5px; border-radius: 999px; white-space: nowrap;
+      border: 1px solid transparent; background: transparent;
+    }
+    .stage-pill.sp-lead { border-color: rgba(234,228,218,.28); color: var(--mutd); }
+    .stage-pill.sp-inspected { border-color: rgba(234,228,218,.5); color: var(--stone); }
+    .stage-pill.sp-proposed { background: rgba(240,200,194,.16); color: var(--copper-light); }
+    .stage-pill.sp-signed { background: var(--copper); border-color: var(--copper); color: var(--stone-light); }
+    .stage-pill.sp-in-production { background: var(--stone); border-color: var(--stone); color: var(--ink); }
+    .stage-pill.sp-closed { background: rgba(234,228,218,.08); border-color: rgba(234,228,218,.16); color: var(--mutd); }
+    .stage-pill.sp-declined { border-color: rgba(201,126,120,.5); color: var(--copper-mid); background: transparent; }
+    .no-customers { color: var(--mutd); }
+
+    /* Settings / Export / Import: one menu behind the top-right button */
+    #list-dim, #menu-scrim { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; }
+    #list-dim { z-index: 40; }
+    #menu-scrim { z-index: 29; transition: opacity .4s var(--ease); }
+    #sidebar.menu-open #menu-scrim { opacity: .5; pointer-events: auto; }
+    #sidebar-footer {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 30; border-top: 0;
+      background: var(--stone); border-radius: 26px 26px 0 0; box-shadow: 0 -20px 50px rgba(0,0,0,.35);
+      padding: 10px 18px calc(22px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 10px;
+      transform: translateY(105%); visibility: hidden; transition: transform .5s var(--ease), visibility 0s linear .5s;
+    }
+    #sidebar.menu-open #sidebar-footer { transform: none; visibility: visible; transition: transform .5s var(--ease), visibility 0s; }
+    .menu-grab { width: 40px; height: 5px; border-radius: 999px; background: rgba(28,26,24,.22); margin: 0 auto 8px; flex: none; }
+    .btn-footer {
+      flex: none; width: 100%; min-height: 56px; border-radius: 16px; background: var(--white); border: 1px solid var(--stone-dark);
+      color: var(--ink); font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: .18em; padding: 2px 12px 0;
+    }
+    .btn-footer:hover { background: var(--white); color: var(--ink); }
+
+    /* ── Customer file ── */
+    #main { background: var(--stone); position: relative; }
+    #mobile-back, #detail { position: relative; z-index: 1; }
+    #mobile-back {
+      background: transparent; border-bottom: 0; color: var(--copper); font-size: 15px; letter-spacing: .18em; gap: 4px;
+      min-height: 48px; padding: calc(6px + env(safe-area-inset-top, 0px)) 16px 0;
+    }
+    #mobile-back svg { width: 18px; height: 18px; display: block; margin-top: -2px; }
+    #detail-header { background: transparent; border-bottom: 0; padding: 14px 18px 12px; }
+    .detail-top { align-items: flex-start; }
+    .detail-name { font-size: 34px; text-transform: uppercase; letter-spacing: .01em; line-height: 1.04; overflow-wrap: anywhere; }
+    .detail-arc { font-size: 13px; letter-spacing: .2em; margin-top: 6px; }
+    .detail-addr { font-size: 14px; color: var(--mut); margin-top: 4px; line-height: 1.4; }
+    .pip-btn.hd-save { height: 46px; min-height: 46px; padding: 2px 20px 0; border-radius: 999px; font-size: 15px; letter-spacing: .2em; }
+    .pip-btn.hd-del {
+      width: 46px; height: 46px; min-height: 46px; padding: 0; border-radius: 999px; display: flex; align-items: center; justify-content: center;
+      background: var(--white); border: 1px solid var(--stone-dark); color: var(--danger);
+    }
+    .hd-del svg { width: 19px; height: 19px; display: block; }
+
+    #form-area { padding: 4px 14px calc(40px + env(safe-area-inset-bottom, 0px)); }
+    #pipeline, .form-section {
+      background: var(--white); border: 1px solid rgba(28,26,24,.06); border-radius: 22px; padding: 18px 16px;
+      margin: 0 0 14px; box-shadow: var(--card-shadow);
+    }
+    .form-section-title { border-bottom: 0; padding-bottom: 0; font-size: 13px; letter-spacing: .2em; margin-bottom: 14px; }
+    .pip-head { display: flex; justify-content: space-between; align-items: baseline; }
+    .pip-head .form-section-title { margin-bottom: 0; }
+    .pip-step { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 13px; color: var(--mut); }
+    .pip-step.declined { color: var(--danger); }
+    .pipeline-stages { display: block; overflow: visible; padding: 0; margin-top: 16px; }
+    .pip-track, .pip-labs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
+    .pip-seg { height: 6px; border-radius: 999px; background: var(--stone-dark); overflow: hidden; }
+    .pip-seg b { display: block; height: 100%; border-radius: 999px; background: var(--copper); transform: scaleX(0); transform-origin: 0 50%; }
+    .pip-seg.done b { transform: none; }
+    .pip-seg.current b { transform: none; animation: arcFill .52s var(--ease) backwards; }
+    .pip-labs { margin-top: 9px; }
+    .pip-label {
+      font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: .04em; line-height: 1.1; text-align: center;
+      white-space: nowrap; overflow: hidden; color: var(--mut); margin: 0; padding: 0; max-width: none; width: auto;
+    }
+    .pip-label.done { color: var(--ink); }
+    .pip-label.current { color: var(--copper); }
+    #pipeline-controls { display: grid; grid-template-columns: 54px 1fr 1fr; gap: 8px; margin-top: 18px; }
+    #pipeline-controls .pip-btn { height: 52px; min-height: 52px; border-radius: 16px; font-size: 16px; letter-spacing: .14em; padding: 2px 10px 0; margin: 0 !important; white-space: nowrap; }
+    #pipeline-controls .pip-btn-back { display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 1px solid var(--stone-dark); color: var(--ink); }
+    #pipeline-controls .pip-btn-back svg { width: 18px; height: 18px; display: block; }
+    #pipeline-controls .pip-btn-next { grid-column: 2 / 4; box-shadow: 0 8px 18px rgba(151,73,48,.28), inset 0 1px 0 rgba(240,200,194,.35); }
+    #pipeline-controls .pip-btn-next:disabled { box-shadow: none; }
+    #pipeline-controls .pip-btn-save { grid-column: 1 / 3; }
+    #pipeline-controls .pip-btn-decline { background: transparent; border: 1px solid var(--stone-dark); }
+
+    input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="date"], input[type="password"], select, textarea {
+      border-radius: 12px; background: #F8F5EF; border-color: var(--stone-dark);
+    }
+    input[type="password"] {
+      border: 1px solid var(--stone-dark); color: var(--ink); font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 11px; outline: none; width: 100%;
+    }
+    #sidebar #search { background: rgba(234,228,218,.07); border-color: rgba(234,228,218,.12); }
+    .btn-ins .bi-t { white-space: nowrap; }
+    #form-area label { letter-spacing: .12em; }
+    .proposal-btn { border-radius: 14px; min-height: 50px; font-size: 15px; letter-spacing: .14em; padding: 12px 18px 10px; justify-content: center; }
+    .x-row, .jc-card, .ins-card { border-radius: 16px; border-color: rgba(28,26,24,.1); }
+    .sort-toggle { border-radius: 14px; min-height: 52px; background: rgba(240,200,194,.18); letter-spacing: .18em; }
+    #calc-total { font-size: 26px !important; }
+    .contract-strip { border-radius: 14px; }
+    .proposal-section, .sgn-box, .xe-calc { border-radius: 16px; }
+    .xe-seg button, .xe-status button, .bl-chip, .ex-3 button { border-radius: 12px; }
+
+    /* Pop-ups rise and settle */
+    #modal-overlay.active { animation: arcFade .3s ease backwards; }
+    #modal-overlay.active #modal-box { animation: arcPop .42s var(--ease) backwards; }
+    #modal-box { border-radius: 24px; }
+    .modal-btn { border-radius: 14px; min-height: 50px; }
+    .x-sheet.active, #x-editor.active { animation: arcSheet .52s var(--ease) backwards; }
+    @keyframes arcSheet { from { transform: translateY(100%); } to { transform: none; } }
+    @keyframes arcPop { from { transform: translateY(24px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+    @keyframes arcFade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes arcFill { from { transform: scaleX(0); } to { transform: none; } }
+
+    /* A press should feel like a press */
+    .btn-new, .pip-btn, .proposal-btn, .modal-btn, .btn-ins, .btn-footer, .hd-btn, .x-row { transition: transform .18s var(--ease), background-color .18s, opacity .2s; }
+    .btn-new:active, .pip-btn:active, .proposal-btn:active, .modal-btn:active, .btn-ins:active, .btn-footer:active, .hd-btn:active, .stage-chip:active { transform: scale(.97); }
+    .customer-card:active { background: rgba(234,228,218,.05); }
+
+    @media (min-width: 701px) {
+      .topo-main { opacity: .16; }
+      .btn-ins, .btn-inv { font-size: 12px; letter-spacing: .06em; padding: 12px 10px 10px; }
+      #mobile-back { display: none; }
+    }
+
+    /* Phone: pages glide. The customer file slides in over the list. */
+    @media (max-width: 700px) {
+      #sidebar { z-index: 20; transition: transform var(--t-push) var(--ease); }
+      #sidebar.hidden { transform: translateX(-28%); }
+      #list-dim { transition: opacity var(--t-push) var(--ease); }
+      #sidebar.hidden #list-dim { opacity: .45; }
+      #main {
+        display: flex; z-index: 25; transform: translateX(100%); visibility: hidden; box-shadow: -24px 0 48px rgba(0,0,0,.28);
+        transition: transform var(--t-push) var(--ease), visibility 0s linear var(--t-push);
+      }
+      #main.visible { transform: none; visibility: visible; transition: transform var(--t-push) var(--ease), visibility 0s; }
+      #main { touch-action: pan-y; }
+      #sidebar.arc-drag, #main.arc-drag, #sidebar.arc-drag #list-dim { transition: none !important; }
+      .detail-name { font-size: 34px; }
+      #form-area { padding: 4px 14px calc(40px + env(safe-area-inset-bottom, 0px)); }
+      #pipeline { padding: 18px 16px; }
+      #form-area input[type="text"], #form-area input[type="email"], #form-area input[type="tel"], #form-area input[type="number"],
+      #form-area input[type="date"], #form-area select, #form-area textarea { font-size: 16px; min-height: 48px; }
+      .price-row input { min-height: 44px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
+    }
+  }
+
 </style>
 <script src="arcsync.js"></script>
 <script src="arcmail.js"></script>
@@ -1045,6 +1277,8 @@
               <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
               <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
+          <clipPath id="aHex"><path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z"/></clipPath>
+            <linearGradient id="aGlint" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
           </defs>
           <path d="M50 4 L92 27 L92 73 L50 96 L8 73 L8 27 Z" fill="none" stroke="#1C1A18" stroke-width="1.8" opacity="0.85"/>
           <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="none" stroke="#C97E78" stroke-width="1.2"/>
@@ -1070,16 +1304,22 @@
           <line x1="31" y1="76" x2="69" y2="76" stroke="#1C1A18" stroke-width="0.9" opacity="0.28"/>
           <line x1="31" y1="74.5" x2="31" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"/>
           <line x1="69" y1="74.5" x2="69" y2="77.5" stroke="#C97E78" stroke-width="0.8" opacity="0.65"/>
+          <g clip-path="url(#aHex)"><rect id="shield-glint" x="-30" y="0" width="26" height="100" fill="url(#aGlint)" style="transform:translateX(160px) skewX(-18deg)"/></g>
         </svg>
         <div class="brand-text">
           <span class="brand-agency">AGENCY</span>
           <span class="brand-roofing">ROOFING CO.</span>
         </div>
       </div>
+      <button type="button" class="hd-btn" id="btn-menu" aria-label="Settings, backup and import" aria-expanded="false" aria-controls="sidebar-footer">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+      </button>
+      <div class="brand-tag">Built with agency. Driven by obligation.</div>
     </div>
 
+    <div id="list-sheet">
     <div id="sidebar-actions">
-      <button class="btn-new" id="btn-new-customer">+ NEW CUSTOMER</button>
+      <button class="btn-new" id="btn-new-customer"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>NEW CUSTOMER</span></button>
       <button class="btn-icon" id="btn-export-icon" title="Export backup">⬇</button>
       <label class="btn-icon" title="Import backup" style="cursor:pointer;">⬆<input type="file" accept=".json" id="import-file" style="display:none" onchange="importData(this)"></label>
     </div>
@@ -1108,15 +1348,22 @@
       </select>
     </div>
 
+    <div id="stage-chips" role="group" aria-label="Filter by stage"></div>
+
     <div id="ins-wrap">
-      <a class="btn-ins btn-board" id="btn-board" href="board.html">JOB BOARD</a>
-      <button class="btn-ins" id="btn-inspections" type="button">INSPECTIONS <span class="ins-count" id="ins-count"></span></button>
-      <button class="btn-ins btn-inv" id="btn-invoices" type="button">INVOICES <span class="ins-count" id="inv-count"></span></button>
+      <a class="btn-ins btn-board" id="btn-board" href="board.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="10" rx="1.5"/></svg><span class="bi-t">JOB BOARD</span></a>
+      <button class="btn-ins" id="btn-inspections" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 3h6v4H9zM9 13l2 2 4-4"/></svg><span class="bi-t">INSPECTIONS</span> <span class="ins-count" id="ins-count"></span></button>
+      <button class="btn-ins btn-inv" id="btn-invoices" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg><span class="bi-t">INVOICES</span> <span class="ins-count" id="inv-count"></span></button>
     </div>
 
     <div id="customer-list"></div>
+    </div><!-- /list-sheet -->
+
+    <div id="list-dim" aria-hidden="true"></div>
+    <div id="menu-scrim" aria-hidden="true"></div>
 
     <div id="sidebar-footer">
+      <div class="menu-grab" aria-hidden="true"></div>
       <button class="btn-footer" id="btn-export">EXPORT BACKUP</button>
       <button class="btn-footer" id="btn-settings" type="button">SETTINGS</button>
       <label class="btn-footer" style="cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center;">
@@ -1127,7 +1374,12 @@
 
   <!-- MAIN PANEL -->
   <div id="main">
-    <div id="mobile-back" onclick="mobileBack()">← BACK</div>
+    <svg class="topo topo-main" aria-hidden="true" viewBox="0 0 240 220">
+        <g fill="none" stroke="#974930" stroke-width="1">
+          <path d="M250 150 C 214 146, 196 120, 190 92 C 184 62, 160 44, 150 -10"/><path d="M250 176 C 204 172, 176 142, 168 106 C 160 70, 132 52, 122 -10"/><path d="M250 202 C 194 198, 156 164, 146 120 C 136 78, 104 60, 94 -10"/><path d="M250 124 C 224 120, 214 100, 210 80 C 206 56, 186 38, 178 -10"/><path d="M250 98 C 236 94, 230 80, 228 66 C 225 46, 212 30, 206 -10"/><path d="M250 70 C 244 62, 242 48, 240 36 C 238 22, 234 10, 232 -10"/>
+        </g>
+      </svg>
+    <div id="mobile-back" onclick="mobileBack()" role="button" tabindex="0"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><span>CUSTOMERS</span></div>
 
     <!-- Empty state -->
     <div id="empty-state">
@@ -1179,30 +1431,31 @@
             <div class="detail-addr" id="dh-addr">—</div>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start;flex-shrink:0;">
-            <button class="pip-btn pip-btn-save" onclick="saveCustomer()" style="padding:8px 14px;font-size:12px;">SAVE</button>
-            <button class="pip-btn pip-btn-decline" onclick="confirmDelete()" style="padding:8px 14px;font-size:12px;" title="Delete this customer">🗑</button>
+            <button class="pip-btn pip-btn-save hd-save" onclick="saveCustomer()">SAVE</button>
+            <button class="pip-btn pip-btn-decline hd-del" onclick="confirmDelete()" title="Delete this customer" aria-label="Delete this customer"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
           </div>
-        </div>
-      </div>
-
-      <!-- Pipeline bar -->
-      <div id="pipeline">
-        <div class="pipeline-stages" id="pipeline-bar"></div>
-        <div id="pipeline-controls">
-          <button class="pip-btn pip-btn-back" onclick="stageBack()">← BACK</button>
-          <button class="pip-btn pip-btn-next" id="btn-next" onclick="stageNext()">NEXT →</button>
-          <button class="pip-btn pip-btn-save" onclick="saveCustomer()">SAVE</button>
-          <button class="pip-btn pip-btn-decline" onclick="confirmDecline()">DECLINE</button>
         </div>
       </div>
 
       <!-- Form area -->
       <div id="form-area">
+      <!-- Pipeline bar -->
+      <div id="pipeline">
+        <div class="pip-head"><span class="form-section-title">Pipeline</span><span class="pip-step" id="pip-step"></span></div>
+        <div class="pipeline-stages" id="pipeline-bar"></div>
+        <div id="pipeline-controls">
+          <button class="pip-btn pip-btn-back" onclick="stageBack()" aria-label="Back one stage"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button class="pip-btn pip-btn-next" id="btn-next" onclick="stageNext()">NEXT</button>
+          <button class="pip-btn pip-btn-save" onclick="saveCustomer()">SAVE</button>
+          <button class="pip-btn pip-btn-decline" onclick="confirmDecline()">DECLINE</button>
+        </div>
+      </div>
+
         <!-- CONTACT INFO -->
         <div class="form-section">
           <div class="form-section-title">Contact Information</div>
           <div class="sort-box" id="sort-box">
-            <button type="button" class="sort-toggle" id="sort-toggle" aria-expanded="false" aria-controls="sort-panel">📋 PASTE CUSTOMER TEXT</button>
+            <button type="button" class="sort-toggle" id="sort-toggle" aria-expanded="false" aria-controls="sort-panel">PASTE CUSTOMER TEXT</button>
             <div class="sort-panel" id="sort-panel">
               <label for="sort-text">Paste customer text</label>
               <textarea id="sort-text" rows="6" autocomplete="off" placeholder="Paste a text message, email or web form. Sort It finds the name, phone, email and address."></textarea>
@@ -1383,7 +1636,7 @@
             <button type="button" data-fdays="0" class="clear">CLEAR</button>
           </div>
           <div class="maint-actions">
-            <a class="proposal-btn proposal-btn-secondary gcal-link" id="f-follow-gcal" href="#" target="_blank" rel="noopener" hidden>📅 ADD TO GOOGLE CALENDAR</a>
+            <a class="proposal-btn proposal-btn-secondary gcal-link" id="f-follow-gcal" href="#" target="_blank" rel="noopener" hidden>ADD TO GOOGLE CALENDAR</a>
           </div>
           <p class="xsec-note" style="margin-top:8px;">Shows on the Job Board under Today when it's due.</p>
         </div>
@@ -1397,7 +1650,7 @@
             </div>
           </div>
           <div class="maint-actions">
-            <a class="proposal-btn proposal-btn-secondary gcal-link" id="f-sched-gcal" href="#" target="_blank" rel="noopener" hidden>📅 ADD TO GOOGLE CALENDAR</a>
+            <a class="proposal-btn proposal-btn-secondary gcal-link" id="f-sched-gcal" href="#" target="_blank" rel="noopener" hidden>ADD TO GOOGLE CALENDAR</a>
           </div>
         </div>
 
@@ -1415,7 +1668,7 @@
             </div>
           </div>
           <div class="maint-actions">
-            <a class="proposal-btn proposal-btn-secondary gcal-link" id="f-gcal" href="#" target="_blank" rel="noopener">📅 ADD TO GOOGLE CALENDAR</a>
+            <a class="proposal-btn proposal-btn-secondary gcal-link" id="f-gcal" href="#" target="_blank" rel="noopener">ADD TO GOOGLE CALENDAR</a>
             <button type="button" class="proposal-btn proposal-btn-primary" id="f-inspected">✓ MARK INSPECTED</button>
           </div>
           <p class="xsec-note" style="margin-top:8px;">Closing a repair job sets the next inspection 12 months after it was completed. Mark inspected rolls it forward one year.</p>
@@ -1426,14 +1679,14 @@
           <div class="form-section-title">Proposal</div>
           <div class="proposal-section">
             <div class="proposal-step-title">PREVIEW &amp; SEND</div>
-            <button class="proposal-btn proposal-btn-primary" id="btn-generate" type="button">📄 PREVIEW PROPOSAL</button>
+            <button class="proposal-btn proposal-btn-primary" id="btn-generate" type="button">PREVIEW PROPOSAL</button>
             <p style="font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5;">Opens the proposal on this screen and builds the PDF. Tap Send to email it, or Save PDF to keep a copy in Files.</p>
           </div>
           <div class="proposal-section">
             <div class="proposal-step-title">SIGN IN PERSON</div>
             <div id="sign-status-proposal"></div>
-            <button class="proposal-btn proposal-btn-primary" id="btn-sign-proposal" type="button">✍ SIGN PROPOSAL</button>
-            <button class="proposal-btn proposal-btn-secondary" id="btn-rsign-proposal" type="button">📲 SIGN ON THEIR PHONE</button>
+            <button class="proposal-btn proposal-btn-primary" id="btn-sign-proposal" type="button">SIGN PROPOSAL</button>
+            <button class="proposal-btn proposal-btn-secondary" id="btn-rsign-proposal" type="button">SIGN ON THEIR PHONE</button>
           </div>
         </div>
 
@@ -1460,7 +1713,7 @@
           <p class="xsec-note">Scan supplier invoices and receipts for this job. Google reads them, you check the numbers, and each scan is filed in this customer's Drive folder. Internal only, never on a customer document.</p>
           <div class="jc-card" id="jc-card"></div>
           <div class="x-list" id="exp-list"></div>
-          <button class="proposal-btn proposal-btn-primary x-add" id="btn-add-scan" type="button">📄 ADD RECEIPT / INVOICE</button>
+          <button class="proposal-btn proposal-btn-primary x-add" id="btn-add-scan" type="button">ADD RECEIPT / INVOICE</button>
           <p class="jc-hint" id="jc-hint" role="status" aria-live="polite"></p>
           <button class="proposal-btn proposal-btn-secondary x-add" id="btn-add-manual" type="button" style="margin-top:6px;">+ ADD WITHOUT A SCAN</button>
           <a class="jc-sheet-link" id="jc-sheet-link" href="#" target="_blank" rel="noopener" hidden>Open the Agency Roofing Expenses sheet ↗</a>
@@ -1570,7 +1823,7 @@
   <div class="pv-body" id="pv-body"><div class="pv-stage" id="pv-stage"></div></div>
   <div class="xe-foot">
     <div class="pv-status" id="pv-status" role="status" aria-live="polite"></div>
-    <div class="pv-link-row" id="pv-link-row" hidden><button class="proposal-btn proposal-btn-secondary" id="pv-link" type="button">📲 SIGN ON THEIR PHONE</button></div>
+    <div class="pv-link-row" id="pv-link-row" hidden><button class="proposal-btn proposal-btn-secondary" id="pv-link" type="button">SIGN ON THEIR PHONE</button></div>
     <div class="xe-foot-in pv-foot-in">
       <button class="proposal-btn proposal-btn-secondary" id="pv-save" type="button" disabled>SAVE PDF</button>
       <button class="proposal-btn proposal-btn-primary" id="pv-send" type="button" disabled>SEND QUOTE</button>
@@ -2134,16 +2387,21 @@ function renderList() {
     const name = [c.first, c.last].filter(Boolean).join(' ') || 'Unnamed';
     const inProg = (Date.now() - c.updatedAt) < 86400000;
     const stageClass = c.stage === 'Declined' ? 'declined' : c.stage === 'Closed' ? 'closed' : c.stage === 'Signed' ? 'signed' : '';
-    return `<div class="customer-card${c.id === currentId ? ' active' : ''}" onclick="selectCustomer('${c.id}')">
-      <div class="card-name">${esc(name)}</div>
-      ${c.address ? `<div class="card-address">${esc(c.address)}</div>` : ''}
-      <div class="card-meta">
-        <span class="stage-pill ${stageClass}">${esc(c.stage)}</span>
-        ${inProg && c.id === currentId ? '<span class="in-progress-tag">IN PROGRESS</span>' : ''}
-        ${c.quotes && c.quotes.length ? `<span class="card-tag">+${c.quotes.length} QUOTE${c.quotes.length > 1 ? 'S' : ''}</span>` : ''}
-        ${c.changeOrders && c.changeOrders.length ? `<span class="card-tag">${c.changeOrders.length} CO</span>` : ''}
-        ${followTag(c)}
-        <span class="arc-num">${esc(c.arcNum)}</span>
+    const amt = priceOf(c, 0).sub;
+    const sub = [c.address, c.arcNum].filter(Boolean).map(esc).join(' · ');
+    const tags = (inProg && c.id === currentId ? '<span class="in-progress-tag">IN PROGRESS</span>' : '') +
+      (c.quotes && c.quotes.length ? `<span class="card-tag">+${c.quotes.length} QUOTE${c.quotes.length > 1 ? 'S' : ''}</span>` : '') +
+      (c.changeOrders && c.changeOrders.length ? `<span class="card-tag">${c.changeOrders.length} CO</span>` : '') +
+      followTag(c);
+    return `<div class="customer-card${c.id === currentId ? ' active' : ''}" data-id="${c.id}" onclick="selectCustomer('${c.id}')">
+      <div class="cc-l">
+        <div class="card-name">${esc(name)}</div>
+        <div class="card-address">${sub}</div>
+        ${tags ? `<div class="card-meta">${tags}</div>` : ''}
+      </div>
+      <div class="cc-r">
+        ${amt > 0 ? `<span class="cc-amt">${fmt(amt).replace(/\.00$/, '')}</span>` : '<span class="cc-nq">No quote yet</span>'}
+        <span class="stage-pill ${stageClass} sp-${c.stage.toLowerCase().replace(/[^a-z]+/g, '-')}">${esc(c.stage)}</span>
       </div>
     </div>`;
   }).join('');
@@ -2261,32 +2519,23 @@ function renderPipeline() {
   const si = STAGES.indexOf(c.stage);
   const bar = document.getElementById('pipeline-bar');
 
-  let html = '';
-  STAGES.forEach((s, i) => {
-    const isDone = i < si;
-    const isCurrent = i === si;
-    const dotClass = s === 'Declined' && isCurrent ? 'declined-dot' : isCurrent ? 'current' : isDone ? 'done' : '';
-    const labelClass = isCurrent ? 'current' : '';
-
-    html += `<div class="pip-stage-wrap">
-      <div class="pip-stage">
-        <div class="pip-dot ${dotClass}"></div>
-        <div class="pip-label ${labelClass}">${s}</div>
-      </div>
-      ${i < STAGES.length - 1 ? `<div class="pip-line ${isDone || isCurrent ? 'done' : ''}"></div>` : ''}
-    </div>`;
+  // Six-step bar (Declined is a state, not a step)
+  const SHORT = { 'In Production': 'In Prod.' };
+  const steps = STAGES.filter(s => s !== 'Declined');
+  const declined = c.stage === 'Declined';
+  let track = '', labs = '';
+  steps.forEach((s, i) => {
+    const cls = declined ? '' : i < si ? 'done' : i === si ? 'current' : '';
+    track += `<div class="pip-seg ${cls}"><b></b></div>`;
+    labs += `<div class="pip-label ${cls}">${SHORT[s] || s}</div>`;
   });
-
-  bar.innerHTML = html;
-
-  // Scroll current dot into view
-  setTimeout(() => {
-    const dots = bar.querySelectorAll('.pip-dot');
-    if (dots[si]) dots[si].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  }, 50);
+  bar.innerHTML = `<div class="pip-track">${track}</div><div class="pip-labs">${labs}</div>`;
+  const stepEl = document.getElementById('pip-step');
+  if (stepEl) { stepEl.textContent = declined ? 'Declined' : 'Step ' + (si + 1) + ' of ' + steps.length; stepEl.classList.toggle('declined', declined); }
 
   const btnNext = document.getElementById('btn-next');
   btnNext.disabled = c.stage === 'Closed' || c.stage === 'Declined';
+  btnNext.textContent = btnNext.disabled ? 'NEXT' : 'NEXT: ' + STAGES[si + 1].toUpperCase() + ' →';
 
   updateScheduledSection();
 }
@@ -3830,7 +4079,7 @@ function renderExtras() {
   ql.innerHTML = c.quotes.length ? c.quotes.map(q => {
     const p = priceOf(q, quoteRate(c, q));
     return `<button class="x-row" type="button" data-kind="quote" data-id="${q.id}">
-      <span><span class="x-num">${esc(q.num)}${validSig(q, quoteContent(c, q)) ? '<span class="signed-mark">✍ SIGNED</span>' : ''}</span><span class="x-title">${esc(q.title || 'Untitled quote')}</span></span>
+      <span><span class="x-num">${esc(q.num)}${validSig(q, quoteContent(c, q)) ? '<span class="signed-mark">SIGNED</span>' : ''}</span><span class="x-title">${esc(q.title || 'Untitled quote')}</span></span>
       <span class="x-right"><span class="st-pill ${q.status.toLowerCase()}">${esc(q.status)}</span><span class="x-amt">${fmt(p.total)}</span></span>
     </button>`;
   }).join('') : '<div class="x-empty">No additional quotes for this customer.</div>';
@@ -3838,7 +4087,7 @@ function renderExtras() {
   cl.innerHTML = c.changeOrders.length ? c.changeOrders.map(o => {
     const p = coPrice(o, coRate(c, o));
     return `<button class="x-row" type="button" data-kind="co" data-id="${o.id}">
-      <span><span class="x-num">${esc(o.num)}${validSig(o, coContent(c, o)) ? '<span class="signed-mark">✍ SIGNED</span>' : ''}</span><span class="x-title">${esc(o.title || 'Untitled change order')}</span></span>
+      <span><span class="x-num">${esc(o.num)}${validSig(o, coContent(c, o)) ? '<span class="signed-mark">SIGNED</span>' : ''}</span><span class="x-title">${esc(o.title || 'Untitled change order')}</span></span>
       <span class="x-right"><span class="st-pill ${o.status.toLowerCase()}">${esc(o.status)}</span><span class="x-amt${p.total < 0 ? ' credit' : ''}">${fmtSigned(p.total)}</span></span>
     </button>`;
   }).join('') : '<div class="x-empty">No change orders yet.</div>';
@@ -4225,7 +4474,7 @@ function renderJobCost() {
   var st = ARCSign.settings(), link = document.getElementById('jc-sheet-link');
   if (link) { link.hidden = !st.expSheet; if (st.expSheet) link.href = st.expSheet; }
   var b = document.getElementById('btn-add-scan');
-  if (b && !ex_state) b.textContent = window.ARCMail && ARCMail.enabled && ARCMail.hasDrivePass ? '📄 CHOOSE THE SCAN' : '📄 ADD RECEIPT / INVOICE';
+  if (b && !ex_state) b.textContent = window.ARCMail && ARCMail.enabled && ARCMail.hasDrivePass ? 'CHOOSE THE SCAN' : 'ADD RECEIPT / INVOICE';
 }
 
 function jcHint(t, err) { var h = document.getElementById('jc-hint'); if (h) { h.textContent = t || ''; h.className = 'jc-hint' + (err ? ' err' : ''); } }
@@ -5380,7 +5629,7 @@ function renderSignStatus() {
   if (!c || !el) return;
   const s = sigState(c, proposalContent(c));
   el.innerHTML = signStatusHTML(c, proposalContent(c), { kind: 'proposal' });
-  btn.innerHTML = s === 'none' ? '✍ SIGN PROPOSAL' : '✍ SIGN AGAIN';
+  btn.innerHTML = s === 'none' ? 'SIGN PROPOSAL' : 'SIGN AGAIN';
   const rb = document.getElementById('btn-rsign-proposal'); if (rb) rb.style.display = s === 'valid' ? 'none' : '';
 }
 
@@ -5391,7 +5640,7 @@ function renderEditorSign() {
   const content = xe.kind === 'quote' ? quoteContent(c, it) : coContent(c, it);
   el.innerHTML = signStatusHTML(it, content, { kind: xe.kind, id: it.id });
   const word = xe.kind === 'quote' ? 'QUOTE' : 'CHANGE ORDER';
-  btn.innerHTML = sigState(it, content) === 'none' ? '✍ SIGN ' + word : '✍ SIGN AGAIN';
+  btn.innerHTML = sigState(it, content) === 'none' ? 'SIGN ' + word : 'SIGN AGAIN';
   const rb = document.getElementById('xe-rsign'); if (rb) rb.style.display = sigState(it, content) === 'valid' ? 'none' : '';
 }
 
@@ -5399,8 +5648,8 @@ function editorSignSection() {
   return `<div class="form-section">
     <div class="form-section-title">Signatures</div>
     <div class="sgn-box"><div id="xe-sign-status"></div>
-    <button class="proposal-btn proposal-btn-primary x-add" id="xe-sign" type="button">✍ SIGN</button>
-    <button class="proposal-btn proposal-btn-secondary x-add" id="xe-rsign" type="button">📲 SIGN ON THEIR PHONE</button></div>
+    <button class="proposal-btn proposal-btn-primary x-add" id="xe-sign" type="button">SIGN</button>
+    <button class="proposal-btn proposal-btn-secondary x-add" id="xe-rsign" type="button">SIGN ON THEIR PHONE</button></div>
   </div>`;
 }
 
@@ -5632,7 +5881,7 @@ function renderPvLink() {
   b.disabled = !r;
   b.dataset.state = r ? (r.url ? 'ready' : r.off) : 'wait';
   b.textContent = !r ? 'PREPARING SIGN-ONLINE LINK…'
-    : r.url ? '📲 SIGN ON THEIR PHONE (QR / TEXT)'
+    : r.url ? 'SIGN ON THEIR PHONE (QR / TEXT)'
     : r.off === 'signin' ? 'ONLINE SIGNING: SIGN IN TO CLOUD SYNC'
     : r.off === 'setup' ? 'ONLINE SIGNING NEEDS ONE-TIME SETUP'
     : 'SIGN LINK DIDN’T SAVE · TAP TO RETRY';
@@ -6210,7 +6459,7 @@ function renderInspections() {
         <span class="ins-due">Due ${esc(longDate(c.nextInspection))} · ${when}</span>
       </button>
       <div class="ins-acts">
-        <a href="${esc(gcalUrl(c, c.nextInspection))}" target="_blank" rel="noopener">📅 GOOGLE CALENDAR</a>
+        <a href="${esc(gcalUrl(c, c.nextInspection))}" target="_blank" rel="noopener">GOOGLE CALENDAR</a>
         <button type="button" data-inspected="${c.id}">✓ MARK INSPECTED</button>
       </div>
     </div>`;
@@ -6712,6 +6961,231 @@ var _eb = document.getElementById('btn-export');
 if (_eb) _eb.addEventListener('click', exportData);
 var _eib = document.getElementById('btn-export-icon');
 if (_eib) _eib.addEventListener('click', exportData);
+</script>
+<script>
+// ══ PREMIUM LAYER: motion, stage chips, menu, shield glint, haptic taps (Nov 2026) ══
+// Look and feel only. Reads and writes no stored data. Every piece is wrapped so a failure here can never block the CRM.
+(function () {
+  'use strict';
+  var RM = false;
+  try { RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
+  var EASE = 'cubic-bezier(.22,1,.36,1)';
+  var $ = function (id) { return document.getElementById(id); };
+  var sidebar = $('sidebar'), main = $('main'), dim = $('list-dim');
+  function isPhone() { return window.innerWidth <= 700; }
+
+  // ── Haptic tap ─────────────────────────────────────────
+  // iPhone Safari has no vibration command. Toggling a hidden native switch makes the phone give its own light tap
+  // (iOS 18+). Unofficial: if Apple removes it, taps simply stop and nothing else changes. Android uses vibrate().
+  function tap() {
+    try {
+      if (navigator.vibrate) { navigator.vibrate(8); return; }
+      var label = document.createElement('label');
+      label.setAttribute('aria-hidden', 'true');
+      label.style.display = 'none';
+      var input = document.createElement('input');
+      input.type = 'checkbox';
+      input.setAttribute('switch', '');
+      label.appendChild(input);
+      document.head.appendChild(label);
+      label.click();
+      document.head.removeChild(label);
+    } catch (e) {}
+  }
+  window.ARCTap = tap;
+  var TAPPABLE = 'button, a.proposal-btn, a.btn-ins, .customer-card, label.btn-footer, #mobile-back, .x-row, summary, [role="button"]';
+  document.addEventListener('click', function (e) {
+    try {
+      if (!e.isTrusted) return;
+      var t = e.target && e.target.closest ? e.target.closest(TAPPABLE) : null;
+      if (t && !t.disabled) tap();
+    } catch (err) {}
+  }, true);
+
+  // ── Stage chips (drive the original stage <select>, which stays the source of truth) ──
+  try {
+    var sel = $('stage-select'), chips = $('stage-chips');
+    var drawChips = function () {
+      var h = '';
+      for (var i = 0; i < sel.options.length; i++) {
+        var o = sel.options[i], v = o.value || (i === 0 ? '' : o.text);
+        h += '<button type="button" class="stage-chip' + (sel.value === v ? ' on' : '') + '" data-v="' + v + '">' + (i === 0 ? 'ALL' : o.text.toUpperCase()) + '</button>';
+      }
+      chips.innerHTML = h;
+    };
+    chips.addEventListener('click', function (e) {
+      var b = e.target.closest('.stage-chip'); if (!b) return;
+      sel.value = b.getAttribute('data-v');
+      drawChips();
+      window.renderList();
+      flowIn($('customer-list').querySelectorAll('.customer-card'), 0, 40, 12);
+    });
+    sel.addEventListener('change', drawChips);
+    drawChips();
+  } catch (e) {}
+
+  // ── Settings / Export Backup / Import menu ─────────────
+  try {
+    var menuBtn = $('btn-menu'), foot = $('sidebar-footer'), scrim = $('menu-scrim');
+    var setMenu = function (open) {
+      sidebar.classList.toggle('menu-open', open);
+      menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    menuBtn.addEventListener('click', function () { setMenu(!sidebar.classList.contains('menu-open')); });
+    scrim.addEventListener('click', function () { setMenu(false); });
+    foot.addEventListener('click', function (e) { if (e.target.closest('.btn-footer')) setTimeout(function () { setMenu(false); }, 60); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+  } catch (e) {}
+
+  // ── Small motion helpers (transform + opacity only; nothing is left behind on the element) ──
+  function flowIn(els, base, step, max) {
+    if (RM || !els) return;
+    for (var i = 0, n = 0; i < els.length && n < (max || 10); i++) {
+      var el = els[i];
+      if (!el.animate || el.offsetParent === null) continue;
+      el.animate([{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }],
+        { duration: 560, easing: EASE, delay: (base || 0) + n * (step || 55), fill: 'backwards' });
+      n++;
+    }
+  }
+
+  // The customer's name flows from the row up into the page title
+  function morphName(fromRect, text) {
+    try {
+      var title = $('dh-name');
+      if (RM || !fromRect || !title || !title.animate) return;
+      var r = title.getBoundingClientRect(), tx = 0;
+      try { tx = new DOMMatrix(getComputedStyle(main).transform).m41; } catch (e) {}
+      var to = { x: r.left - tx, y: r.top, w: r.width, h: r.height };
+      if (!to.h || !fromRect.height) return;
+      var cs = getComputedStyle(title);
+      var lines = Math.max(1, Math.round(to.h / (parseFloat(cs.lineHeight) || to.h)));
+      var s = fromRect.height / (to.h / lines);
+      var dx = fromRect.left - to.x, dy = fromRect.top - to.y;
+      var fx = document.createElement('div');
+      fx.setAttribute('aria-hidden', 'true');
+      fx.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden';
+      var small = document.createElement('div');
+      small.textContent = text;
+      small.style.cssText = 'position:absolute;left:' + fromRect.left + 'px;top:' + fromRect.top + 'px;white-space:nowrap;transform-origin:0 0;' +
+        "font-family:'Inter',sans-serif;font-size:16px;font-weight:600;line-height:1.2;color:#F2EDE6";
+      var big = document.createElement('div');
+      big.textContent = title.textContent;
+      big.style.cssText = 'position:absolute;left:' + to.x + 'px;top:' + to.y + 'px;width:' + to.w + 'px;transform-origin:0 0;overflow-wrap:anywhere;' +
+        'font-family:' + cs.fontFamily + ';font-size:' + cs.fontSize + ';line-height:' + cs.lineHeight + ';letter-spacing:' + cs.letterSpacing +
+        ';text-transform:' + cs.textTransform + ';color:' + cs.color;
+      fx.appendChild(small); fx.appendChild(big);
+      document.body.appendChild(fx);
+      title.style.visibility = 'hidden';
+      var done = function () { title.style.visibility = ''; if (fx.parentNode) fx.parentNode.removeChild(fx); };
+      var opt = { duration: 480, easing: EASE, fill: 'both' };
+      small.animate([{ transform: 'none', opacity: 1 }, { opacity: 0, offset: .45 }, { transform: 'translate(' + (-dx) + 'px,' + (-dy) + 'px) scale(' + (1 / s) + ')', opacity: 0 }], opt);
+      var a = big.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + s + ')', opacity: 0 }, { opacity: 1, offset: .5 }, { transform: 'none', opacity: 1 }], opt);
+      a.onfinish = done; a.oncancel = done;
+      setTimeout(done, 700);
+    } catch (e) { try { $('dh-name').style.visibility = ''; } catch (e2) {} }
+  }
+
+  // ── Opening a customer: glide in, name flows, cards ripple ──
+  try {
+    var origSelect = window.selectCustomer;
+    window.selectCustomer = function (id) {
+      var fromList = isPhone() && !main.classList.contains('visible');
+      var rect = null, text = '';
+      if (fromList && !RM) {
+        try {
+          var nm = document.querySelector('.customer-card[data-id="' + id + '"] .card-name');
+          if (nm) { rect = nm.getBoundingClientRect(); text = nm.textContent; }
+        } catch (e) {}
+      }
+      var out = origSelect.apply(this, arguments);
+      if (fromList) {
+        try {
+          var fa = $('form-area');
+          if (fa) fa.scrollTop = 0;
+          morphName(rect, text);
+          flowIn([$('pipeline')].concat([].slice.call(document.querySelectorAll('#form-area > .form-section'))), 180, 55, 6);
+        } catch (e) {}
+      }
+      return out;
+    };
+  } catch (e) {}
+
+  // ── Swipe right to go back (the page follows the finger) ──
+  // Starts away from the screen edge so it never fights Safari's own back swipe, and never on a signature pad,
+  // a text field or anything that scrolls sideways.
+  try {
+    var x0 = 0, y0 = 0, live = false, drag = false, lastX = 0, lastT = 0, v = 0, pid = null, moved = false;
+    var NO = 'input, textarea, select, canvas, [contenteditable], iframe, .leaflet-container';
+    var scrollsX = function (el) {
+      for (; el && el !== main; el = el.parentElement) {
+        if (el.scrollWidth > el.clientWidth + 4) {
+          var ox = getComputedStyle(el).overflowX;
+          if (ox === 'auto' || ox === 'scroll') return true;
+        }
+      }
+      return false;
+    };
+    var setDrag = function (on) { main.classList.toggle('arc-drag', on); sidebar.classList.toggle('arc-drag', on); };
+    var clear = function () { main.style.transform = ''; sidebar.style.transform = ''; dim.style.opacity = ''; };
+    main.addEventListener('pointerdown', function (e) {
+      live = false; moved = false;
+      if (!isPhone() || !main.classList.contains('visible') || e.pointerType === 'mouse') return;
+      if (e.clientX < 24 || (e.target.closest && e.target.closest(NO)) || scrollsX(e.target)) return;
+      x0 = e.clientX; y0 = e.clientY; lastX = x0; lastT = performance.now(); v = 0; pid = e.pointerId; live = true; drag = false;
+    });
+    main.addEventListener('pointermove', function (e) {
+      if (!live || e.pointerId !== pid) return;
+      var dx = e.clientX - x0, dy = e.clientY - y0;
+      if (!drag) {
+        if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) { live = false; return; }
+        if (dx > 14 && dx > Math.abs(dy) * 1.5) { drag = true; moved = true; setDrag(true); try { main.setPointerCapture(pid); } catch (err) {} }
+        else return;
+      }
+      var now = performance.now(); v = (e.clientX - lastX) / Math.max(1, now - lastT); lastX = e.clientX; lastT = now;
+      var x = Math.max(0, dx), w = window.innerWidth;
+      main.style.transform = 'translateX(' + x + 'px)';
+      sidebar.style.transform = 'translateX(' + (-0.28 * w + x * 0.28) + 'px)';
+      dim.style.opacity = String(0.45 * (1 - x / w));
+    });
+    var end = function (e) {
+      if (!live) return; live = false;
+      if (!drag) return; drag = false;
+      var x = Math.max(0, e.clientX - x0), goBack = e.type === 'pointerup' && (x > window.innerWidth * 0.33 || v > 0.45);
+      void main.offsetWidth;
+      setDrag(false);
+      void main.offsetWidth;
+      clear();
+      if (goBack) { tap(); window.mobileBack(); }
+    };
+    main.addEventListener('pointerup', end);
+    main.addEventListener('pointercancel', end);
+    // a swipe is not a tap: swallow the click that follows a drag
+    main.addEventListener('click', function (e) { if (moved) { moved = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  } catch (e) {}
+
+  // ── Back row works from the keyboard too ──
+  try {
+    $('mobile-back').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.mobileBack(); } });
+  } catch (e) {}
+
+  // ── First paint: list settles in, then one glint crosses the shield (right to left), once per session ──
+  try {
+    if (!RM) {
+      var sheet = $('list-sheet');
+      if (sheet && sheet.animate) sheet.animate([{ transform: 'translateY(48px)' }, { transform: 'none' }], { duration: 760, easing: EASE, fill: 'backwards' });
+      flowIn($('customer-list').querySelectorAll('.customer-card'), 220, 45, 10);
+      var seen = false;
+      try { seen = sessionStorage.getItem('arc_glint') === '1'; sessionStorage.setItem('arc_glint', '1'); } catch (e) {}
+      var g = $('shield-glint');
+      if (!seen && g && g.animate) {
+        g.animate([{ transform: 'translateX(160px) skewX(-18deg)' }, { transform: 'translateX(0px) skewX(-18deg)' }],
+          { duration: 1100, delay: 900, easing: 'cubic-bezier(.45,0,.2,1)', fill: 'both' });
+      }
+    }
+  } catch (e) {}
+})();
+
 </script>
 </body>
 </html>

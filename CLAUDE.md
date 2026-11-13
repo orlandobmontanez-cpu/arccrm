@@ -150,7 +150,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 - Companies (name, contact, billing email, extra CC, address, default terms, **NTTC on file**, private notes) and invoices.
 - Numbers `INV-1001`, `INV-1002`… from `billing.seq` (starts 1000). A number is used up the moment an invoice is created:
-  a never-sent draft can be deleted, a sent invoice can only be **voided**; numbers never repeat. Two devices offline can
+  a never-sent draft can be deleted, a sent invoice can only be **voided**; numbers never repeat. A void can be undone: a voided invoice shows **RESTORE THIS INVOICE** (two taps), which sets it back to Sent (or Draft if never sent) and keeps payments and history. Two devices offline can
   hand out the same number: on load the later never-sent draft is renumbered (`loadBilling`).
 - Line items (description, qty × rate), every amount editable. Tax switch per invoice (on by default, off for NTTC
   companies), rate from the tax city via `ARCSign.cityRate`. Statuses: Draft, Sent, Partly paid, Paid, Overdue (past due

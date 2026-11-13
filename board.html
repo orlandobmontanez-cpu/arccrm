@@ -184,13 +184,64 @@
     transition: opacity .2s, transform .2s; pointer-events: none; white-space: nowrap; }
   .toast.on { opacity: 1; transform: translate(-50%, 0); }
   .toast.err { background: var(--lost); }
+
+  /* ══ PREMIUM LAYER (Nov 2026): look + motion only ══ */
+  @view-transition { navigation: auto; }
+  @media screen {
+    :root { --ease: cubic-bezier(.22, 1, .36, 1); --mut: #5E5852; --lift: 0 1px 2px rgba(28,26,24,.05), 0 10px 22px rgba(28,26,24,.05); }
+    header { border-bottom: 0; }
+    .back { border: 0; background: transparent; color: var(--copper); letter-spacing: .18em; padding: 0 8px 0 0; gap: 4px; min-width: 0; }
+    .back svg { width: 18px; height: 18px; display: block; margin-top: -2px; }
+    .hero { position: relative; overflow: hidden; background: var(--ink); border-radius: 26px; margin: 12px 0 0; padding: 26px 22px 78px;
+      box-shadow: 0 18px 36px rgba(28,26,24,.24); }
+    .hero > * { position: relative; }
+    .hero .hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .hero .date { color: var(--mid); letter-spacing: .24em; font-size: 13px; }
+    .hero h1 { color: #F2EDE6; text-transform: uppercase; font-size: 36px; line-height: 1.04; margin-top: 6px; }
+    .hero p { color: var(--hi); margin-top: 8px; }
+    .stats { gap: 10px; margin-top: 14px; }
+    .stat { background: var(--white); color: var(--ink); border: 1px solid rgba(28,26,24,.06); border-radius: 18px; padding: 16px 14px 14px; box-shadow: var(--lift); }
+    .stat .v { font-size: 34px; color: var(--ink); }
+    .stat .l { color: var(--copper); letter-spacing: .14em; margin-top: 8px; }
+    .stat.alert .v { color: var(--copper); }
+    h2 { font-family: 'Anton', sans-serif; font-size: 26px; letter-spacing: .02em; text-transform: uppercase; }
+    h2::after { display: none; }
+    .sh .meta { font-size: 13px; color: var(--mut); }
+    .job { grid-template-columns: 1fr auto; padding: 14px 16px; border-radius: 18px; border-color: rgba(28,26,24,.06); min-height: 78px; box-shadow: var(--lift);
+      transition: transform .18s var(--ease); }
+    .job:active { transform: scale(.98); }
+    .job .bar { display: none; }
+    .job .nm { font-size: 16px; }
+    .job .ad { font-size: 13px; color: var(--mut); }
+    .job .why { font-family: 'Lora', Georgia, serif; font-size: 13.5px; color: var(--copper); }
+    .job .amt { font-family: 'Anton', sans-serif; font-weight: 400; font-size: 19px; letter-spacing: .01em; }
+    .pill { border-radius: 999px; padding: 6px 10px 5px; letter-spacing: .14em; margin-top: 6px; }
+    .card, .kpi, .empty { border-radius: 18px; border-color: rgba(28,26,24,.06); }
+    .card, .kpi { box-shadow: var(--lift); }
+    .read { border-left: 0; border-radius: 18px; border: 1px solid rgba(28,26,24,.06); }
+    .seg button, .period button { border-radius: 12px; }
+    #map { border-radius: 18px; }
+    .scrim { transition: opacity .4s var(--ease); }
+    .sheet { border-radius: 26px 26px 0 0; transition: transform .52s var(--ease); box-shadow: 0 -20px 50px rgba(0,0,0,.3); }
+    .grab { width: 40px; height: 5px; border-radius: 999px; background: rgba(28,26,24,.22); }
+    .btn { border-radius: 14px; transition: transform .18s var(--ease), background-color .18s; }
+    .btn:active, .seg button:active, .period button:active, .x:active { transform: scale(.97); }
+    .x { border-radius: 999px; }
+    .blk { border-radius: 18px; border-color: rgba(28,26,24,.06); }
+    .fld { border-radius: 12px; }
+    ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .38s; animation-timing-function: var(--ease); }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
+      ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+    }
+  }
 </style>
 <script src="arcsync.js"></script>
 </head>
 <body>
 <header>
   <div class="hd">
-    <a class="back" href="./" aria-label="Back to the CRM">← CRM</a>
+    <a class="back" href="./" aria-label="Back to the CRM"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><span>CRM</span></a>
     <div class="lockup">
         <svg class="shield" aria-hidden="true" viewBox="-2 -2 104 104" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -234,11 +285,17 @@
 
 <div class="wrap">
   <div class="hero">
+    <svg class="hero-bg" aria-hidden="true" viewBox="0 0 354 232" preserveAspectRatio="none">
+      <g fill="none" stroke="#F0C8C2" stroke-width="1" opacity="0.08"><path d="M-10 60 C 60 30, 120 80, 200 50 S 320 20, 364 48"/><path d="M-10 84 C 60 56, 124 104, 204 74 S 320 46, 364 72"/><path d="M-10 108 C 62 82, 128 128, 208 98 S 322 72, 364 96"/><path d="M-10 36 C 58 6, 116 56, 196 26 S 318 -4, 364 24"/></g>
+      <path class="ridge" d="M0 232 L0 196 L34 188 L70 176 L98 180 L132 160 L158 166 L186 146 L214 152 L240 134 L262 142 L292 150 L322 170 L354 178 L354 232 Z" fill="#974930" opacity="0.55"/>
+      <path class="ridge" d="M0 232 L0 210 L40 204 L84 194 L120 198 L162 184 L204 190 L246 176 L288 186 L324 196 L354 200 L354 232 Z" fill="#C97E78" opacity="0.5"/>
+      <path class="ridge" d="M0 232 L0 220 L60 216 L130 210 L200 214 L270 206 L354 214 L354 232 Z" fill="#F0C8C2" opacity="0.4"/>
+    </svg>
     <div class="date" id="today-date"></div>
     <h1 id="greet">Today</h1>
     <p>Built with agency. Driven by obligation.</p>
-    <div class="stats" id="stats"></div>
   </div>
+  <div class="stats" id="stats"></div>
 
   <section id="sec-today">
     <div class="sh"><h2>Today</h2><span class="meta">Tap a job to update it</span></div>
@@ -637,11 +694,11 @@ const ZIPS = {"87001":[35.389,-106.352,"Algodones"],"87002":[34.651,-106.695,"Be
         '<div class="row4"><button type="button" class="btn" data-fu="1">TOMORROW</button><button type="button" class="btn" data-fu="3">3 DAYS</button><button type="button" class="btn" data-fu="7">1 WEEK</button><button type="button" class="btn" data-fu="14">2 WEEKS</button></div>' +
         '<input class="fld" type="date" id="sh-fu" value="' + esc(fu) + '" aria-label="Follow-up date">' +
         '<input class="fld" type="text" id="sh-fn" value="' + esc(j.followNote) + '" placeholder="What about? e.g. Check in on the proposal" maxlength="120" aria-label="Follow-up note">' +
-        (fu ? '<div class="row2"><button type="button" class="btn copper" data-act="done">✓ FOLLOWED UP</button><a class="btn" target="_blank" rel="noopener" href="' + esc(gcal(c, fu, 'Follow up – ' + name(c), j.followNote)) + '">📅 CALENDAR</a></div>' : '') +
+        (fu ? '<div class="row2"><button type="button" class="btn copper" data-act="done">✓ FOLLOWED UP</button><a class="btn" target="_blank" rel="noopener" href="' + esc(gcal(c, fu, 'Follow up – ' + name(c), j.followNote)) + '">CALENDAR</a></div>' : '') +
       '</div>' +
       (showSched ? '<div class="blk"><div class="t">INSTALL DATE <small>' + (c.scheddate ? esc(longDate(c.scheddate)) : 'Not scheduled') + '</small></div>' +
         '<input class="fld" type="date" id="sh-sd" value="' + esc(c.scheddate || '') + '" aria-label="Install date">' +
-        (c.scheddate ? '<a class="btn gcal" target="_blank" rel="noopener" href="' + esc(gcal(c, c.scheddate, 'Roof install – ' + name(c), [c.rooftype, j.size ? j.size + ' sq ft' : ''].filter(Boolean).join(' · '))) + '">📅 ADD INSTALL TO GOOGLE CALENDAR</a>' : '') +
+        (c.scheddate ? '<a class="btn gcal" target="_blank" rel="noopener" href="' + esc(gcal(c, c.scheddate, 'Roof install – ' + name(c), [c.rooftype, j.size ? j.size + ' sq ft' : ''].filter(Boolean).join(' · '))) + '">ADD INSTALL TO GOOGLE CALENDAR</a>' : '') +
       '</div>' : '') +
       '<a class="btn ink" style="margin-top:12px" href="./?open=' + encodeURIComponent(c.id) + '">OPEN IN CRM →</a>';
   }
@@ -735,5 +792,49 @@ const ZIPS = {"87001":[35.389,-106.352,"Algodones"],"87002":[34.651,-106.695,"Be
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous"></script>
+<script>
+// ══ PREMIUM LAYER: page settle, numbers count up, haptic taps (Nov 2026). Look and feel only; touches no stored data. ══
+(function () {
+  'use strict';
+  var RM = false;
+  try { RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
+  var EASE = 'cubic-bezier(.22,1,.36,1)';
+  // iPhone Safari has no vibration command; toggling a hidden native switch gives the phone's own light tap (iOS 18+, unofficial).
+  function tap() {
+    try {
+      if (navigator.vibrate) { navigator.vibrate(8); return; }
+      var label = document.createElement('label'); label.setAttribute('aria-hidden', 'true'); label.style.display = 'none';
+      var input = document.createElement('input'); input.type = 'checkbox'; input.setAttribute('switch', '');
+      label.appendChild(input); document.head.appendChild(label); label.click(); document.head.removeChild(label);
+    } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    try { if (e.isTrusted && e.target.closest && e.target.closest('button, a.btn, a.back')) tap(); } catch (err) {}
+  }, true);
+  if (RM) return;
+  window.addEventListener('load', function () {
+    try {
+      var parts = [].slice.call(document.querySelectorAll('.hero, .stats, .wrap > section')), n = 0;
+      parts.forEach(function (el) {
+        if (!el.animate || n > 5) return;
+        el.animate([{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }], { duration: 600, easing: EASE, delay: 60 + n * 70, fill: 'backwards' });
+        n++;
+      });
+      [].forEach.call(document.querySelectorAll('.hero .ridge'), function (el, k) {
+        el.animate([{ transform: 'translateY(' + (30 + k * 12) + 'px)' }, { transform: 'none' }], { duration: 1100, easing: EASE, delay: 200 + k * 90, fill: 'backwards' });
+      });
+      // the three headline numbers count up once
+      setTimeout(function () {
+        [].forEach.call(document.querySelectorAll('#stats .stat .v'), function (el) {
+          var m = /^(\d+)(%?)$/.exec(el.textContent.trim()); if (!m) return;
+          var to = +m[1], suf = m[2], t0 = null; if (!to) return;
+          function f(t) { if (!el.isConnected) return; if (!t0) t0 = t; var p = Math.min(1, (t - t0) / 900), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(to * e) + suf; if (p < 1) requestAnimationFrame(f); }
+          requestAnimationFrame(f);
+        });
+      }, 260);
+    } catch (e) {}
+  });
+})();
+</script>
 </body>
 </html>

@@ -776,6 +776,13 @@
   .tm-live { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 13px; color: var(--copper); min-height: 18px; margin: -4px 0 10px; }
   .tm-btns { display: grid; grid-template-columns: auto 1fr 1.4fr; gap: 8px; }
   .x-row.tm-on { border-color: var(--copper); }
+  .tm-top { display: flex; gap: 8px; overflow-x: auto; margin: 0 -2px 12px; padding: 0 2px; scrollbar-width: none; }
+  .tm-top::-webkit-scrollbar { display: none; }
+  .tm-chip { flex: none; min-height: 44px; padding: 2px 14px 0; border: 1px solid var(--stone-dark); border-radius: 999px; background: var(--white); color: var(--ink);
+    font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.12em; cursor: pointer; white-space: nowrap; }
+  .tm-chip.on { background: var(--ink); color: var(--stone-light); border-color: var(--ink); }
+  .tm-form .bf-2 { margin-top: 4px; }
+  #hs-new[hidden] { display: none; }
   .tm-line { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; padding: 6px 0; border-bottom: 1px solid rgba(28,26,24,0.08); color: var(--ink-soft); }
   .tm-line b { font-weight: 600; color: var(--ink); white-space: nowrap; }
   #inv-sheet input.bad { border-color: var(--danger); }
@@ -1112,14 +1119,15 @@
       border: 1px solid rgba(234,228,218,.22); transition: background-color .3s, color .3s, border-color .3s, transform .18s var(--ease);
     }
     .stage-chip.on { background: var(--stone); color: var(--ink); border-color: var(--stone); }
-    #ins-wrap { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0 16px 14px; }
+    #ins-wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 0 16px 14px; }
     .btn-ins, .btn-inv {
-      grid-column: auto; position: relative; flex-direction: column; align-items: flex-start; justify-content: space-between;
-      height: 76px; min-height: 76px; padding: 12px 12px 10px; border-radius: 16px; text-decoration: none; gap: 0;
+      grid-column: auto; position: relative; flex-direction: row; align-items: center; justify-content: flex-start;
+      height: 56px; min-height: 56px; padding: 2px 12px 0; border-radius: 16px; text-decoration: none; gap: 10px;
       font-size: 14px; letter-spacing: .14em; line-height: 1; background: rgba(234,228,218,.06);
     }
     .btn-ins svg { width: 20px; height: 20px; color: var(--copper-mid); display: block; }
-    .btn-ins .ins-count { position: absolute; top: 10px; right: 10px; letter-spacing: .04em; }
+    .btn-ins svg { margin-top: -2px; }
+    .btn-ins .ins-count { position: absolute; top: 50%; transform: translateY(-50%); right: 10px; letter-spacing: .04em; }
     #customer-list { padding: 0 0 130px; }
     .customer-card {
       display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 80px;
@@ -1261,7 +1269,7 @@
 
     @media (min-width: 701px) {
       .topo-main { opacity: .16; }
-      .btn-ins, .btn-inv { font-size: 12px; letter-spacing: .06em; padding: 12px 10px 10px; }
+      .btn-ins, .btn-inv { font-size: 13px; letter-spacing: .1em; }
       #mobile-back { display: none; }
     }
 
@@ -1387,6 +1395,7 @@
     <div id="ins-wrap">
       <a class="btn-ins btn-board" id="btn-board" href="board.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="10" rx="1.5"/></svg><span class="bi-t">JOB BOARD</span></a>
       <button class="btn-ins" id="btn-inspections" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 3h6v4H9zM9 13l2 2 4-4"/></svg><span class="bi-t">INSPECTIONS</span> <span class="ins-count" id="ins-count"></span></button>
+      <button class="btn-ins" id="btn-hours" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span class="bi-t">HOURS</span> <span class="ins-count" id="hrs-count"></span></button>
       <button class="btn-ins btn-inv" id="btn-invoices" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg><span class="bi-t">INVOICES</span> <span class="ins-count" id="inv-count"></span></button>
     </div>
 
@@ -3307,6 +3316,7 @@ function mergeBillingBackup(b) {
   billing.seq = Math.max(billing.seq, +b.seq || 0);
   saveBilling(); loadBilling(); renderInvCount();
 }
+try { setTimeout(function () { loadBilling(); renderHrsCount(); }, 0); } catch (e) {}
 function renderInvCount() {
   const el = document.getElementById('inv-count'); if (!el) return;
   const n = invList().filter(v => invCalc(v).status === 'Overdue').length;
@@ -4884,7 +4894,7 @@ function loadBilling() {
   if (renum) saveBilling();
 }
 function saveBilling() {
-  try { localStorage.setItem(BILL_KEY, JSON.stringify(billing)); if (typeof renderInvCount === 'function') renderInvCount(); return true; }
+  try { localStorage.setItem(BILL_KEY, JSON.stringify(billing)); if (typeof renderInvCount === 'function') renderInvCount(); if (typeof renderHrsCount === 'function') renderHrsCount(); return true; }
   catch (e) { showToast('STORAGE FULL — EXPORT A BACKUP'); return false; }
 }
 function nextInvoiceNumber() { billing.seq = Math.max(billing.seq, 1000) + 1; return billing.seq; }
@@ -4935,6 +4945,7 @@ function renderBilling() {
   if (bv.view === 'list') { kind.textContent = 'AGENCY ROOFING CO.'; head.textContent = 'Invoices'; body.innerHTML = billListHtml(); foot.innerHTML = billListFoot(); }
   else if (bv.view === 'cos') { kind.textContent = 'INVOICES'; head.textContent = 'Companies'; body.innerHTML = coListHtml(); foot.innerHTML = '<div class="xe-foot-in bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="back">← INVOICES</button><button type="button" class="proposal-btn proposal-btn-primary" data-b="newco">+ NEW COMPANY</button></div>'; }
   else if (bv.view === 'co') { var c = bv.draft; kind.textContent = 'COMPANY'; head.textContent = c.name || 'New company'; body.innerHTML = coFormHtml(c); foot.innerHTML = coFoot(); }
+  else if (bv.view === 'hsetup') { kind.textContent = 'HOURS'; head.textContent = 'Set up hourly billing'; body.innerHTML = hsetupHtml(); foot.innerHTML = '<div class="xe-foot-in bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="back">INVOICES</button><button type="button" class="proposal-btn proposal-btn-primary" data-b="hs-save">START</button></div>'; }
   else if (bv.view === 'time') { var tc = billing.co[bv.coId]; if (!tc) { bv.view = 'list'; return renderBilling(); } kind.textContent = 'HOURS'; head.textContent = tc.name || 'Company'; body.innerHTML = timeHtml(tc); foot.innerHTML = timeFoot(tc); timeLive(); }
   else if (bv.view === 'inv') { var v = bv.draft; kind.textContent = 'INVOICE · ' + invCalc(v).status.toUpperCase(); head.textContent = v.num; body.innerHTML = invFormHtml(v); foot.innerHTML = invFoot(v); invRecalc(); }
 }
@@ -5000,18 +5011,12 @@ function coFormHtml(c) {
     '<div class="ex-f"><label for="co-terms">DEFAULT TERMS</label><select id="co-terms" class="b-sel">' + BILL_TERMS.map(function (t) { return '<option value="' + t[0] + '"' + (c.terms === t[0] ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') + '</select></div>' +
     '<label class="b-check"><input type="checkbox" id="co-nttc"' + (c.nttc ? ' checked' : '') + '><span><b>NTTC on file</b> New invoices to this company start with gross receipts tax off.</span></label>' +
     '<div class="ex-f"><label for="co-notes">NOTES (ONLY YOU SEE THESE)</label><textarea id="co-notes" placeholder="Vendor #, who approves invoices, how they pay">' + esc(c.notes) + '</textarea></div>' +
-    '<div class="tm-set"><div class="tm-set-t">HOURLY BILLING (OPTIONAL)</div>' +
-      '<p class="xsec-note" style="margin:0 0 10px;">Fill in a rate to track hours for this company. The rate is only ever used to work out the total. It never prints on an invoice or the hours log.</p>' +
-      bf('co-rate', 'HOURLY RATE $ (ONLY YOU SEE THIS)', c.rate ? c.rate.toFixed(2) : '', 'type="text" inputmode="decimal" autocomplete="off" placeholder="Leave blank if you don&#39;t bill them by the hour"') +
-      bf('co-hrlabel', 'WHAT THE INVOICE CALLS THE WORK', c.hrLabel, 'type="text" placeholder="Consulting services"') +
-      '<label class="b-check"><input type="checkbox" id="co-hrtax"' + (c.hrTax ? ' checked' : '') + '><span><b>Charge gross receipts tax on hourly invoices</b> Turn off if you are not collecting it from this company.</span></label>' +
-      (c.rate > 0 && billing.co[c.id] ? '<button type="button" class="proposal-btn proposal-btn-secondary" style="width:100%;" data-b="opentime">OPEN HOURS TRACKER</button>' : '') +
-    '</div>';
+    '';
 }
 function coFoot() {
   var used = bv.draft && invList().some(function (v) { return v.coId === bv.draft.id; });
   var exists = bv.draft && billing.co[bv.draft.id];
-  return '<div class="xe-foot-in">' + (exists && !used ? '<button type="button" class="proposal-btn xe-del" data-b="delco">DELETE</button>' : '<span></span>') +
+  return '<div class="xe-foot-in' + (exists && !used ? '' : ' bf-2') + '">' + (exists && !used ? '<button type="button" class="proposal-btn xe-del" data-b="delco">DELETE</button>' : '') +
     '<button type="button" class="proposal-btn proposal-btn-secondary" data-b="cancel">CANCEL</button><button type="button" class="proposal-btn proposal-btn-primary" data-b="saveco">SAVE</button></div>';
 }
 function coRead() {
@@ -5020,7 +5025,6 @@ function coRead() {
   c.name = g('co-name'); c.contact = g('co-contact'); c.email = g('co-email'); c.cc = g('co-cc'); c.phone = g('co-phone');
   c.address = g('co-address'); c.city = g('co-city'); c.state = (g('co-state') || 'NM').toUpperCase(); c.zip = g('co-zip');
   c.terms = g('co-terms') || 'net30'; c.nttc = document.getElementById('co-nttc').checked; c.notes = g('co-notes');
-  c.rate = num2(g('co-rate')) > 0 ? num2(g('co-rate')) : 0; c.hrLabel = g('co-hrlabel') || 'Consulting services'; c.hrTax = document.getElementById('co-hrtax').checked;
   return c;
 }
 function saveCompany() {
@@ -5028,22 +5032,88 @@ function saveCompany() {
   if (!c.name) { nm.classList.add('bad'); nm.focus(); return false; }
   var em = document.getElementById('co-email');
   if (c.email && !/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/.test(c.email)) { em.classList.add('bad'); em.focus(); return false; }
-  if (billing.co[c.id]) c.time = billing.co[c.id].time;   // open hours are owned by the tracker, never by this form
+  var was = billing.co[c.id];   // hourly settings and open hours are owned by the tracker, never by this form
+  if (was) { c.time = was.time; c.rate = was.rate; c.hrTax = was.hrTax; c.hrLabel = was.hrLabel; }
   c.upd = Date.now(); billing.co[c.id] = normCompany(c);
   if (!saveBilling()) return false;
   return true;
 }
 
 // ── Hours tracker ──
-function openTime(coId) { bv.view = 'time'; bv.coId = coId; bv.tEdit = null; bv.tDraft = null; renderBilling(); }
+function hourlyCos() { return coList().filter(function (c) { return c.rate > 0; }); }
+function openTime(coId) { bv.view = 'time'; bv.coId = coId; bv.tEdit = null; bv.tDraft = null; bv.tSet = false; renderBilling(); }
+// The HOURS tile: straight into the tracker. First time (no hourly company yet) it asks for the company and rate on one screen.
+function openHours() {
+  openInvoices();
+  var h = hourlyCos(), last = '';
+  try { last = localStorage.getItem('arc_hours_last') || ''; } catch (e) {}
+  if (!h.length) { bv.view = 'hsetup'; bv.coId = null; renderBilling(); return; }
+  openTime((h.find(function (c) { return c.id === last; }) || h[0]).id);
+}
+function renderHrsCount() {
+  var el = document.getElementById('hrs-count'); if (!el) return;
+  var n = hourlyCos().reduce(function (s, c) { return s + c.time.filter(function (t) { return t.a && !t.b; }).length; }, 0);
+  el.textContent = n ? n + ' OPEN' : '';
+}
+function hsetupHtml(pre) {
+  var cos = coList(), sel = pre && pre.coId ? pre.coId : (cos.length === 1 ? cos[0].id : '');
+  return '<p class="xsec-note">Who do you bill by the hour? Set this once. The rate is only used to work out the total. It never prints on the invoice or the hours log.</p>' +
+    '<div class="tm-form">' +
+    '<div class="ex-f"><label for="hs-co">COMPANY</label><select id="hs-co" class="b-sel"><option value="">Choose a company…</option>' +
+      cos.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(c.name || 'Unnamed company') + '</option>'; }).join('') +
+      '<option value="__new"' + (!cos.length ? ' selected' : '') + '>+ New company…</option></select></div>' +
+    '<div id="hs-new"' + (!cos.length ? '' : ' hidden') + '>' + bf('hs-name', 'COMPANY NAME', '', 'type="text" autocomplete="organization" placeholder="Solarworks"') +
+      bf('hs-email', 'BILLING EMAIL', '', 'type="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ap@company.com"') + '</div>' +
+    hrSettingsFields({ rate: 0, hrLabel: 'Consulting services', hrTax: false }) +
+    '<button type="button" class="proposal-btn proposal-btn-primary" style="width:100%;" data-b="hs-save">START TRACKING HOURS</button></div>';
+}
+function hrSettingsFields(c) {
+  return bf('hs-rate', 'HOURLY RATE $ · ONLY YOU SEE THIS', c.rate ? c.rate.toFixed(2) : '', 'type="text" inputmode="decimal" autocomplete="off" placeholder="90.00"') +
+    bf('hs-label', 'WHAT THE INVOICE CALLS THE WORK', c.hrLabel, 'type="text" placeholder="Consulting services"') +
+    '<label class="b-check"><input type="checkbox" id="hs-tax"' + (c.hrTax ? ' checked' : '') + '><span><b>Charge gross receipts tax</b> Leave off if you are not collecting it from this company.</span></label>';
+}
+function hsRead() {
+  var g = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  return { rate: num2(g('hs-rate')), label: g('hs-label') || 'Consulting services', tax: !!(document.getElementById('hs-tax') || {}).checked };
+}
+function hsetupSave() {
+  var v = hsRead(), csel = document.getElementById('hs-co'), id = csel.value, co;
+  if (!id) { csel.classList.add('bad'); csel.focus(); showToast('CHOOSE A COMPANY'); return; }
+  if (!(v.rate > 0)) { var r = document.getElementById('hs-rate'); r.classList.add('bad'); r.focus(); showToast('ADD YOUR HOURLY RATE'); return; }
+  if (id === '__new') {
+    var nm = document.getElementById('hs-name'), em = document.getElementById('hs-email');
+    if (!nm.value.trim()) { nm.classList.add('bad'); nm.focus(); showToast('ADD THE COMPANY NAME'); return; }
+    if (em.value.trim() && !/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/.test(em.value.trim())) { em.classList.add('bad'); em.focus(); return; }
+    co = normCompany({ name: nm.value.trim(), email: em.value.trim() });
+  } else co = billing.co[id];
+  if (!co) return;
+  co.rate = v.rate; co.hrLabel = v.label; co.hrTax = v.tax; co.upd = Date.now();
+  billing.co[co.id] = normCompany(co);
+  if (!saveBilling()) return;
+  try { localStorage.setItem('arc_hours_last', co.id); } catch (e) {}
+  openTime(co.id); showToast('READY · LOG YOUR FIRST HOURS');
+}
+function tmSettingsSave() {
+  var co = billing.co[bv.coId], v = hsRead(); if (!co) return;
+  if (!(v.rate > 0)) { var r = document.getElementById('hs-rate'); r.classList.add('bad'); r.focus(); showToast('ADD YOUR HOURLY RATE'); return; }
+  co.rate = v.rate; co.hrLabel = v.label; co.hrTax = v.tax; co.upd = Date.now();
+  if (!saveBilling()) return;
+  bv.tSet = false; renderBilling(); showToast('SAVED');
+}
 function timeDraft() { return bv.tDraft || { date: localISODate(), a: '', b: '', who: '', note: '' }; }
 function timeHtml(co) {
-  var d = timeDraft(), list = timeSort(co.time).reverse(), ed = !!bv.tEdit;
+  try { localStorage.setItem('arc_hours_last', co.id); } catch (e) {}
+  var d = timeDraft(), list = timeSort(co.time).reverse(), ed = !!bv.tEdit, others = hourlyCos().filter(function (c) { return c.id !== co.id; });
+  var top = '<div class="tm-top"><button type="button" class="tm-chip' + (bv.tSet ? ' on' : '') + '" data-b="tm-set">RATE &amp; SETTINGS</button>' +
+    others.map(function (c) { return '<button type="button" class="tm-chip" data-time="' + esc(c.id) + '">' + esc(c.name) + ' ›</button>'; }).join('') +
+    '<button type="button" class="tm-chip" data-b="tm-addco">+ ANOTHER COMPANY</button></div>' +
+    (bv.tSet ? '<div class="tm-form" style="margin-bottom:14px;"><div class="tm-set-t">SETTINGS · ONLY YOU SEE THESE</div>' + hrSettingsFields(co) +
+      '<div class="bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="tm-set">CANCEL</button><button type="button" class="proposal-btn proposal-btn-primary" data-b="tm-setsave">SAVE</button></div></div>' : '');
   var tf = function (id, label, val, now) {
     return '<div class="ex-f"><label for="' + id + '">' + label + '</label><div class="tm-t"><input id="' + id + '" type="time" value="' + esc(val) + '">' +
       '<button type="button" class="tm-now" data-b="' + now + '">NOW</button></div></div>';
   };
-  var h = '<div class="tm-sum"><div class="tm-k">THIS PERIOD · NOT YET INVOICED</div><div class="tm-total" id="tm-total"></div><div class="tm-meta" id="tm-meta"></div></div>' +
+  var h = top + '<div class="tm-sum"><div class="tm-k">THIS PERIOD · NOT YET INVOICED</div><div class="tm-total" id="tm-total"></div><div class="tm-meta" id="tm-meta"></div></div>' +
     '<div class="tm-form"><div class="tm-set-t">' + (ed ? 'EDIT ENTRY' : 'ADD HOURS') + '</div>' +
       bf('tm-date', 'DATE', d.date, 'type="date"') +
       '<div class="tm-2">' + tf('tm-a', 'START', d.a, 'now-a') + tf('tm-b', 'FINISH', d.b, 'now-b') + '</div>' +
@@ -5073,7 +5143,7 @@ function timeHtml(co) {
 }
 function timeFoot(co) {
   var n = timeSum(co.time).n;
-  return '<div class="xe-foot-in bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="back">← INVOICES</button>' +
+  return '<div class="xe-foot-in bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="back">INVOICES</button>' +
     '<button type="button" class="proposal-btn proposal-btn-primary" data-b="tm-build"' + (n ? '' : ' disabled') + '>BUILD INVOICE</button></div>';
 }
 function timeRead() {
@@ -5436,6 +5506,7 @@ function previewReceipt(pid) {
 (function wireBilling() {
   var sheet = document.getElementById('inv-sheet'); if (!sheet) return;
   document.getElementById('btn-invoices').addEventListener('click', function (e) { e.preventDefault(); openInvoices(); });
+  document.getElementById('btn-hours').addEventListener('click', function (e) { e.preventDefault(); openHours(); });
   document.getElementById('inv-close').addEventListener('click', function (e) { e.preventDefault(); closeInvoices(); });
   sheet.addEventListener('click', function (e) {
     var t = e.target;
@@ -5462,6 +5533,10 @@ function previewReceipt(pid) {
     if (a === 'now-a' || a === 'now-b') { var nw = new Date(), ni = document.getElementById(a === 'now-a' ? 'tm-a' : 'tm-b'); ni.value = String(nw.getHours()).padStart(2, '0') + ':' + String(nw.getMinutes()).padStart(2, '0'); ni.classList.remove('bad'); timeLive(); }
     else if (a === 'who-training') { document.getElementById('tm-who').value = 'Training'; }
     else if (a === 'tm-save') timeSave();
+    else if (a === 'hs-save') hsetupSave();
+    else if (a === 'tm-set') { bv.tSet = !bv.tSet; renderBilling(); }
+    else if (a === 'tm-setsave') tmSettingsSave();
+    else if (a === 'tm-addco') { bv.view = 'hsetup'; bv.coId = null; renderBilling(); }
     else if (a === 'tm-cancel') { bv.tEdit = null; bv.tDraft = null; renderBilling(); }
     else if (a === 'tm-del') {
       if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'TAP TO DELETE'; b.classList.add('armed'); return; }
@@ -5473,7 +5548,6 @@ function previewReceipt(pid) {
       if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'TAP AGAIN · ' + hrsTxt(bsm.min) + ' HRS'; b.classList.add('armed'); return; }
       timeBuild();
     }
-    else if (a === 'opentime') { if (!saveCompany()) return; openTime(bv.draft.id); }
     else if (a === 'cos') { bv.view = 'cos'; renderBilling(); }
     else if (a === 'back') { bv.view = 'list'; renderBilling(); }
     else if (a === 'newinv') { newInvoice(''); }
@@ -5529,6 +5603,7 @@ function previewReceipt(pid) {
     if (bv.view === 'inv') invRecalc();
   });
   sheet.addEventListener('change', function (e) {
+    if (e.target.id === 'hs-co') { var nw = document.getElementById('hs-new'); if (nw) nw.hidden = e.target.value !== '__new'; if (e.target.value === '__new') document.getElementById('hs-name').focus(); return; }
     if (bv.view !== 'inv') return;
     var id = e.target.id;
     if (id === 'bi-co') {

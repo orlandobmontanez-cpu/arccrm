@@ -168,13 +168,18 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 Orlando consults by the hour (first client: Solarworks, invoiced every Thursday morning). Lives inside the Invoices screen.
 
-- **A company becomes hourly when it has a rate** (`co.rate`, set in the company form). The rate is **private**: it only turns
+- **A company becomes hourly when it has a rate** (`co.rate`, set from the HOURS tile setup or the tracker's settings). The rate is **private**: it only turns
   hours into a total and is **never printed** on an invoice or the hours log, and the tracker shows only the running total.
   He doesn't mind that total ÷ hours reveals it; he just doesn't want it displayed. Keep it off every document.
 - `co.time` = hours not yet invoiced: `{ id, date, a: 'HH:MM', b: 'HH:MM', who, note, at }`. `who` is the customer's last name or
   "Training". No finish time = in progress (0 hours, not invoiced). A finish earlier than the start means past midnight (`timeMin`).
-- Hourly companies show a dark card at the top of the Invoices list → the tracker (`bv.view === 'time'`): running total, add/edit
-  form with NOW buttons, entries, and past invoiced periods.
+- **Entry point: the HOURS tile on the main screen** (`#btn-hours` → `openHours`). It goes straight to the last-used hourly company's
+  tracker. With no hourly company yet it shows one setup screen (`bv.view === 'hsetup'`): pick or create the company, rate, invoice
+  wording, tax. Rate / wording / tax are changed later from **RATE & SETTINGS** at the top of the tracker. The company form has
+  **no** hourly fields (he found that buried and confusing); saving a company keeps rate, hrTax, hrLabel and time untouched.
+- The tracker (`bv.view === 'time'`): running total, add/edit form with NOW buttons, entries, past invoiced periods, chips to switch
+  to another hourly company. Hourly companies also show a dark card at the top of the Invoices list. The HOURS tile shows "N OPEN"
+  when an entry has a start but no finish.
 - **BUILD INVOICE** (two taps) moves every finished entry onto a new Draft invoice (`inv.time`), one line
   "<hrLabel>, <date range> (<hours> hours)" with qty 1 and rate = the total, tax from `co.hrTax`. The tracker is then fresh.
   **The reset is tied to building the invoice, not to the calendar**, so late sends and forgotten entries never split or double-bill.

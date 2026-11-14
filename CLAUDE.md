@@ -180,6 +180,13 @@ Orlando consults by the hour (first client: Solarworks, invoiced every Thursday 
 - The tracker (`bv.view === 'time'`): running total, add/edit form with NOW buttons, entries, past invoiced periods, chips to switch
   to another hourly company. Hourly companies also show a dark card at the top of the Invoices list. The HOURS tile shows "N OPEN"
   when an entry has a start but no finish.
+- **Entries are "brackets"** (`.tm-br` cards, oldest first) above a fresh form titled NEXT ENTRY. SAVE ENTRY stores it, clears the
+  form (keeping the date) and scrolls to it. Tap a card to edit it in the form.
+- **Customers box is a paste box** (`#tm-who`, grows with content). He pastes the list Solarworks texts him, e.g.
+  `1. Jocelyn Gorman (33595) - 1600 Padre Roberto Road Northwest`; `stopLines()` turns each into
+  `Gorman (33595) · 1600 Padre Roberto Road Northwest` (last name, their job #, address as sent), one per line, shown live under the
+  box as "ON THE HOURS LOG". Handles numbered items run together on one line. `who` stores those lines joined by newlines; the hours
+  log prints one per line. A day with several homes is **one** time block with all stops (his choice), not one entry per home.
 - **BUILD INVOICE** (two taps) moves every finished entry onto a new Draft invoice (`inv.time`), one line
   "<hrLabel>, <date range> (<hours> hours)" with qty 1 and rate = the total, tax from `co.hrTax`. The tracker is then fresh.
   **The reset is tied to building the invoice, not to the calendar**, so late sends and forgotten entries never split or double-bill.

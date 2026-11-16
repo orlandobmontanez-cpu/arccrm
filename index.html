@@ -776,6 +776,22 @@
   .tm-live { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 13px; color: var(--copper); min-height: 18px; margin: -4px 0 10px; }
   .tm-btns { display: grid; grid-template-columns: auto 1fr 1.4fr; gap: 8px; }
   .x-row.tm-on { border-color: var(--copper); }
+  .tm-brs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .tm-br { display: flex; flex-direction: column; gap: 6px; width: 100%; text-align: left; cursor: pointer; padding: 14px 14px 10px; border-radius: 16px;
+    background: var(--white); border: 1px solid var(--stone-dark); border-left: 0; font-family: 'Inter', sans-serif; color: var(--ink); }
+  .tm-br.tm-on { border-color: var(--copper); box-shadow: 0 0 0 1px var(--copper); }
+  .tm-br-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.12em; color: var(--copper); }
+  .tm-br-h b { font-family: 'Anton', sans-serif; font-weight: 400; font-size: 18px; letter-spacing: 0.01em; color: var(--ink); white-space: nowrap; }
+  .tm-br-s { display: flex; flex-direction: column; gap: 3px; font-size: 14px; line-height: 1.35; }
+  .tm-br-none { color: var(--ink-muted); font-style: italic; }
+  .tm-br-n { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 13px; color: var(--ink-muted); }
+  .tm-br-e { align-self: flex-end; font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-muted); }
+  textarea.tm-paste { width: 100%; min-height: 110px; resize: none; font-size: 16px; line-height: 1.4; padding: 12px 14px; }
+  .tm-pv { margin-top: 8px; }
+  .tm-pv:empty { display: none; }
+  .tm-pv-t { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.16em; color: var(--copper); margin-bottom: 4px; }
+  .tm-pv-l { font-size: 13px; line-height: 1.4; padding: 6px 10px; margin-bottom: 4px; border-radius: 10px; background: var(--stone); color: var(--ink); }
+  .tm-qk { display: flex; gap: 8px; margin-top: 8px; }
   .tm-top { display: flex; gap: 8px; overflow-x: auto; margin: 0 -2px 12px; padding: 0 2px; scrollbar-width: none; }
   .tm-top::-webkit-scrollbar { display: none; }
   .tm-chip { flex: none; min-height: 44px; padding: 2px 14px 0; border: 1px solid var(--stone-dark); border-radius: 999px; background: var(--white); color: var(--ink);
@@ -4840,13 +4856,34 @@ function normTime(list) {
   var s = function (v, n) { return String(v == null ? '' : v).slice(0, n || 200); };
   return (Array.isArray(list) ? list : []).filter(Boolean).slice(0, 500).map(function (t) {
     return { id: s(t.id, 40) || billId('t'), date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || '') ? t.date : localISODate(), a: hhmm(t.a), b: hhmm(t.b),
-      who: s(t.who, 80), note: s(t.note, 200), at: +t.at || Date.now() };
+      who: s(t.who, 1200), note: s(t.note, 200), at: +t.at || Date.now() };
   });
 }
 function timeMin(t) {   // minutes worked; a finish earlier than the start means it ran past midnight
   if (!t || !t.a || !t.b) return 0;
   var a = +t.a.slice(0, 2) * 60 + +t.a.slice(3), b = +t.b.slice(0, 2) * 60 + +t.b.slice(3), m = b - a;
   return m < 0 ? m + 1440 : m;
+}
+// Turns a pasted list like "1. Jocelyn Gorman (33595) - 1600 Padre Roberto Road Northwest" into
+// "Gorman (33595) · 1600 Padre Roberto Road Northwest", one line per stop. Lines it can't read are kept as typed.
+function stopLines(text) {
+  var t = String(text || '').replace(/\r/g, '').trim(); if (!t) return [];
+  if (/^training$/i.test(t)) return ['Training'];
+  // numbered items may arrive on one line when a text bubble is copied: split before "2." "3." etc.
+  var chunks = t.split(/\n+|(?=(?:^|\s)\d{1,2}[.)]\s+[A-Za-z])/).map(function (x) { return x.trim(); }).filter(Boolean);
+  return chunks.map(function (c) {
+    c = c.replace(/^\d{1,2}[.)]\s+/, '').replace(/^[-•*]\s+/, '').replace(/\s+/g, ' ').trim();
+    var m = /^(.*?)\s*\(([^)]{1,30})\)\s*(?:[-–—·:,]\s*)?(.*)$/.exec(c);
+    var name, job = '', addr = '';
+    if (m) { name = m[1]; job = m[2].trim(); addr = m[3]; }
+    else { var d = /^(.*?)\s+[-–—·]\s+(.*)$/.exec(c); if (d) { name = d[1]; addr = d[2]; } else return c; }
+    name = name.replace(/[,·\-–—]+$/, '').trim();
+    var words = name.split(' ').filter(Boolean);
+    var last = words.length ? words[words.length - 1] : '';
+    if (/^(jr|sr|ii|iii|iv)\.?$/i.test(last) && words.length > 1) last = words[words.length - 2] + ' ' + last;
+    if (!last) return c;
+    return last + (job ? ' (' + job + ')' : '') + (addr ? ' · ' + addr.trim() : '');
+  }).filter(Boolean).slice(0, 20);
 }
 function timeSum(list) { var m = 0, n = 0; (list || []).forEach(function (t) { var x = timeMin(t); if (x > 0) { m += x; n++; } }); return { min: m, n: n }; }
 function hrsTxt(min) { return (min / 60).toFixed(2); }
@@ -5113,25 +5150,30 @@ function timeHtml(co) {
     return '<div class="ex-f"><label for="' + id + '">' + label + '</label><div class="tm-t"><input id="' + id + '" type="time" value="' + esc(val) + '">' +
       '<button type="button" class="tm-now" data-b="' + now + '">NOW</button></div></div>';
   };
+  var asc = timeSort(co.time);
+  var bracket = function (t) {
+    var m = timeMin(t), stops = String(t.who || '').split('\n').filter(Boolean);
+    return '<button class="tm-br' + (bv.tEdit === t.id ? ' tm-on' : '') + '" type="button" data-tedit="' + esc(t.id) + '">' +
+      '<span class="tm-br-h"><span>' + esc(dayDate(t.date)) + ' · ' + esc(clock12(t.a) || 'No start') + ' – ' + esc(clock12(t.b) || '…') + '</span>' +
+        (m > 0 ? '<b>' + hrsTxt(m) + ' hrs</b>' : '<span class="bs-pill">IN PROGRESS</span>') + '</span>' +
+      (stops.length ? '<span class="tm-br-s">' + stops.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</span>' : '<span class="tm-br-s tm-br-none">No customer added</span>') +
+      (t.note ? '<span class="tm-br-n">' + esc(t.note) + '</span>' : '') + '<span class="tm-br-e">TAP TO EDIT</span></button>';
+  };
   var h = top + '<div class="tm-sum"><div class="tm-k">THIS PERIOD · NOT YET INVOICED</div><div class="tm-total" id="tm-total"></div><div class="tm-meta" id="tm-meta"></div></div>' +
-    '<div class="tm-form"><div class="tm-set-t">' + (ed ? 'EDIT ENTRY' : 'ADD HOURS') + '</div>' +
+    (asc.length ? '<div class="tm-set-t" style="margin-top:4px;">ENTRIES THIS PERIOD</div><div class="tm-brs">' + asc.map(bracket).join('') + '</div>' : '') +
+    '<div class="tm-form" id="tm-form"><div class="tm-set-t">' + (ed ? 'EDIT ENTRY' : asc.length ? 'NEXT ENTRY' : 'ADD HOURS') + '</div>' +
       bf('tm-date', 'DATE', d.date, 'type="date"') +
       '<div class="tm-2">' + tf('tm-a', 'START', d.a, 'now-a') + tf('tm-b', 'FINISH', d.b, 'now-b') + '</div>' +
       '<div class="tm-live" id="tm-live"></div>' +
-      '<div class="ex-f"><label for="tm-who">CUSTOMER LAST NAME, OR TRAINING</label><div class="tm-t"><input id="tm-who" type="text" autocapitalize="words" autocomplete="off" value="' + esc(d.who) + '" placeholder="Garcia">' +
-        '<button type="button" class="tm-now" data-b="who-training">TRAINING</button></div></div>' +
-      bf('tm-note', 'NOTE (OPTIONAL, PRINTS ON THE HOURS LOG)', d.note, 'type="text" autocomplete="off" placeholder="Site visit, ride-along, crew training"') +
+      '<div class="ex-f"><label for="tm-who">CUSTOMERS · PASTE THE TEXT OR TYPE</label>' +
+        '<textarea id="tm-who" class="tm-paste" rows="4" autocapitalize="words" autocomplete="off" placeholder="Paste the list they texted you, or type a last name. One home per line.">' + esc(d.who) + '</textarea>' +
+        '<div class="tm-pv" id="tm-pv"></div>' +
+        '<div class="tm-qk"><button type="button" class="tm-now" data-b="who-training">TRAINING</button><button type="button" class="tm-now" data-b="who-clear">CLEAR</button></div></div>' +
+      bf('tm-note', 'REASON / NOTE (OPTIONAL, PRINTS ON THE HOURS LOG)', d.note, 'type="text" autocomplete="off" placeholder="Site visits, ride-along, crew training"') +
       (ed ? '<div class="tm-btns"><button type="button" class="proposal-btn xe-del" data-b="tm-del">DELETE</button><button type="button" class="proposal-btn proposal-btn-secondary" data-b="tm-cancel">CANCEL</button>' +
               '<button type="button" class="proposal-btn proposal-btn-primary" data-b="tm-save">SAVE CHANGES</button></div>'
-          : '<button type="button" class="proposal-btn proposal-btn-primary" style="width:100%;" data-b="tm-save">ADD ENTRY</button>') +
-    '</div>' +
-    '<div class="tm-set-t" style="margin-top:18px;">ENTRIES THIS PERIOD</div><div class="x-list">' +
-    (list.length ? list.map(function (t) {
-      var m = timeMin(t);
-      return '<button class="x-row' + (bv.tEdit === t.id ? ' tm-on' : '') + '" type="button" data-tedit="' + esc(t.id) + '"><span><span class="x-num">' + esc(dayDate(t.date)) + ' · ' + esc(clock12(t.a) || 'No start') + ' – ' + esc(clock12(t.b) || '…') + '</span>' +
-        '<span class="x-title">' + esc(t.who || 'No name') + (t.note ? ' <small>· ' + esc(t.note) + '</small>' : '') + '</span></span>' +
-        '<span class="x-right">' + (m > 0 ? '<span class="x-amt">' + hrsTxt(m) + ' <small>hrs</small></span>' : '<span class="bs-pill">IN PROGRESS</span>') + '</span></button>';
-    }).join('') : '<div class="x-empty">No hours logged yet. Add your first entry above.</div>') + '</div>';
+          : '<button type="button" class="proposal-btn proposal-btn-primary" style="width:100%;" data-b="tm-save">SAVE ENTRY</button>') +
+    '</div>';
   var past = invList().filter(function (v) { return v.coId === co.id && v.time.length; }).sort(function (a, b) { return b.seq - a.seq; });
   if (past.length) h += '<div class="tm-set-t" style="margin-top:18px;">INVOICED PERIODS</div><div class="x-list">' + past.map(function (v) {
     var k = invCalc(v), cls = k.status.toLowerCase().replace(/\s+/g, '-');
@@ -5152,8 +5194,15 @@ function timeRead() {
   return { date: /^\d{4}-\d{2}-\d{2}$/.test(g('tm-date')) ? g('tm-date') : '', a: hhmm(g('tm-a')), b: hhmm(g('tm-b')), who: g('tm-who'), note: g('tm-note') };
 }
 // The running total: everything logged this period, plus the entry being typed
+function tmGrow(el) { if (!el) return; el.style.height = 'auto'; el.style.height = Math.min(Math.max(el.scrollHeight + 2, 110), 360) + 'px'; }
 function timeLive() {
   var co = billing.co[bv.coId]; if (!co || !document.getElementById('tm-total')) return;
+  var who = document.getElementById('tm-who'), pv = document.getElementById('tm-pv');
+  if (who && pv) {
+    tmGrow(who);
+    var ls = stopLines(who.value);
+    pv.innerHTML = ls.length ? '<div class="tm-pv-t">ON THE HOURS LOG · ' + ls.length + ' LINE' + (ls.length === 1 ? '' : 'S') + '</div>' + ls.map(function (x) { return '<div class="tm-pv-l">' + esc(x) + '</div>'; }).join('') : '';
+  }
   var d = timeRead(), rest = co.time.filter(function (t) { return t.id !== bv.tEdit; });
   var sm = timeSum(rest.concat([d])), m = timeMin(d);
   document.getElementById('tm-total').textContent = fmt(timeAmt(sm.min, co.rate));
@@ -5164,13 +5213,22 @@ function timeSave() {
   var co = billing.co[bv.coId]; if (!co) return;
   var d = timeRead(), bad = !d.date ? 'tm-date' : !d.a ? 'tm-a' : null;
   if (bad) { var el = document.getElementById(bad); el.classList.add('bad'); el.focus(); showToast(bad === 'tm-a' ? 'ADD A START TIME' : 'CHOOSE A DATE'); return; }
+  d.who = stopLines(d.who).join('\n');
   var m = timeMin(d);
   if (bv.tEdit) { co.time = co.time.map(function (t) { return t.id === bv.tEdit ? { id: t.id, date: d.date, a: d.a, b: d.b, who: d.who, note: d.note, at: t.at } : t; }); }
   else co.time.push({ id: billId('t'), date: d.date, a: d.a, b: d.b, who: d.who, note: d.note, at: Date.now() });
   co.time = normTime(co.time); co.upd = Date.now();
   if (!saveBilling()) return;
-  showToast(bv.tEdit ? 'ENTRY SAVED' : m > 0 ? 'ADDED · ' + hrsTxt(m) + ' HRS' : 'STARTED · ADD A FINISH TIME LATER');
-  bv.tEdit = null; bv.tDraft = null; renderBilling();
+  var wasEdit = !!bv.tEdit;
+  showToast(wasEdit ? 'ENTRY SAVED' : m > 0 ? 'SAVED · ' + hrsTxt(m) + ' HRS' : 'STARTED · ADD A FINISH TIME LATER');
+  bv.tEdit = null; bv.tDraft = { date: d.date, a: '', b: '', who: '', note: '' }; renderBilling();
+  // the saved entry is now its own card; bring the fresh form into view, ready for the next one
+  try {
+    var f = document.getElementById('tm-form'), cards = document.querySelectorAll('.tm-br');
+    if (f) f.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    var last = cards[cards.length - 1];
+    if (!wasEdit && last && last.animate) last.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.22,1,.36,1)' });
+  } catch (e) {}
 }
 function timeBuild() {
   var co = billing.co[bv.coId]; if (!co) return;
@@ -5191,7 +5249,7 @@ function timeBuild() {
 function invTimeHtml(v) {
   if (!v.time.length) return '';
   return '<div class="tm-inv"><div class="tm-set-t">HOURS ON THIS INVOICE · ' + hrsTxt(timeSum(v.time).min) + '</div>' + timeSort(v.time).map(function (t) {
-    return '<div class="tm-line"><span>' + esc(dayDate(t.date)) + ' · ' + esc(clock12(t.a)) + ' – ' + esc(clock12(t.b)) + (t.who ? ' · ' + esc(t.who) : '') + '</span><b>' + hrsTxt(timeMin(t)) + '</b></div>';
+    return '<div class="tm-line"><span>' + esc(dayDate(t.date)) + ' · ' + esc(clock12(t.a)) + ' – ' + esc(clock12(t.b)) + (t.who ? ' · ' + esc(String(t.who).split('\n').map(function (x) { return x.split(' (')[0].split(' · ')[0]; }).join(', ')) : '') + '</span><b>' + hrsTxt(timeMin(t)) + '</b></div>';
   }).join('') + '<p class="xsec-note" style="margin:8px 0 0;">The hours log prints on the invoice.' + (v.status === 'Draft' && !v.payments.length ? ' To change hours, delete this draft: they go back to the tracker.' : '') + '</p></div>';
 }
 
@@ -5384,8 +5442,8 @@ function hoursLog(v) {
   return '<div class="hl"><div class="sh">Hours Log · ' + esc(timeRange(list)) + '</div><div class="sh-rule"></div>' +
     '<table class="it hlt"><thead><tr><th>Date</th><th>Start</th><th>Finish</th><th>Customer / Training</th><th class="n">Hours</th></tr></thead><tbody>' +
     list.map(function (t) {
-      return '<tr><td>' + esc(dayDate(t.date)) + '</td><td>' + esc(clock12(t.a)) + '</td><td>' + esc(clock12(t.b)) + '</td><td>' + esc(t.who || '') +
-        (t.note ? (t.who ? ' · ' : '') + '<span class="hl-n">' + esc(t.note) + '</span>' : '') + '</td><td class="n">' + hrsTxt(timeMin(t)) + '</td></tr>';
+      return '<tr><td>' + esc(dayDate(t.date)) + '</td><td>' + esc(clock12(t.a)) + '</td><td>' + esc(clock12(t.b)) + '</td><td>' + String(t.who || '').split('\n').filter(Boolean).map(esc).join('<br>') +
+        (t.note ? (t.who ? '<br>' : '') + '<span class="hl-n">' + esc(t.note) + '</span>' : '') + '</td><td class="n">' + hrsTxt(timeMin(t)) + '</td></tr>';
     }).join('') +
     '<tr class="hl-tot"><td colspan="4">Total hours</td><td class="n">' + hrsTxt(timeSum(list).min) + '</td></tr></tbody></table></div>';
 }
@@ -5513,7 +5571,7 @@ function previewReceipt(pid) {
     var f = t.closest('[data-filter]'); if (f) { bv.filter = f.dataset.filter; renderBilling(); return; }
     var tmc = t.closest('[data-time]'); if (tmc) { openTime(tmc.dataset.time); return; }
     var te = t.closest('[data-tedit]');
-    if (te) { var tco = billing.co[bv.coId], tt = tco && tco.time.find(function (x) { return x.id === te.dataset.tedit; }); if (tt) { bv.tEdit = tt.id; bv.tDraft = { date: tt.date, a: tt.a, b: tt.b, who: tt.who, note: tt.note }; renderBilling(); document.getElementById('inv-body').scrollTop = 0; } return; }
+    if (te) { var tco = billing.co[bv.coId], tt = tco && tco.time.find(function (x) { return x.id === te.dataset.tedit; }); if (tt) { bv.tEdit = tt.id; bv.tDraft = { date: tt.date, a: tt.a, b: tt.b, who: tt.who, note: tt.note }; renderBilling(); var tf2 = document.getElementById('tm-form'); if (tf2) tf2.scrollIntoView({ block: 'start' }); } return; }
     var r = t.closest('[data-inv]'); if (r) { bv.from = bv.view === 'time' ? 'time' : 'list'; openInvoice(r.dataset.inv); return; }
     var c = t.closest('[data-co]'); if (c) { bv.view = 'co'; bv.from = 'cos'; bv.draft = normCompany(JSON.parse(JSON.stringify(billing.co[c.dataset.co]))); renderBilling(); return; }
     var rc = t.closest('[data-pay]'); if (rc) { if (!billing.co[bv.draft.coId] || !invValid(false)) { showToast('CHOOSE A COMPANY FIRST'); return; } previewReceipt(rc.dataset.pay); return; }
@@ -5531,13 +5589,14 @@ function previewReceipt(pid) {
     var b = t.closest('[data-b]'); if (!b) return;
     var a = b.dataset.b;
     if (a === 'now-a' || a === 'now-b') { var nw = new Date(), ni = document.getElementById(a === 'now-a' ? 'tm-a' : 'tm-b'); ni.value = String(nw.getHours()).padStart(2, '0') + ':' + String(nw.getMinutes()).padStart(2, '0'); ni.classList.remove('bad'); timeLive(); }
-    else if (a === 'who-training') { document.getElementById('tm-who').value = 'Training'; }
+    else if (a === 'who-training') { var wt = document.getElementById('tm-who'); wt.value = 'Training'; tmGrow(wt); timeLive(); }
     else if (a === 'tm-save') timeSave();
     else if (a === 'hs-save') hsetupSave();
     else if (a === 'tm-set') { bv.tSet = !bv.tSet; renderBilling(); }
     else if (a === 'tm-setsave') tmSettingsSave();
     else if (a === 'tm-addco') { bv.view = 'hsetup'; bv.coId = null; renderBilling(); }
     else if (a === 'tm-cancel') { bv.tEdit = null; bv.tDraft = null; renderBilling(); }
+    else if (a === 'who-clear') { var wc = document.getElementById('tm-who'); wc.value = ''; tmGrow(wc); timeLive(); wc.focus(); }
     else if (a === 'tm-del') {
       if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'TAP TO DELETE'; b.classList.add('armed'); return; }
       var dco = billing.co[bv.coId]; if (dco) { dco.time = dco.time.filter(function (x) { return x.id !== bv.tEdit; }); dco.upd = Date.now(); saveBilling(); }

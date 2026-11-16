@@ -1107,6 +1107,14 @@
     .hd-btn svg { width: 20px; height: 20px; display: block; }
     .topo { position: absolute; top: 0; right: 0; width: 200px; height: 183px; pointer-events: none; z-index: 0; opacity: .2; }
 
+    /* Topographic corner: one faint top-right corner on every screen (Nov 16 2026). Never more than one corner per screen. */
+    #sidebar-header::before { content: ""; position: absolute; top: 0; right: 0; width: 200px; height: 183px; pointer-events: none; z-index: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 220'%3E%3Cg fill='none' stroke='%23974930' stroke-width='1' opacity='0.2'%3E%3Cpath d='M250 150 C 214 146, 196 120, 190 92 C 184 62, 160 44, 150 -10'/%3E%3Cpath d='M250 176 C 204 172, 176 142, 168 106 C 160 70, 132 52, 122 -10'/%3E%3Cpath d='M250 202 C 194 198, 156 164, 146 120 C 136 78, 104 60, 94 -10'/%3E%3Cpath d='M250 124 C 224 120, 214 100, 210 80 C 206 56, 186 38, 178 -10'/%3E%3Cpath d='M250 98 C 236 94, 230 80, 228 66 C 225 46, 212 30, 206 -10'/%3E%3Cpath d='M250 70 C 244 62, 242 48, 240 36 C 238 22, 234 10, 232 -10'/%3E%3C/g%3E%3C/svg%3E") no-repeat right top / contain; }
+    .xe-head { position: relative; overflow: hidden; }
+    .xe-head::before { content: ""; position: absolute; top: 0; right: 0; width: 220px; height: 200px; pointer-events: none; z-index: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 220'%3E%3Cg fill='none' stroke='%23C97E78' stroke-width='1' opacity='0.28'%3E%3Cpath d='M250 150 C 214 146, 196 120, 190 92 C 184 62, 160 44, 150 -10'/%3E%3Cpath d='M250 176 C 204 172, 176 142, 168 106 C 160 70, 132 52, 122 -10'/%3E%3Cpath d='M250 202 C 194 198, 156 164, 146 120 C 136 78, 104 60, 94 -10'/%3E%3Cpath d='M250 124 C 224 120, 214 100, 210 80 C 206 56, 186 38, 178 -10'/%3E%3Cpath d='M250 98 C 236 94, 230 80, 228 66 C 225 46, 212 30, 206 -10'/%3E%3Cpath d='M250 70 C 244 62, 242 48, 240 36 C 238 22, 234 10, 232 -10'/%3E%3C/g%3E%3C/svg%3E") no-repeat right top / contain; }
+    .xe-head > * { position: relative; z-index: 1; }
+
     #list-sheet {
       flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden;
       background: var(--ink); border-radius: 26px 26px 0 0; padding-top: 18px; box-shadow: 0 -10px 30px rgba(28,26,24,.18);

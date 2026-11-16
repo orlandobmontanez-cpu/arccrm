@@ -277,7 +277,7 @@ documents and PDFs are untouched) and one `PREMIUM LAYER` `<script>` at the end 
 - Customer file: name in Anton caps, `#pipeline` moved **inside `#form-area`** so it scrolls with the form (the name + SAVE stay
   pinned). Pipeline is a six-step bar (`.pip-seg`); Declined is shown as a state, not a step. NEXT reads "NEXT: SIGNED →".
   Form sections are white cards. Emoji were removed from button labels (text unchanged otherwise).
-- **Topographic lines:** one top-right corner of the customer file only, faint copper. **Sandia ridge:** only on the Job Board
+- **Topographic lines:** one faint top-right corner per screen: the customer list header, the customer file, and every dark pop-up header (`.xe-head::before`, Invoices, Hours, documents). Never more than that one corner. The Job Board keeps its own contour card. **Sandia ridge:** only on the Job Board
   greeting card. Do not add either anywhere else (he finds more too busy). Buttons stay flat copper, no metal sheen.
 - **Motion** (flowing water: quick start, soft settle, `cubic-bezier(.22,1,.36,1)`, about half a second):
   phone only, the customer file glides in from the right over the list (`#main` is always `display:flex` now and slides with

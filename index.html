@@ -1107,6 +1107,34 @@
     .hd-btn svg { width: 20px; height: 20px; display: block; }
     .topo { position: absolute; top: 0; right: 0; width: 200px; height: 183px; pointer-events: none; z-index: 0; opacity: .2; }
 
+
+    /* Weather watch */
+    .hd-btns { display: flex; gap: 8px; align-items: center; position: relative; z-index: 1; }
+    .wx-btn { width: auto; min-width: 46px; padding: 0 12px 0 10px; gap: 5px; color: var(--copper); }
+    .wx-btn[hidden] { display: none; }
+    .wx-btn .wx-t { font-family: 'Anton', sans-serif; font-size: 16px; color: var(--ink); letter-spacing: .02em; }
+    .wx-panel { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 74px); right: 14px; left: 14px; z-index: 45; background: var(--white);
+      border: 1px solid rgba(28,26,24,.08); border-radius: 22px; padding: 14px 16px 12px; box-shadow: 0 20px 50px rgba(28,26,24,.25); animation: arcPop .38s var(--ease) backwards; }
+    .wx-panel[hidden] { display: none; }
+    .wx-ph { display: flex; justify-content: space-between; align-items: center; font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: .2em; color: var(--copper); margin-bottom: 4px; }
+    .wx-x { width: 44px; height: 44px; border: 0; background: transparent; font-size: 26px; color: var(--ink); cursor: pointer; margin-right: -10px; }
+    .wx-row { display: grid; grid-template-columns: 82px 24px 1fr auto; gap: 8px; align-items: center; padding: 9px 0; border-top: 1px solid rgba(28,26,24,.07); font-size: 13px; color: var(--ink); }
+    .wx-row .wx-d { font-weight: 600; } .wx-row .wx-i { color: var(--copper); }
+    .wx-row .wx-s { color: var(--mut); line-height: 1.3; } .wx-row .wx-s em { display: block; font-style: normal; font-weight: 600; color: var(--copper); }
+    .wx-row .wx-h { font-family: 'Anton', sans-serif; font-size: 16px; white-space: nowrap; } .wx-row .wx-h small { font-family: 'Inter', sans-serif; font-size: 12px; color: var(--mut); }
+    .wx-row.warn { background: rgba(240,200,194,.22); margin: 0 -16px; padding: 9px 16px; }
+    .wx-f { font-size: 11px; color: var(--mut); margin-top: 8px; }
+    .wx-banner { margin: 0 16px 12px; padding: 10px 12px 6px; border-radius: 16px; background: rgba(240,200,194,.14); border: 1px solid rgba(201,126,120,.45); color: var(--stone-light); }
+    .wx-banner[hidden] { display: none; }
+    .wxb-h { display: flex; align-items: center; gap: 8px; color: var(--copper-mid); font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: .2em; }
+    .wxb-h span { flex: 1; padding-top: 2px; }
+    .wxb-x { width: 40px; height: 40px; margin: -8px -8px -8px 0; border: 0; background: transparent; color: var(--stone-light); font-size: 24px; cursor: pointer; }
+    .wxb-r { display: flex; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; align-items: center; padding: 6px 0; border: 0; border-top: 1px solid rgba(234,228,218,.1);
+      background: transparent; color: var(--stone-light); font-family: 'Inter', sans-serif; font-size: 14px; text-align: left; cursor: pointer; }
+    .wxb-r:first-of-type { border-top: 0; } .wxb-r b { font-weight: 600; } .wxb-r span { color: var(--copper-light); white-space: nowrap; }
+    .wx-job { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 10px 5px; border-radius: 999px; background: var(--white); border: 1px solid var(--stone-dark); font-size: 12.5px; color: var(--mut); }
+    .wx-job[hidden] { display: none; }
+    .wx-job svg { color: var(--copper); } .wx-job.warn { background: rgba(240,200,194,.35); border-color: var(--copper-mid); color: var(--ink); font-weight: 600; }
     /* Topographic corner: one faint top-right corner on every screen (Nov 16 2026). Never more than one corner per screen. */
     #sidebar-header::before { content: ""; position: absolute; top: 0; right: 0; width: 200px; height: 183px; pointer-events: none; z-index: 0;
       background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 220'%3E%3Cg fill='none' stroke='%23974930' stroke-width='1' opacity='0.2'%3E%3Cpath d='M250 150 C 214 146, 196 120, 190 92 C 184 62, 160 44, 150 -10'/%3E%3Cpath d='M250 176 C 204 172, 176 142, 168 106 C 160 70, 132 52, 122 -10'/%3E%3Cpath d='M250 202 C 194 198, 156 164, 146 120 C 136 78, 104 60, 94 -10'/%3E%3Cpath d='M250 124 C 224 120, 214 100, 210 80 C 206 56, 186 38, 178 -10'/%3E%3Cpath d='M250 98 C 236 94, 230 80, 228 66 C 225 46, 212 30, 206 -10'/%3E%3Cpath d='M250 70 C 244 62, 242 48, 240 36 C 238 22, 234 10, 232 -10'/%3E%3C/g%3E%3C/svg%3E") no-repeat right top / contain; }
@@ -1377,12 +1405,16 @@
           <span class="brand-roofing">ROOFING CO.</span>
         </div>
       </div>
+      <div class="hd-btns">
+      <button type="button" class="hd-btn wx-btn" id="wx-btn" aria-expanded="false" aria-controls="wx-panel" hidden></button>
       <button type="button" class="hd-btn" id="btn-menu" aria-label="Settings, backup and import" aria-expanded="false" aria-controls="sidebar-footer">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
       </button>
+      </div>
       <div class="brand-tag">Built with agency. Driven by obligation.</div>
     </div>
 
+    <div id="wx-panel" class="wx-panel" role="dialog" aria-label="7-day weather" hidden></div>
     <div id="list-sheet">
     <div id="sidebar-actions">
       <button class="btn-new" id="btn-new-customer"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>NEW CUSTOMER</span></button>
@@ -1396,6 +1428,7 @@
     </div>
 
     <button type="button" id="sync-line" class="sync-line" hidden></button>
+    <div id="wx-banner" class="wx-banner" role="status" hidden></div>
 
     <div id="search-wrap">
       <input type="text" id="search" placeholder="Search customers..." oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -1496,6 +1529,7 @@
             <div class="detail-name" id="dh-name">—</div>
             <div class="detail-arc" id="dh-arc">—</div>
             <div class="detail-addr" id="dh-addr">—</div>
+            <div class="wx-job" id="wx-job" hidden></div>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start;flex-shrink:0;">
             <button class="pip-btn pip-btn-save hd-save" onclick="saveCustomer()">SAVE</button>
@@ -7526,6 +7560,235 @@ if (_eib) _eib.addEventListener('click', exportData);
       }
     }
   } catch (e) {}
+})();
+
+</script>
+<script>
+// ══ WEATHER WATCH (Nov 2026) ══════════════════════════════════════════════
+// National Weather Service forecasts (free, no key). A small icon in the corner shows today; a banner appears only when a
+// scheduled job in the next 7 days has rain >= 40% or gusts >= 25 mph during work hours (6 AM–8 PM) at the job's ZIP.
+// Read-only: never writes customer data. Caches in localStorage (arc_wx_*). Any failure just hides the weather.
+(function () {
+  'use strict';
+  var RAIN = 40, GUST = 25, WORK_FROM = 6, WORK_TO = 20, TTL = 60 * 60 * 1000;
+  var ZIPS = {"87001":[35.389,-106.352,"Algodones"],"87002":[34.651,-106.695,"Belen"],"87004":[35.328,-106.531,"Bernalillo"],"87005":[35.255,-107.986,"Bluewater"],"87006":[34.5,-106.804,"Bosque"],"87007":[35.046,-107.471,"Casa Blanca"],"87008":[35.129,-106.362,"Cedar Crest"],"87009":[34.371,-105.702,"Cedarvale"],"87010":[35.423,-106.132,"Cerrillos"],"87011":[34.065,-105.95,"Claunch"],"87012":[36.102,-106.669,"Coyote"],"87013":[36.048,-107.189,"Cuba"],"87014":[35.086,-107.518,"Cubero"],"87015":[35.078,-106.187,"Edgewood"],"87016":[34.77,-106.135,"Estancia"],"87017":[36.32,-106.769,"Gallina"],"87018":[36.209,-107.458,"Counselor"],"87020":[35.148,-107.853,"Grants"],"87021":[35.17,-107.891,"Milan"],"87022":[34.907,-106.689,"Isleta"],"87023":[34.592,-106.761,"Jarales"],"87024":[35.624,-106.722,"Jemez Pueblo"],"87025":[35.893,-106.771,"Jemez Springs"],"87026":[34.962,-107.233,"Laguna"],"87027":[36.119,-106.992,"La Jara"],"87028":[34.381,-106.815,"La Joya"],"87029":[36.325,-107.049,"Lindrith"],"87031":[34.781,-106.712,"Los Lunas"],"87032":[34.865,-106.052,"Mcintosh"],"87034":[34.896,-107.582,"Pueblo Of Acoma"],"87035":[34.989,-106.061,"Moriarty"],"87036":[34.516,-106.258,"Mountainair"],"87037":[36.16,-107.766,"Nageezi"],"87038":[35.041,-107.422,"New Laguna"],"87040":[35.139,-107.379,"Paguate"],"87041":[35.571,-106.338,"Pena Blanca"],"87042":[34.833,-106.687,"Peralta"],"87043":[35.309,-106.529,"Placitas"],"87044":[35.66,-106.668,"Ponderosa"],"87045":[35.355,-108.104,"Prewitt"],"87046":[36.184,-106.957,"Regina"],"87047":[35.168,-106.324,"Sandia Park"],"87048":[35.234,-106.62,"Corrales"],"87049":[35.082,-107.599,"San Fidel"],"87051":[35.112,-107.883,"San Rafael"],"87052":[35.527,-106.344,"Santo Domingo Pueblo"],"87053":[35.563,-106.771,"San Ysidro"],"87056":[35.13,-106.028,"Stanley"],"87059":[35.045,-106.306,"Tijeras"],"87060":[34.743,-106.733,"Tome"],"87061":[34.695,-106.325,"Torreon"],"87062":[34.485,-106.759,"Veguita"],"87063":[34.575,-106.031,"Willard"],"87064":[36.188,-106.556,"Youngsville"],"87068":[34.876,-106.698,"Bosque Farms"],"87070":[35.01,-105.669,"Clines Corners"],"87072":[35.609,-106.352,"Cochiti Pueblo"],"87083":[35.648,-106.343,"Cochiti Lake"],"87101":[35.2,-106.645,"Albuquerque"],"87102":[35.082,-106.648,"Albuquerque"],"87103":[35.044,-106.673,"Albuquerque"],"87104":[35.104,-106.671,"Albuquerque"],"87105":[35.045,-106.689,"Albuquerque"],"87106":[35.079,-106.617,"Albuquerque"],"87107":[35.135,-106.643,"Albuquerque"],"87108":[35.073,-106.575,"Albuquerque"],"87109":[35.151,-106.569,"Albuquerque"],"87110":[35.11,-106.578,"Albuquerque"],"87111":[35.135,-106.522,"Albuquerque"],"87112":[35.101,-106.518,"Albuquerque"],"87113":[35.176,-106.602,"Albuquerque"],"87114":[35.187,-106.665,"Albuquerque"],"87115":[35.055,-106.546,"Albuquerque"],"87116":[35.056,-106.551,"Albuquerque"],"87117":[35.02,-106.55,"Kirtland Afb"],"87119":[35.044,-106.673,"Albuquerque"],"87120":[35.142,-106.704,"Albuquerque"],"87121":[35.051,-106.727,"Albuquerque"],"87122":[35.179,-106.51,"Albuquerque"],"87123":[35.072,-106.509,"Albuquerque"],"87124":[35.249,-106.682,"Rio Rancho"],"87125":[35.044,-106.673,"Albuquerque"],"87131":[35.044,-106.673,"Albuquerque"],"87144":[35.324,-106.71,"Rio Rancho"],"87151":[35.023,-106.856,"Albuquerque"],"87153":[35.044,-106.673,"Albuquerque"],"87154":[35.044,-106.673,"Albuquerque"],"87158":[35.084,-106.651,"Albuquerque"],"87165":[35.08,-106.64,"Albuquerque"],"87174":[35.044,-106.673,"Rio Rancho"],"87176":[35.044,-106.673,"Albuquerque"],"87181":[35.044,-106.673,"Albuquerque"],"87184":[35.044,-106.673,"Albuquerque"],"87185":[35.044,-106.673,"Albuquerque"],"87187":[35.044,-106.673,"Albuquerque"],"87190":[35.044,-106.673,"Albuquerque"],"87191":[35.044,-106.673,"Albuquerque"],"87192":[35.044,-106.673,"Albuquerque"],"87193":[35.044,-106.673,"Albuquerque"],"87194":[35.044,-106.673,"Albuquerque"],"87195":[35.044,-106.673,"Albuquerque"],"87196":[35.044,-106.673,"Albuquerque"],"87197":[35.084,-106.651,"Albuquerque"],"87198":[35.084,-106.651,"Albuquerque"],"87199":[35.044,-106.673,"Albuquerque"],"87501":[35.697,-105.982,"Santa Fe"],"87502":[35.687,-105.938,"Santa Fe"],"87503":[35.687,-105.938,"Santa Fe"],"87504":[35.687,-105.938,"Santa Fe"],"87505":[35.622,-105.869,"Santa Fe"],"87506":[35.819,-105.989,"Santa Fe"],"87507":[35.657,-106.015,"Santa Fe"],"87508":[35.533,-105.926,"Santa Fe"],"87509":[35.521,-105.982,"Santa Fe"],"87510":[36.177,-106.245,"Abiquiu"],"87511":[36.089,-106.054,"Alcalde"],"87512":[36.942,-105.454,"Amalia"],"87513":[36.58,-105.687,"Arroyo Hondo"],"87514":[36.52,-105.534,"Arroyo Seco"],"87515":[36.48,-106.438,"Canjilon"],"87516":[36.181,-106.438,"Canones"],"87517":[36.364,-105.765,"Carson"],"87518":[36.465,-106.579,"Cebolla"],"87519":[36.754,-105.613,"Cerro"],"87520":[36.896,-106.583,"Chama"],"87521":[36.131,-105.739,"Chamisal"],"87522":[36.004,-105.947,"Chimayo"],"87523":[36.007,-105.861,"Cordova"],"87524":[36.932,-105.672,"Costilla"],"87525":[36.596,-105.454,"Taos Ski Valley"],"87527":[36.179,-105.862,"Dixon"],"87528":[36.86,-107.06,"Dulce"],"87529":[36.432,-105.575,"El Prado"],"87530":[36.365,-106.219,"El Rito"],"87531":[36.215,-105.89,"Embudo"],"87532":[35.987,-106.072,"Espanola"],"87533":[35.987,-106.065,"Espanola"],"87535":[35.529,-105.748,"Glorieta"],"87537":[36.074,-106.14,"Hernandez"],"87538":[35.421,-105.559,"Ilfeld"],"87539":[36.465,-106.579,"La Madera"],"87540":[35.431,-105.941,"Lamy"],"87543":[36.14,-105.682,"Llano"],"87544":[35.866,-106.268,"Los Alamos"],"87545":[35.864,-106.295,"Los Alamos"],"87547":[35.828,-106.204,"White Rock"],"87548":[36.176,-106.183,"Medanales"],"87549":[36.331,-106.003,"Ojo Caliente"],"87551":[36.729,-106.57,"Los Ojos"],"87552":[35.571,-105.67,"Pecos"],"87553":[36.176,-105.71,"Penasco"],"87554":[36.508,-106.011,"Petaca"],"87556":[36.704,-105.595,"Questa"],"87557":[36.336,-105.609,"Ranchos De Taos"],"87558":[36.666,-105.469,"Red River"],"87560":[35.334,-105.465,"Ribera"],"87562":[35.492,-105.675,"Rowe"],"87564":[36.612,-105.636,"San Cristobal"],"87565":[35.457,-105.438,"San Jose"],"87566":[36.051,-106.069,"Ohkay Owingeh"],"87567":[35.986,-106.032,"Santa Cruz"],"87569":[35.398,-105.324,"Serafina"],"87571":[36.395,-105.585,"Taos"],"87573":[35.773,-105.671,"Tererro"],"87574":[35.787,-105.916,"Tesuque"],"87575":[36.681,-106.557,"Tierra Amarilla"],"87576":[36.131,-105.759,"Trampas"],"87577":[36.647,-105.967,"Tres Piedras"],"87578":[36.044,-105.813,"Truchas"],"87579":[36.134,-105.571,"Vadito"],"87580":[36.57,-105.566,"Valdez"],"87581":[36.529,-106.145,"Vallecitos"],"87582":[36.159,-105.975,"Velarde"],"87583":[35.267,-105.361,"Villanueva"],"87592":[35.521,-105.982,"Santa Fe"],"87594":[35.521,-105.982,"Santa Fe"]};
+  var HOME = [35.0844, -106.6504, 'Albuquerque'];
+  var $ = function (id) { return document.getElementById(id); };
+  var mem = {};
+  function lsGet(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function escH(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  // ── where a job is: its ZIP, else its city, else Albuquerque ──
+  var cityPts = null;
+  function placeOf(c) {
+    var z = String(c && c.zip || '').trim().slice(0, 5);
+    if (ZIPS[z]) return ZIPS[z];
+    if (!cityPts) { cityPts = {}; Object.keys(ZIPS).forEach(function (k) { var v = ZIPS[k], n = v[2].toLowerCase(); (cityPts[n] = cityPts[n] || []).push(v); }); }
+    var cp = cityPts[String(c && c.city || '').trim().toLowerCase()];
+    if (cp) return [cp.reduce(function (s, p) { return s + p[0]; }, 0) / cp.length, cp.reduce(function (s, p) { return s + p[1]; }, 0) / cp.length, cp[0][2]];
+    return HOME;
+  }
+  function ptKey(p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }
+
+  function getJSON(url) {
+    return fetch(url, { headers: { Accept: 'application/geo+json' } }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+  }
+  // NWS: /points → forecast + grid URLs (cached for good), then the forecasts (cached an hour)
+  function forecastFor(p) {
+    var k = ptKey(p);
+    if (mem[k]) return mem[k];
+    var cache = lsGet('arc_wx_cache', {}), hit = cache[k];
+    if (hit && Date.now() - hit.at < TTL) return (mem[k] = Promise.resolve(hit));
+    var pts = lsGet('arc_wx_pts', {});
+    var urls = pts[k] ? Promise.resolve(pts[k]) : getJSON('https://api.weather.gov/points/' + k).then(function (j) {
+      var u = { f: j.properties.forecast, g: j.properties.forecastGridData };
+      var all = lsGet('arc_wx_pts', {}); all[k] = u; lsSet('arc_wx_pts', all); return u;
+    });
+    mem[k] = urls.then(function (u) {
+      return Promise.all([getJSON(u.f), getJSON(u.g)]).then(function (r) {
+        var out = { at: Date.now(), periods: (r[0].properties.periods || []).slice(0, 14).map(function (q) {
+            return { n: q.name, d: q.isDaytime, t: q.temperature, s: q.shortForecast, p: q.probabilityOfPrecipitation ? q.probabilityOfPrecipitation.value : null, st: q.startTime };
+          }), days: dailyRisk(r[1].properties) };
+        var all = lsGet('arc_wx_cache', {}); all[k] = out;
+        Object.keys(all).forEach(function (x) { if (Date.now() - all[x].at > 6 * TTL) delete all[x]; });
+        lsSet('arc_wx_cache', all);
+        return out;
+      });
+    }).catch(function (e) { delete mem[k]; if (hit) return hit; throw e; });
+    return mem[k];
+  }
+  // Grid data → per local date: highest rain chance and highest gust (mph) during work hours
+  function localParts(d) {
+    var f = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Denver', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false });
+    var o = {}; f.formatToParts(d).forEach(function (x) { o[x.type] = x.value; });
+    return { date: o.year + '-' + o.month + '-' + o.day, hour: +o.hour % 24 };
+  }
+  function eachHour(validTime, fn) {
+    var parts = String(validTime).split('/'), start = new Date(parts[0]), m = /P(?:(\d+)D)?T?(?:(\d+)H)?/.exec(parts[1] || 'PT1H');
+    var hrs = (+(m && m[1]) || 0) * 24 + (+(m && m[2]) || 0) || 1;
+    for (var i = 0; i < hrs; i++) fn(new Date(start.getTime() + i * 3600000));
+  }
+  function dailyRisk(g) {
+    var days = {};
+    var add = function (series, field, conv) {
+      ((g[series] && g[series].values) || []).forEach(function (v) {
+        if (v.value == null) return;
+        eachHour(v.validTime, function (t) {
+          var lp = localParts(t); if (lp.hour < WORK_FROM || lp.hour >= WORK_TO) return;
+          var d = days[lp.date] = days[lp.date] || { rain: 0, gust: 0 };
+          d[field] = Math.max(d[field], Math.round(conv(v.value)));
+        });
+      });
+    };
+    add('probabilityOfPrecipitation', 'rain', function (x) { return x; });
+    add('windGust', 'gust', function (x) { return x * 0.621371; });   // km/h → mph
+    return days;
+  }
+
+  // ── icons (stroke, brand colors) ──
+  var IC = {
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+    moon: '<path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/>',
+    cloud: '<path d="M7 18h10a4 4 0 0 0 .4-8 6 6 0 0 0-11.5 1.5A3.3 3.3 0 0 0 7 18z"/>',
+    part: '<path d="M8.5 6.5V5M4.6 8.1l-1-1M13.4 8.1l1-1M3.5 12H2"/><path d="M5.8 11.2a3.5 3.5 0 0 1 6.4-1.6"/><path d="M9 19h8.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.6 1.3A2.9 2.9 0 0 0 9 19z"/>',
+    rain: '<path d="M7 15h10a4 4 0 0 0 .4-8 6 6 0 0 0-11.5 1.5A3.3 3.3 0 0 0 7 15z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/>',
+    storm: '<path d="M7 14h10a4 4 0 0 0 .4-8 6 6 0 0 0-11.5 1.5A3.3 3.3 0 0 0 7 14z"/><path d="M12.5 14l-2 3.5h3l-2 3.5"/>',
+    snow: '<path d="M7 14h10a4 4 0 0 0 .4-8 6 6 0 0 0-11.5 1.5A3.3 3.3 0 0 0 7 14z"/><path d="M8 18h.01M12 19h.01M16 18h.01M10 21h.01M14 21h.01"/>',
+    wind: '<path d="M3 9h11a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3M3 12h8"/>',
+    fog: '<path d="M4 9h16M3 13h18M5 17h14"/>'
+  };
+  function kind(s, day) {
+    s = String(s || '').toLowerCase();
+    if (/thunder|t-storm/.test(s)) return 'storm';
+    if (/snow|sleet|flurr|ice|wintry/.test(s)) return 'snow';
+    if (/rain|shower|drizzle/.test(s)) return 'rain';
+    if (/fog|haze|smoke|dust/.test(s)) return 'fog';
+    if (/wind|breezy|blustery/.test(s)) return 'wind';
+    if (/partly|mostly sunny|mostly clear|few clouds/.test(s)) return day === false ? 'moon' : 'part';
+    if (/cloud|overcast/.test(s)) return 'cloud';
+    return day === false ? 'moon' : 'sun';
+  }
+  function icon(k, size) { return '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:' + (size || 20) + 'px;height:' + (size || 20) + 'px;display:block">' + (IC[k] || IC.sun) + '</svg>'; }
+
+  function todayISO() { return localParts(new Date()).date; }
+  function addDays(iso, n) { var d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+  function dayLabel(iso) { return iso === todayISO() ? 'Today' : iso === addDays(todayISO(), 1) ? 'Tomorrow' : new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
+  function riskText(r) {
+    var bits = [];
+    if (r.rain >= RAIN) bits.push(r.rain + '% rain');
+    if (r.gust >= GUST) bits.push('gusts ' + r.gust + ' mph');
+    return bits.join(' · ');
+  }
+  function lastName(c) { return String(c.last || c.first || 'Job').trim(); }
+
+  // ── corner icon + 7-day panel ──
+  var home = null;
+  function renderCorner(fc) {
+    var btn = $('wx-btn'); if (!btn) return;
+    var now = fc.periods[0], hi = fc.periods.filter(function (q) { return q.d; })[0] || now;
+    btn.innerHTML = icon(kind(now.s, now.d), 20) + '<span class="wx-t">' + (hi ? hi.t + '°' : '') + '</span>';
+    btn.setAttribute('aria-label', 'Weather: ' + now.n + ', ' + now.s + ', ' + now.t + ' degrees. Tap for 7 days.');
+    btn.hidden = false;
+    home = fc;
+  }
+  function panelHtml(fc) {
+    var days = [], seen = {};
+    fc.periods.forEach(function (q, i) {
+      var date = localParts(new Date(q.st)).date; if (seen[date]) { if (!q.d) seen[date].lo = q.t; return; }
+      var row = seen[date] = { date: date, n: q.d ? q.n : 'Tonight', hi: q.d ? q.t : null, lo: q.d ? null : q.t, s: q.s, day: q.d, p: q.p };
+      days.push(row);
+    });
+    return '<div class="wx-ph"><span>7-DAY · ' + escH(HOME[2].toUpperCase()) + '</span><button type="button" class="wx-x" id="wx-x" aria-label="Close weather">&times;</button></div>' +
+      days.slice(0, 7).map(function (d) {
+        var r = fc.days[d.date] || { rain: 0, gust: 0 }, warn = r.rain >= RAIN || r.gust >= GUST;
+        return '<div class="wx-row' + (warn ? ' warn' : '') + '"><span class="wx-d">' + escH(dayLabel(d.date)) + '</span>' +
+          '<span class="wx-i">' + icon(kind(d.s, d.day), 18) + '</span>' +
+          '<span class="wx-s">' + escH(d.s) + (warn ? '<em>' + escH(riskText(r)) + '</em>' : '') + '</span>' +
+          '<span class="wx-h">' + (d.hi != null ? d.hi + '°' : '') + (d.lo != null ? '<small> ' + d.lo + '°</small>' : '') + '</span></div>';
+      }).join('') + '<div class="wx-f">National Weather Service · warnings at ' + RAIN + '% rain or ' + GUST + ' mph gusts, 6 AM–8 PM</div>';
+  }
+  function togglePanel(open) {
+    var p = $('wx-panel'); if (!p || !home) return;
+    if (open == null) open = p.hidden;
+    if (open) { p.innerHTML = panelHtml(home); p.hidden = false; $('wx-btn').setAttribute('aria-expanded', 'true'); var x = $('wx-x'); if (x) x.addEventListener('click', function () { togglePanel(false); }); }
+    else { p.hidden = true; $('wx-btn').setAttribute('aria-expanded', 'false'); }
+  }
+
+  // ── scheduled jobs → banner ──
+  function upcomingJobs() {
+    var t = todayISO(), end = addDays(t, 6);
+    return (typeof customers !== 'undefined' && customers || []).filter(function (c) {
+      return c && c.scheddate && c.scheddate >= t && c.scheddate <= end && c.stage !== 'Closed' && c.stage !== 'Declined';
+    });
+  }
+  function checkJobs() {
+    var jobs = upcomingJobs();
+    if (!jobs.length) { showBanner([]); return Promise.resolve([]); }
+    return Promise.all(jobs.map(function (c) {
+      return forecastFor(placeOf(c)).then(function (fc) { var r = fc.days[c.scheddate]; return r && (r.rain >= RAIN || r.gust >= GUST) ? { c: c, r: r } : null; }, function () { return null; });
+    })).then(function (hits) {
+      hits = hits.filter(Boolean).sort(function (a, b) { return a.c.scheddate < b.c.scheddate ? -1 : 1; });
+      showBanner(hits); return hits;
+    });
+  }
+  function showBanner(hits) {
+    var b = $('wx-banner'); if (!b) return;
+    var hid = lsGet('arc_wx_hide', {}), sig = hits.map(function (h) { return h.c.id + h.c.scheddate + riskText(h.r); }).join('|');
+    if (!hits.length || hid.sig === sig) { b.hidden = true; return; }
+    b.innerHTML = '<div class="wxb-h">' + icon(hits.some(function (h) { return h.r.rain >= RAIN; }) ? 'rain' : 'wind', 18) +
+      '<span>WEATHER WATCH</span><button type="button" class="wxb-x" id="wxb-x" aria-label="Dismiss weather warning">&times;</button></div>' +
+      hits.map(function (h) {
+        return '<button type="button" class="wxb-r" data-wxc="' + escH(h.c.id) + '"><b>' + escH(dayLabel(h.c.scheddate)) + ' · ' + escH(lastName(h.c)) + '</b><span>' + escH(riskText(h.r)) + '</span></button>';
+      }).join('');
+    b.hidden = false;
+    b.dataset.sig = sig;
+  }
+
+  // ── on the customer file: the forecast for a scheduled day ──
+  function jobLine(c) {
+    var el = $('wx-job'); if (!el) return;
+    el.hidden = true; el.innerHTML = '';
+    var t = todayISO();
+    if (!c || !c.scheddate || c.scheddate < t || c.scheddate > addDays(t, 6)) return;
+    forecastFor(placeOf(c)).then(function (fc) {
+      var cur = typeof getCurrent === 'function' ? getCurrent() : null; if (!cur || cur.id !== c.id) return;
+      var r = fc.days[c.scheddate]; if (!r) return;
+      var warn = r.rain >= RAIN || r.gust >= GUST;
+      el.className = 'wx-job' + (warn ? ' warn' : '');
+      el.innerHTML = icon(warn ? (r.rain >= RAIN ? 'rain' : 'wind') : 'sun', 16) + '<span>' + escH(dayLabel(c.scheddate)) + ' · ' +
+        (warn ? escH(riskText(r)) : 'looks workable · ' + r.rain + '% rain · gusts ' + r.gust + ' mph') + '</span>';
+      el.hidden = false;
+    }, function () {});
+  }
+
+  // ── wiring ──
+  function refresh() {
+    forecastFor(HOME).then(renderCorner, function () { var b = $('wx-btn'); if (b) b.hidden = true; });
+    checkJobs().catch(function () {});
+  }
+  function init() {
+    var btn = $('wx-btn'), ban = $('wx-banner');
+    if (!btn || !window.fetch) return;
+    btn.addEventListener('click', function (e) { e.stopPropagation(); togglePanel(); });
+    document.addEventListener('click', function (e) { var p = $('wx-panel'); if (p && !p.hidden && !p.contains(e.target) && e.target !== btn) togglePanel(false); });
+    ban.addEventListener('click', function (e) {
+      if (e.target.closest('#wxb-x')) { lsSet('arc_wx_hide', { sig: ban.dataset.sig, at: Date.now() }); ban.hidden = true; return; }
+      var r = e.target.closest('[data-wxc]'); if (r && typeof selectCustomer === 'function') selectCustomer(r.dataset.wxc);
+    });
+    try {
+      var orig = window.selectCustomer;
+      window.selectCustomer = function (id) { var out = orig.apply(this, arguments); try { jobLine(getCurrent()); } catch (e) {} return out; };
+    } catch (e) {}
+    var sd = $('f-scheddate');
+    if (sd) sd.addEventListener('change', function () { try { var c = Object.assign({}, getCurrent(), { scheddate: sd.value }); jobLine(c); setTimeout(function () { checkJobs().catch(function () {}); }, 600); } catch (e) {} });
+    window.addEventListener('arc:synced', function () { checkJobs().catch(function () {}); });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
+    refresh();
+    setInterval(refresh, TTL);
+  }
+  window.ARCWeather = { refresh: refresh, _risk: dailyRisk, _place: placeOf };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else setTimeout(init, 0);
 })();
 
 </script>

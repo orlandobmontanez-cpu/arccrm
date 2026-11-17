@@ -292,6 +292,17 @@ documents and PDFs are untouched) and one `PREMIUM LAYER` `<script>` at the end 
 - Not built, his call still open: "Dusk" dark variant (he said leave it for now).
 - When adding screens or buttons, style them inside the layer and keep to these rules.
 
+## Weather watch (Nov 16 2026)
+
+Minimal by request: an icon in the top-right corner (`#wx-btn`, today's icon + high), a 7-day panel on tap (`#wx-panel`), a banner
+under the sync line (`#wx-banner`) **only** when a scheduled job (`scheddate` within 7 days, not Closed/Declined) has **≥ 40% rain or
+gusts ≥ 25 mph between 6 AM and 8 PM** at the job's ZIP (city, then Albuquerque as fallback; ZIP table copied from board.html), and a
+small note under the address on the customer file (`#wx-job`).
+- Source: **National Weather Service** (`api.weather.gov`, free, no key, CORS). He chose NWS over AccuWeather because an AccuWeather key
+  would be public in this repo. `/points` URLs cached forever (`arc_wx_pts`), forecasts for an hour (`arc_wx_cache`).
+- The banner's X hides it until the warnings change (`arc_wx_hide`). Read-only: it never writes customer data.
+- Not push notifications: real lock-screen alerts would need the home-screen app + a push service. Banner only for now.
+
 ## Privacy and security rules (Nov 16 2026)
 
 - **This repository is public.** Never put a real customer's or client's name, address, phone, email, job number, price, or any

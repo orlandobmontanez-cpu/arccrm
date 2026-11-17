@@ -41,24 +41,24 @@ function world(rows, opts = {}) {
   return { g, sent, notified, files, root, all };
 }
 const PDF = Buffer.from('%PDF-1.3 fake').toString('base64');
-const row = (o = {}) => Object.assign({ token: 't'.repeat(48), cid: 'c15', kind: 'proposal', num: 'ARC-00015', name: 'Ray Scott', at: '2026-11-13T02:10:00.000Z', ip: '203.0.113.9',
-  info: { what: 'repair quote', amount: '$1,867.24', amountLabel: 'Final investment', address: '8011 Camino Paisano NW, Albuquerque, NM 87120', driveFolder: 'Scott, Ray · ARC-00015', pdfName: 'ARC Proposal - Scott - ARC-00015 - Signed.pdf', docId: 'ABCD-1234-EF56' }, pdf: PDF }, o);
+const row = (o = {}) => Object.assign({ token: 't'.repeat(48), cid: 'c15', kind: 'proposal', num: 'ARC-00015', name: 'Pat Sample', at: '2026-11-13T02:10:00.000Z', ip: '203.0.113.9',
+  info: { what: 'repair quote', amount: '$1,867.24', amountLabel: 'Final investment', address: '123 Sample St NW, Albuquerque, NM 87120', driveFolder: 'Sample, Pat · ARC-00015', pdfName: 'ARC Proposal - Scott - ARC-00015 - Signed.pdf', docId: 'ABCD-1234-EF56' }, pdf: PDF }, o);
 
 // 1. Normal: existing CRM folder
-let w = world([row()], { existing: 'Scott, Ray · ARC-00015' });
+let w = world([row()], { existing: 'Sample, Pat · ARC-00015' });
 w.g.checkSigned();
 ok(w.sent.length === 1 && w.sent[0].to === 'orlando.montanez@agencyroofingco.com', 'emails orlando.montanez@agencyroofingco.com');
-ok(w.sent[0].subject === '✍ Ray Scott signed repair quote ARC-00015', 'subject: ' + w.sent[0].subject);
+ok(w.sent[0].subject === '✍ Pat Sample signed repair quote ARC-00015', 'subject: ' + w.sent[0].subject);
 ok(w.sent[0].o.noReply === true && w.sent[0].o.attachments.length === 1 && w.sent[0].o.attachments[0].name.endsWith('- Signed.pdf'), 'from no-reply with the signed PDF attached');
-ok(w.files.length === 1 && w.all().filter(f => f.name === 'Scott, Ray · ARC-00015').length === 1, 'PDF filed in the existing customer folder (no duplicate folder)');
+ok(w.files.length === 1 && w.all().filter(f => f.name === 'Sample, Pat · ARC-00015').length === 1, 'PDF filed in the existing customer folder (no duplicate folder)');
 ok(w.sent[0].o.htmlBody.includes('?open=c15') && w.sent[0].o.htmlBody.includes('VIEW IN DRIVE'), 'email has Open in CRM + View in Drive');
 ok(w.notified.length === 1, 'marked as sent');
 w.g.checkSigned(); ok(w.sent.length === 1, 'never sent twice');
 
 // 2. No folder yet → creates Agency Roofing › Customers › folder
 w = world([row()]); w.g.checkSigned();
-const f = w.all().find(x => x.name === 'Scott, Ray · ARC-00015');
-ok(f && f.parent.name === 'Customers' && f.parent.parent.name === 'Agency Roofing', 'creates Agency Roofing › Customers › Scott, Ray · ARC-00015');
+const f = w.all().find(x => x.name === 'Sample, Pat · ARC-00015');
+ok(f && f.parent.name === 'Customers' && f.parent.parent.name === 'Agency Roofing', 'creates Agency Roofing › Customers › Sample, Pat · ARC-00015');
 
 // 3. No PDF (customer closed the page) → still emails, says so
 w = world([row({ pdf: null })]); w.g.checkSigned();
@@ -78,7 +78,7 @@ try { w.g.checkSigned(); } catch (e) {}
 ok(w.notified.length === 0, 'email failure is retried next minute (not marked sent)');
 
 // 7. Same file name replaces the old copy
-w = world([row(), row({ token: 'u'.repeat(48) })], { existing: 'Scott, Ray · ARC-00015' }); w.g.checkSigned();
+w = world([row(), row({ token: 'u'.repeat(48) })], { existing: 'Sample, Pat · ARC-00015' }); w.g.checkSigned();
 ok(w.files.filter(x => !x.trashed).length === 1, 'same name replaces the older copy');
 
 // 8. Wrong key → clear error

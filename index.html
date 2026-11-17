@@ -1323,6 +1323,10 @@
     }
   }
 
+  .bk-p { margin: 0 0 12px; text-align: left; line-height: 1.5; }
+  .bk-l { display: block; text-align: left; font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.16em; color: var(--copper); margin: 10px 0 4px; }
+  .bk-i { width: 100%; min-height: 48px; font-size: 16px; padding: 10px 12px; border: 1px solid var(--stone-dark); border-radius: 12px; background: #F8F5EF; color: var(--ink); box-sizing: border-box; }
+  .bk-msg { min-height: 18px; margin-top: 8px; text-align: left; font-size: 13px; color: var(--danger); }
 </style>
 <script src="arcsync.js"></script>
 <script src="arcmail.js"></script>
@@ -3292,7 +3296,59 @@ function deleteCustomer() {
 
 // ── EXPORT / IMPORT ────────────────────────────────────
 
-function exportData() {
+// ── Password-locked backups ──
+// Backups hold every customer, cost and margin, so they are encrypted with a password before they leave the app:
+// PBKDF2-SHA256 (310,000 rounds) turns the password into a key, AES-GCM encrypts the file. Without the password the file
+// is unreadable, and there is no way to recover it. Import still opens older unlocked backups.
+const ARC_LOCK_ITER = 310000;
+function b64of(buf) { const b = new Uint8Array(buf); let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
+function bytesOf(b64) { const s = atob(b64), b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b; }
+async function lockKey(pass, salt, iter) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: iter }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function lockBackup(text, pass) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await lockKey(pass, salt, ARC_LOCK_ITER);
+  const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, new TextEncoder().encode(text));
+  return JSON.stringify({ arcLocked: 1, app: 'ARC CRM', kdf: 'PBKDF2-SHA256', iter: ARC_LOCK_ITER, cipher: 'AES-GCM-256',
+    salt: b64of(salt), iv: b64of(iv), data: b64of(data), note: 'Password-locked ARC CRM backup. Import it in ARC CRM with its password.' });
+}
+async function unlockBackup(obj, pass) {
+  const key = await lockKey(pass, bytesOf(obj.salt), +obj.iter || ARC_LOCK_ITER);
+  const out = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytesOf(obj.iv) }, key, bytesOf(obj.data));   // throws on a wrong password
+  return new TextDecoder().decode(out);
+}
+// A password box inside the app's own pop-up (iPhone-safe, no browser prompt). Resolves with the password, or null if cancelled.
+function askBackupPassword(mode) {
+  return new Promise(resolve => {
+    const making = mode === 'export';
+    showModal(making ? 'LOCK THIS BACKUP' : 'LOCKED BACKUP', '', [
+      { label: 'CANCEL', cls: 'modal-btn modal-btn-cancel', fn: () => { closeModal(); resolve(null); } },
+      { label: making ? 'LOCK & EXPORT' : 'UNLOCK', cls: 'modal-btn modal-btn-confirm', fn: () => {
+          const p1 = document.getElementById('bk-p1'), p2 = document.getElementById('bk-p2'), msg = document.getElementById('bk-msg');
+          const v = p1.value;
+          if (making && v.length < 8) { msg.textContent = 'Use at least 8 characters.'; p1.focus(); return; }
+          if (making && v !== p2.value) { msg.textContent = 'The two passwords don\'t match.'; p2.focus(); return; }
+          if (!v) { p1.focus(); return; }
+          closeModal(); resolve(v);
+        } }
+    ]);
+    const body = document.getElementById('modal-body');
+    body.innerHTML = (making
+        ? '<p class="bk-p">Your backup holds every customer, price and margin. Pick a password to lock it. <b>Write it down.</b> Without it the backup can\'t be opened, and it can\'t be recovered.</p>'
+        : '<p class="bk-p">This backup is password-locked. Enter the password you chose when you exported it.</p>') +
+      '<label class="bk-l" for="bk-p1">PASSWORD</label><input id="bk-p1" class="bk-i" type="password" autocomplete="' + (making ? 'new-password' : 'current-password') + '">' +
+      (making ? '<label class="bk-l" for="bk-p2">TYPE IT AGAIN</label><input id="bk-p2" class="bk-i" type="password" autocomplete="new-password">' : '') +
+      '<div class="bk-msg" id="bk-msg" role="alert"></div>';
+    setTimeout(() => { const f = document.getElementById('bk-p1'); if (f) f.focus(); }, 60);
+  });
+}
+
+async function exportData() {
+  if (!(window.crypto && crypto.subtle)) { showModal('CAN\'T LOCK BACKUP', 'This browser can\'t encrypt files. Open the CRM in Safari or Chrome to export a backup.', [{ label: 'OK', cls: 'modal-btn modal-btn-confirm', fn: closeModal }]); return; }
+  const pass = await askBackupPassword('export');
+  if (!pass) return;
   // Same backward-compatible format as storage: a plain array of customers that
   // any version can import. arcExt carries newer fields; the first record also
   // carries arcBackup = { settings, ownerSig } (older versions ignore both).
@@ -3304,17 +3360,20 @@ function exportData() {
   const extra = { version: 2, exportedAt: new Date(st.lastBackupAt).toISOString(), settings: st, ownerSig: ARCSign.ownerSig(), billing: billing };
   if (data.length) data[0].arcBackup = extra;
   // No customers yet: the object form still saves settings + signature
-  const blob = new Blob([JSON.stringify(data.length ? data : { customers: [], settings: extra.settings, ownerSig: extra.ownerSig, billing: extra.billing }, null, 2)], { type: 'application/json' });
+  const plain = JSON.stringify(data.length ? data : { customers: [], settings: extra.settings, ownerSig: extra.ownerSig, billing: extra.billing });
+  let locked;
+  try { locked = await lockBackup(plain, pass); } catch (e) { showToast('COULD NOT LOCK THE BACKUP'); return; }
+  const blob = new Blob([locked], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const ts = new Date().toISOString().slice(0,10);
   a.href = url;
-  a.download = `arc-crm-backup-${ts}.json`;
+  a.download = `arc-crm-backup-${ts}-locked.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast('BACKUP EXPORTED');
+  showToast('LOCKED BACKUP EXPORTED');
   renderBackupBanner();
 }
 
@@ -3389,9 +3448,20 @@ function importData(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
+    let parsed;
+    try { parsed = JSON.parse(e.target.result); } catch (err) { parsed = null; }
+    if (parsed && parsed.arcLocked) {
+      const pass = await askBackupPassword('import');
+      if (!pass) return;
+      try { parsed = JSON.parse(await unlockBackup(parsed, pass)); }
+      catch (err) {
+        showModal('WRONG PASSWORD', 'That password didn\'t unlock this backup. Nothing was changed. Try again with the password you used when you exported it.', [{ label: 'OK', cls: 'modal-btn modal-btn-confirm', fn: closeModal }]);
+        return;
+      }
+    }
     try {
-      const backup = readBackup(JSON.parse(e.target.result));
+      const backup = readBackup(parsed);
       if (!backup) throw new Error('Invalid format');
       const data = backup.customers;
       showModal(
@@ -4872,8 +4942,8 @@ function timeMin(t) {   // minutes worked; a finish earlier than the start means
   var a = +t.a.slice(0, 2) * 60 + +t.a.slice(3), b = +t.b.slice(0, 2) * 60 + +t.b.slice(3), m = b - a;
   return m < 0 ? m + 1440 : m;
 }
-// Turns a pasted list like "1. Jocelyn Gorman (33595) - 1600 Padre Roberto Road Northwest" into
-// "Gorman (33595) · 1600 Padre Roberto Road Northwest", one line per stop. Lines it can't read are kept as typed.
+// Turns a pasted list like "1. Pat Sample (10001) - 123 Sample Road Northwest" into
+// "Sample (10001) · 123 Sample Road Northwest", one line per stop. Lines it can't read are kept as typed.
 function stopLines(text) {
   var t = String(text || '').replace(/\r/g, '').trim(); if (!t) return [];
   if (/^training$/i.test(t)) return ['Training'];
@@ -5107,7 +5177,7 @@ function hsetupHtml(pre) {
     '<div class="ex-f"><label for="hs-co">COMPANY</label><select id="hs-co" class="b-sel"><option value="">Choose a company…</option>' +
       cos.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(c.name || 'Unnamed company') + '</option>'; }).join('') +
       '<option value="__new"' + (!cos.length ? ' selected' : '') + '>+ New company…</option></select></div>' +
-    '<div id="hs-new"' + (!cos.length ? '' : ' hidden') + '>' + bf('hs-name', 'COMPANY NAME', '', 'type="text" autocomplete="organization" placeholder="Solarworks"') +
+    '<div id="hs-new"' + (!cos.length ? '' : ' hidden') + '>' + bf('hs-name', 'COMPANY NAME', '', 'type="text" autocomplete="organization" placeholder="Company name"') +
       bf('hs-email', 'BILLING EMAIL', '', 'type="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ap@company.com"') + '</div>' +
     hrSettingsFields({ rate: 0, hrLabel: 'Consulting services', hrTax: false }) +
     '<button type="button" class="proposal-btn proposal-btn-primary" style="width:100%;" data-b="hs-save">START TRACKING HOURS</button></div>';

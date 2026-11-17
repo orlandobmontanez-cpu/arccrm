@@ -12,8 +12,8 @@ const EMPTY = { first: '', last: '', phone: '', email: '', street: '', city: '',
 const cases = [
   {
     name: 'one-line text with emoji, lowercase, "my name is"',
-    text: 'Hi Orlando! 👋 My name is jeanette serna, I have a leak over my kitchen 😩 Address is 1234 montgomery blvd ne albuquerque nm 87111. Call me 505.555.0199 or JSerna@Gmail.com thanks!!',
-    want: { first: 'Jeanette', last: 'Serna', phone: '(505) 555-0199', email: 'jserna@gmail.com', street: '1234 Montgomery Blvd NE', city: 'Albuquerque', state: 'NM', zip: '87111' },
+    text: 'Hi Orlando! 👋 My name is jeanette serna, I have a leak over my kitchen 😩 Address is 1234 montgomery blvd ne albuquerque nm 87111. Call me 505.555.0199 or JSerna@Example.com thanks!!',
+    want: { first: 'Jeanette', last: 'Serna', phone: '(505) 555-0199', email: 'jserna@example.com', street: '1234 Montgomery Blvd NE', city: 'Albuquerque', state: 'NM', zip: '87111' },
   },
   {
     name: 'email with signature block and "Sent from my iPhone"',
@@ -26,37 +26,37 @@ Daniel Sandoval
 4812 Montaño Rd NW
 Albuquerque, NM 87120
 (505) 555-0148
-dsandoval@yahoo.com
+dsandoval@example.com
 
 Sent from my iPhone`,
-    want: { first: 'Daniel', last: 'Sandoval', phone: '(505) 555-0148', email: 'dsandoval@yahoo.com', street: '4812 Montaño Rd NW', city: 'Albuquerque', state: 'NM', zip: '87120' },
+    want: { first: 'Daniel', last: 'Sandoval', phone: '(505) 555-0148', email: 'dsandoval@example.com', street: '4812 Montaño Rd NW', city: 'Albuquerque', state: 'NM', zip: '87120' },
   },
   {
     name: 'web form with labels, ALL CAPS name, unit, "New Mexico"',
     text: `Name: MARIA LOPEZ
 Phone: 5055551234
-Email: Maria.Lopez@Gmail.com
+Email: Maria.Lopez@Example.com
 Address: 10512 lagrima de oro rd ne apt 3, Albuquerque, New Mexico 87111
 Message: roof is ponding near the drain`,
-    want: { first: 'Maria', last: 'Lopez', phone: '(505) 555-1234', email: 'maria.lopez@gmail.com', street: '10512 Lagrima de Oro Rd NE Apt 3', city: 'Albuquerque', state: 'NM', zip: '87111' },
+    want: { first: 'Maria', last: 'Lopez', phone: '(505) 555-1234', email: 'maria.lopez@example.com', street: '10512 Lagrima de Oro Rd NE Apt 3', city: 'Albuquerque', state: 'NM', zip: '87111' },
   },
   {
     name: '+1 phone, #unit, no state, numbers that are not addresses',
-    text: 'this is Rob from nextdoor 🙂 +1 (505) 321-7788. 2201 Central Ave SE #4B Albuquerque 87106. 2 story building, 20 years old roof',
-    want: { first: 'Rob', last: '', phone: '(505) 321-7788', email: '', street: '2201 Central Ave SE #4B', city: 'Albuquerque', state: 'NM', zip: '87106' },
+    text: 'this is Rob from nextdoor 🙂 +1 (505) 555-0101. 2201 Central Ave SE #4B Albuquerque 87106. 2 story building, 20 years old roof',
+    want: { first: 'Rob', last: '', phone: '(505) 555-0101', email: '', street: '2201 Central Ave SE #4B', city: 'Albuquerque', state: 'NM', zip: '87106' },
   },
   {
     name: 'couple, Rio Rancho, no state',
     text: `Hey there!
 Tom & Linda Garcia
 1600 sara rd se, rio rancho 87124
-tom.garcia@comcast.net 505-891-2233`,
-    want: { first: 'Tom & Linda', last: 'Garcia', phone: '(505) 891-2233', email: 'tom.garcia@comcast.net', street: '1600 Sara Rd SE', city: 'Rio Rancho', state: 'NM', zip: '87124' },
+tom.garcia@example.com 505-555-0104`,
+    want: { first: 'Tom & Linda', last: 'Garcia', phone: '(505) 555-0104', email: 'tom.garcia@example.com', street: '1600 Sara Rd SE', city: 'Rio Rancho', state: 'NM', zip: '87124' },
   },
   {
     name: 'Spanish street name, "ABQ", "my name\'s"',
-    text: "Good afternoon, my name's Lupe Chavez. We're at 905 Calle del Ranchero NW in ABQ 87107. My cell is 505 400 1212.",
-    want: { first: 'Lupe', last: 'Chavez', phone: '(505) 400-1212', email: '', street: '905 Calle del Ranchero NW', city: 'Albuquerque', state: 'NM', zip: '87107' },
+    text: "Good afternoon, my name's Lupe Chavez. We're at 905 Calle del Ranchero NW in ABQ 87107. My cell is 505 555 0102.",
+    want: { first: 'Lupe', last: 'Chavez', phone: '(505) 555-0102', email: '', street: '905 Calle del Ranchero NW', city: 'Albuquerque', state: 'NM', zip: '87107' },
   },
   {
     name: 'Last, First on its own line, multi-line address',
@@ -76,8 +76,8 @@ Albuquerque NM 87110
     text: `hi, its mike t.
 mike thompson
 8800 holly ave ne albuquerque nm 87122-1234
-mike.t@hotmail.com`,
-    want: { first: 'Mike', last: 'Thompson', phone: '', email: 'mike.t@hotmail.com', street: '8800 Holly Ave NE', city: 'Albuquerque', state: 'NM', zip: '87122' },
+mike.t@example.com`,
+    want: { first: 'Mike', last: 'Thompson', phone: '', email: 'mike.t@example.com', street: '8800 Holly Ave NE', city: 'Albuquerque', state: 'NM', zip: '87122' },
   },
   {
     name: '7-digit local number, extension, no address',
@@ -86,8 +86,8 @@ mike.t@hotmail.com`,
   },
   {
     name: 'no street type, Corrales, comma-separated',
-    text: 'Hello! Ana Martinez. 54 Camino de la Tierra, Corrales NM 87048. ana_m@icloud.com. text me at 5055550987 😊',
-    want: { first: 'Ana', last: 'Martinez', phone: '(505) 555-0987', email: 'ana_m@icloud.com', street: '54 Camino de la Tierra', city: 'Corrales', state: 'NM', zip: '87048' },
+    text: 'Hello! Ana Martinez. 54 Camino de la Tierra, Corrales NM 87048. ana_m@example.com. text me at 5055550987 😊',
+    want: { first: 'Ana', last: 'Martinez', phone: '(505) 555-0987', email: 'ana_m@example.com', street: '54 Camino de la Tierra', city: 'Corrales', state: 'NM', zip: '87048' },
   },
   {
     name: 'only name and phone',
@@ -110,24 +110,24 @@ mike.t@hotmail.com`,
 3700 Coors Blvd NW
 Unit 12
 Albuquerque, NM 87120
-kim.nguyen@outlook.com`,
-    want: { first: 'Kim', last: 'Nguyen', email: 'kim.nguyen@outlook.com', street: '3700 Coors Blvd NW Unit 12', city: 'Albuquerque', state: 'NM', zip: '87120' },
+kim.nguyen@example.com`,
+    want: { first: 'Kim', last: 'Nguyen', email: 'kim.nguyen@example.com', street: '3700 Coors Blvd NW Unit 12', city: 'Albuquerque', state: 'NM', zip: '87120' },
   },
   {
     name: 'Mr. honorific, middle initial, dotted phone, Los Lunas',
     text: `From: Mr. Robert J. Archuleta
 Re: flat roof estimate
 Property: 312 Main St. NW, Los Lunas, NM 87031
-Phone 505.865.4410`,
-    want: { first: 'Robert', last: 'Archuleta', phone: '(505) 865-4410', street: '312 Main St NW', city: 'Los Lunas', state: 'NM', zip: '87031' },
+Phone 505.555.0103`,
+    want: { first: 'Robert', last: 'Archuleta', phone: '(505) 555-0103', street: '312 Main St NW', city: 'Los Lunas', state: 'NM', zip: '87031' },
   },
   {
     name: 'compound last name, Santa Fe, Hi Orlando greeting',
     text: `Hi Orlando,
 Maria de la Cruz
 1500 Cerrillos Rd, Santa Fe, NM 87505
-maria.delacruz@gmail.com`,
-    want: { first: 'Maria', last: 'de la Cruz', email: 'maria.delacruz@gmail.com', street: '1500 Cerrillos Rd', city: 'Santa Fe', state: 'NM', zip: '87505' },
+maria.delacruz@example.com`,
+    want: { first: 'Maria', last: 'de la Cruz', email: 'maria.delacruz@example.com', street: '1500 Cerrillos Rd', city: 'Santa Fe', state: 'NM', zip: '87505' },
   },
   {
     name: 'numbered street (4th St), greeting + "I\'m"',

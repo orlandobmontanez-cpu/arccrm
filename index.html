@@ -4872,8 +4872,8 @@ function timeMin(t) {   // minutes worked; a finish earlier than the start means
   var a = +t.a.slice(0, 2) * 60 + +t.a.slice(3), b = +t.b.slice(0, 2) * 60 + +t.b.slice(3), m = b - a;
   return m < 0 ? m + 1440 : m;
 }
-// Turns a pasted list like "1. Jocelyn Gorman (33595) - 1600 Padre Roberto Road Northwest" into
-// "Gorman (33595) · 1600 Padre Roberto Road Northwest", one line per stop. Lines it can't read are kept as typed.
+// Turns a pasted list like "1. Pat Sample (10001) - 123 Sample Road Northwest" into
+// "Sample (10001) · 123 Sample Road Northwest", one line per stop. Lines it can't read are kept as typed.
 function stopLines(text) {
   var t = String(text || '').replace(/\r/g, '').trim(); if (!t) return [];
   if (/^training$/i.test(t)) return ['Training'];
@@ -5107,7 +5107,7 @@ function hsetupHtml(pre) {
     '<div class="ex-f"><label for="hs-co">COMPANY</label><select id="hs-co" class="b-sel"><option value="">Choose a company…</option>' +
       cos.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(c.name || 'Unnamed company') + '</option>'; }).join('') +
       '<option value="__new"' + (!cos.length ? ' selected' : '') + '>+ New company…</option></select></div>' +
-    '<div id="hs-new"' + (!cos.length ? '' : ' hidden') + '>' + bf('hs-name', 'COMPANY NAME', '', 'type="text" autocomplete="organization" placeholder="Solarworks"') +
+    '<div id="hs-new"' + (!cos.length ? '' : ' hidden') + '>' + bf('hs-name', 'COMPANY NAME', '', 'type="text" autocomplete="organization" placeholder="Company name"') +
       bf('hs-email', 'BILLING EMAIL', '', 'type="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ap@company.com"') + '</div>' +
     hrSettingsFields({ rate: 0, hrLabel: 'Consulting services', hrTax: false }) +
     '<button type="button" class="proposal-btn proposal-btn-primary" style="width:100%;" data-b="hs-save">START TRACKING HOURS</button></div>';

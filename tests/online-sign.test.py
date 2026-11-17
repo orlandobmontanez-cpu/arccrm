@@ -95,8 +95,8 @@ def gmail(route):
     route.fulfill(status=200, headers={'Access-Control-Allow-Origin': '*'}, content_type='application/json', body='{"id":"m1"}')
 
 now = int(time.time() * 1000)
-CUST = {'id': 'c15', 'arcNum': 'ARC-00015', 'first': 'Ray', 'last': 'Scott', 'email': 'rayscott1951@aol.com', 'phone': '(505) 555-1234',
-        'address': '8011 Camino Paisano NW', 'city': 'Albuquerque', 'state': 'NM', 'zip': '87120', 'stage': 'Proposed',
+CUST = {'id': 'c15', 'arcNum': 'ARC-00015', 'first': 'Pat', 'last': 'Sample', 'email': 'pat.sample@example.com', 'phone': '(505) 555-1234',
+        'address': '123 Sample St NW', 'city': 'Albuquerque', 'state': 'NM', 'zip': '87120', 'stage': 'Proposed',
         'scope': 'Seal **parapet** cap seams\nPatch blistered field at drain\nRecoat repaired areas with silicone', 'requests': '',
         'materials': '850', 'labor': '600', 'other': '0', 'margin': '20', 'jobType': 'repair', 'taxRate': 7.3125,
         'quotes': [], 'changeOrders': [], 'activityLog': [], 'createdAt': now, 'updatedAt': now}
@@ -185,7 +185,7 @@ with sync_playwright() as p:
     cp.goto(BASE + 'sign.html#' + tok)
     cp.wait_for_selector('#go-sign:visible')
     cp.wait_for_timeout(2500)
-    ok('Hi Ray' in cp.inner_text('main') and 'ARC-00015' in cp.inner_text('main'), 'customer page greets Ray with his quote number')
+    ok('Hi Pat' in cp.inner_text('main') and 'ARC-00015' in cp.inner_text('main'), 'customer page greets Pat with the quote number')
     ok('About This Repair' in cp.inner_text('main'), 'customer page shows About This Repair')
     cp.screenshot(path='/tmp/c1-review.png', full_page=True)
     cp.screenshot(path='/tmp/c1-top.png')
@@ -199,11 +199,11 @@ with sync_playwright() as p:
     cp.mouse.up()
     ok(cp.locator('#sg-ok').is_disabled(), 'Sign stays off until the boxes are ticked')
     cp.check('#sg-ack'); cp.check('#sg-consent')
-    ok(cp.input_value('#sg-name') == 'Ray Scott', 'name pre-filled')
+    ok(cp.input_value('#sg-name') == 'Pat Sample', 'name pre-filled')
     cp.screenshot(path='/tmp/c2-sign.png')
     cp.click('#sg-ok'); cp.wait_for_timeout(1200)
-    ok('Signed. Thank you, Ray!' in cp.inner_text('main'), 'customer sees the thank-you screen')
-    ok('<!--arc-sig-->' in row['info']['html'] and '⟦NAME⟧' in row['info']['sigTpl'] and row['info']['driveFolder'] == 'Scott, Ray · ARC-00015', 'request carries the signature block + Drive folder name')
+    ok('Signed. Thank you, Pat!' in cp.inner_text('main'), 'customer sees the thank-you screen')
+    ok('<!--arc-sig-->' in row['info']['html'] and '⟦NAME⟧' in row['info']['sigTpl'] and row['info']['driveFolder'] == 'Sample, Pat · ARC-00015', 'request carries the signature block + Drive folder name')
     cp.wait_for_selector('#copy-box a[download]', timeout=40000)
     ok('DOWNLOAD YOUR SIGNED COPY' in cp.inner_text('#copy-box'), 'customer can download their signed copy')
     cp.screenshot(path='/tmp/c3-done.png')
@@ -225,12 +225,12 @@ with sync_playwright() as p:
     c = page.evaluate("customers.find(x => x.id === 'c15')")
     ok(c['sig'] and c['sig']['customer']['method'] == 'Signed online' and c['sig']['contractor'], 'signature on the record, countersigned with saved signature')
     ok(c['stage'] == 'Signed', 'stage moved to Signed')
-    ok(any('signed online by Ray Scott' in a['msg'] for a in c['activityLog']), 'activity log entry')
+    ok(any('signed online by Pat Sample' in a['msg'] for a in c['activityLog']), 'activity log entry')
     ok(SIGN[tok]['applied'] is True, 'request marked applied')
-    ok(page.locator('#rs-banner').is_visible() and 'signed repair quote ARC-00015' in page.inner_text('#rs-banner'), 'banner: Ray signed repair quote online')
+    ok(page.locator('#rs-banner').is_visible() and 'signed repair quote ARC-00015' in page.inner_text('#rs-banner'), 'banner: Pat signed repair quote online')
     page.screenshot(path='/tmp/s5-banner.png')
     stored = page.evaluate("JSON.parse(localStorage.getItem('arc_v3'))[0].sig")
-    ok(stored and stored['customer']['name'] == 'Ray Scott', 'signature saved to phone storage (syncs)')
+    ok(stored and stored['customer']['name'] == 'Pat Sample', 'signature saved to phone storage (syncs)')
     page.click('#rs-open'); page.wait_for_timeout(400)
     ok('signed online' in page.inner_text('#sign-status-proposal'), 'status: SIGNED · signed online')
     ok(not page.locator('#btn-rsign-proposal').is_visible(), 'Sign on their phone hidden once signed')

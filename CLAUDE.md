@@ -166,7 +166,7 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 
 ## Hours tracker (hourly consulting billed through Invoices) — added Nov 13 2026
 
-Orlando consults by the hour (first client: Solarworks, invoiced every Thursday morning). Lives inside the Invoices screen.
+Orlando consults by the hour for some clients (invoiced weekly). Lives inside the Invoices screen.
 
 - **A company becomes hourly when it has a rate** (`co.rate`, set from the HOURS tile setup or the tracker's settings). The rate is **private**: it only turns
   hours into a total and is **never printed** on an invoice or the hours log, and the tracker shows only the running total.
@@ -182,9 +182,9 @@ Orlando consults by the hour (first client: Solarworks, invoiced every Thursday 
   when an entry has a start but no finish.
 - **Entries are "brackets"** (`.tm-br` cards, oldest first) above a fresh form titled NEXT ENTRY. SAVE ENTRY stores it, clears the
   form (keeping the date) and scrolls to it. Tap a card to edit it in the form.
-- **Customers box is a paste box** (`#tm-who`, grows with content). He pastes the list Solarworks texts him, e.g.
-  `1. Jocelyn Gorman (33595) - 1600 Padre Roberto Road Northwest`; `stopLines()` turns each into
-  `Gorman (33595) · 1600 Padre Roberto Road Northwest` (last name, their job #, address as sent), one per line, shown live under the
+- **Customers box is a paste box** (`#tm-who`, grows with content). He pastes the list the client texts him, e.g.
+  `1. Pat Sample (10001) - 123 Sample Road Northwest`; `stopLines()` turns each into
+  `Sample (10001) · 123 Sample Road Northwest` (last name, their job #, address as sent), one per line, shown live under the
   box as "ON THE HOURS LOG". Handles numbered items run together on one line. `who` stores those lines joined by newlines; the hours
   log prints one per line. A day with several homes is **one** time block with all stops (his choice), not one entry per home.
 - **BUILD INVOICE** (two taps) moves every finished entry onto a new Draft invoice (`inv.time`), one line
@@ -195,7 +195,7 @@ Orlando consults by the hour (first client: Solarworks, invoiced every Thursday 
   (`hoursLog`). Still one Letter page.
 - No new storage key or sync channel: the fields ride on the existing `co:` / `inv:` records, so sync and backups carry them.
 - He sends it himself on Thursdays (a reminder comes from elsewhere); the CRM does not auto-send.
-- Tax: he chose **not** to charge Solarworks GRT (`hrTax` off for them) and absorbs it; other contractors are charged.
+- Tax is per company (`hrTax`).
 
 ## Documents (proposal, quote, change order, receipt)
 
@@ -291,6 +291,14 @@ documents and PDFs are untouched) and one `PREMIUM LAYER` `<script>` at the end 
   phone. He chose to skip haptics. Do not re-add without asking; the only method left needs an invisible switch over every button.
 - Not built, his call still open: "Dusk" dark variant (he said leave it for now).
 - When adding screens or buttons, style them inside the layer and keep to these rules.
+
+## Privacy and security rules (Nov 16 2026)
+
+- **This repository is public.** Never put a real customer's or client's name, address, phone, email, job number, price, or any
+  business arrangement in code, comments, tests or this file. Use made-up examples (Pat Sample, 123 Sample St NW, 555 numbers,
+  example.com). He has real customers; a public slip is a real privacy problem.
+- **Backups are not password-locked, by his choice** (Nov 16 2026: a password would slow him down). Don't add one without asking.
+- Supabase tables use row-level security (owner = auth.uid()); the key in the code is the publishable one. Keep it that way.
 
 ## Testing before every push
 

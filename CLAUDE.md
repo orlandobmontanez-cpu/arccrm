@@ -297,10 +297,7 @@ documents and PDFs are untouched) and one `PREMIUM LAYER` `<script>` at the end 
 - **This repository is public.** Never put a real customer's or client's name, address, phone, email, job number, price, or any
   business arrangement in code, comments, tests or this file. Use made-up examples (Pat Sample, 123 Sample St NW, 555 numbers,
   example.com). He has real customers; a public slip is a real privacy problem.
-- **Backups are password-locked.** Export Backup asks for a password (8+ characters, typed twice) and saves
-  `arc-crm-backup-<date>-locked.json`: `{ arcLocked: 1, kdf: 'PBKDF2-SHA256', iter, cipher: 'AES-GCM-256', salt, iv, data }`.
-  Import detects `arcLocked`, asks for the password, and leaves data untouched on a wrong one. Old unlocked backups still import.
-  The password is never stored and can't be recovered.
+- **Backups are not password-locked, by his choice** (Nov 16 2026: a password would slow him down). Don't add one without asking.
 - Supabase tables use row-level security (owner = auth.uid()); the key in the code is the publishable one. Keep it that way.
 
 ## Testing before every push

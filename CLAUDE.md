@@ -121,8 +121,11 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   `requestAccessToken` must run inside the tap (pop-up rules), so the PDF and the Google script are prepared beforehand.
   No client secret or refresh token anywhere. If `CLIENT_ID` is empty, `ARCMail.enabled` is false and the Mail-app flow runs.
 - Message = RFC 822 multipart/mixed built by hand (base64 body + PDF, RFC 2047 folded subject) → `users/me/messages/send` `{ raw }`.
-  When `compose` gets `signUrl` and the message still contains that link, the body is multipart/alternative: the plain text
-  plus an HTML copy (`htmlBody`) where the link line becomes a copper **REVIEW & SIGN ONLINE** button.
+  The body is multipart/alternative: the plain text plus a branded HTML copy (`htmlBody`, Nov 18 2026 — he found the old one
+  "very on your face"): stone page, small shield + AGENCY / ROOFING CO. header, off-white card, calm 15.5px type, the tagline in
+  Lora italic, the sign-off under a hairline with the phone as a tap-to-call link. If the message contains the `signUrl`, that line
+  becomes a quiet ink pill **REVIEW & SIGN ONLINE** with "Or open it in your browser" under it (no raw link shown). Same words as
+  the plain text; never add or change wording here.
 - "Use the Mail app instead" in the sheet runs the older flow below. Sends are logged in the customer's activity log
   (the receipt page writes the log entry straight into `arc_v3`).
 - **One inbox only:** everything goes to and from orlando.montanez@agencyroofingco.com (Orlando's choice, Nov 2026). Never route

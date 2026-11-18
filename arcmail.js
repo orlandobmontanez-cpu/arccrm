@@ -109,24 +109,59 @@
       r.readAsDataURL(file);
     });
   }
-  // HTML version of the message: same words, paragraphs kept, the sign-online link shown as a button
+  // HTML version of the message, in the Agency look: same words as the plain text (Orlando's wording, unchanged),
+  // set on a stone page in a quiet card. The sign-online link becomes a small ink REVIEW & SIGN ONLINE button with a
+  // short "open it in your browser" text link under it (no long raw link). The tagline and the sign-off get their own styling.
+  var ARC_SITE = 'https://orlandobmontanez-cpu.github.io/arccrm/';
   function htmlBody(text, signUrl) {
     function e(x) { return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-    function link(x) { return e(x).replace(/https?:\/\/[^\s<]+/g, function (u) { return '<a href="' + u + '" style="color:#974930">' + u + '</a>'; }); }
-    var url = e(signUrl);
-    var button = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 6px"><tr>' +
-      '<td style="background:#974930;border-radius:6px"><a href="' + url + '" style="display:inline-block;padding:15px 28px;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;letter-spacing:1.5px;color:#ffffff;text-decoration:none">REVIEW &amp; SIGN ONLINE</a></td>' +
-      '</tr></table><div style="font-size:12px;color:#6B6560;margin-bottom:4px">Button not working? Open this link: <a href="' + url + '" style="color:#974930;word-break:break-all">' + url + '</a></div>';
-    var paras = String(text).replace(/\r\n/g, '\n').split(/\n{2,}/).map(function (p) {
-      var lines = p.split('\n');
-      if (lines.some(function (l) { return l.trim() === signUrl; })) {
+    var A = 'color:#974930;text-decoration:none;border-bottom:1px solid rgba(151,73,48,.35)';
+    function link(x) {
+      return e(x).replace(/https?:\/\/[^\s<]+/g, function (u) { return '<a href="' + u + '" style="' + A + '">' + u + '</a>'; })
+        .replace(/\(?\d{3}\)?[ .-]?\d{3}[ .-]\d{4}/g, function (ph) { return '<a href="tel:' + ph.replace(/\D/g, '') + '" style="' + A + '">' + ph + '</a>'; });
+    }
+    var SANS = "-apple-system,BlinkMacSystemFont,'Helvetica Neue',Inter,Helvetica,Arial,sans-serif";
+    var SERIF = "Lora,Georgia,'Times New Roman',serif";
+    var url = signUrl ? e(signUrl) : '';
+    var button = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 10px"><tr>' +
+      '<td style="background:#1C1A18;border-radius:999px"><a href="' + url + '" style="display:inline-block;padding:14px 30px;font-family:' + SANS +
+      ';font-size:12px;font-weight:600;letter-spacing:2.6px;color:#F2EDE6;text-decoration:none">REVIEW &amp; SIGN ONLINE</a></td>' +
+      '</tr></table><p style="margin:0 0 22px;font-family:' + SANS + ';font-size:12.5px;line-height:1.5;color:#8A847C">Or <a href="' + url +
+      '" style="color:#8A847C;text-decoration:underline">open it in your browser</a>.</p>';
+    var TAG = 'built with agency. driven by obligation.';
+    var paras = String(text).replace(/\r\n/g, '\n').trim().split(/\n{2,}/);
+    var last = paras.length - 1;
+    var html = paras.map(function (p, idx) {
+      var lines = p.split('\n').map(function (l) { return l.replace(/\s+$/, ''); });
+      if (url && lines.some(function (l) { return l.trim() === signUrl; })) {
         var rest = lines.filter(function (l) { return l.trim() !== signUrl; });
-        return (rest.length ? '<p style="margin:0 0 8px">' + rest.map(link).join('<br>') + '</p>' : '') + button;
+        return (rest.length ? '<p style="margin:0 0 4px">' + rest.map(link).join('<br>') + '</p>' : '') + button;
       }
-      return '<p style="margin:0 0 14px">' + lines.map(link).join('<br>') + '</p>';
-    });
-    return '<!DOCTYPE html><html><body style="margin:0;padding:0"><div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#1C1A18;max-width:600px">' +
-      paras.join('') + '</div></body></html>';
+      if (p.trim().toLowerCase() === TAG)
+        return '<p style="margin:26px 0 22px;font-family:' + SERIF + ';font-style:italic;font-size:15px;line-height:1.5;color:#5E5852">' + e(p.trim()) + '</p>';
+      if (idx === last && lines.length > 1 && lines.length <= 5) {
+        return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid #E3DCD1;margin-top:6px"><tr><td style="padding-top:16px">' +
+          '<div style="font-family:' + SANS + ';font-size:15px;font-weight:600;color:#1C1A18;line-height:1.4">' + link(lines[0]) + '</div>' +
+          lines.slice(1).map(function (l) { return '<div style="font-family:' + SANS + ';font-size:13px;color:#5E5852;line-height:1.6">' + link(l) + '</div>'; }).join('') +
+          '</td></tr></table>';
+      }
+      return '<p style="margin:0 0 16px">' + lines.map(link).join('<br>') + '</p>';
+    }).join('');
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">' +
+      '<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Lora:ital@1&display=swap" rel="stylesheet"></head>' +
+      '<body style="margin:0;padding:0;background:#EAE4DA">' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#EAE4DA"><tr><td align="center" style="padding:28px 14px 30px">' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px">' +
+        '<tr><td style="padding:0 6px 18px"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
+          '<td style="vertical-align:middle;padding-right:12px"><img src="' + ARC_SITE + 'apple-touch-icon.png" width="44" height="44" alt="" style="display:block;border:0;width:44px;height:44px"></td>' +
+          '<td style="vertical-align:middle"><div style="font-family:Anton,\'Arial Narrow\',\'Helvetica Neue\',Arial,sans-serif;font-size:24px;line-height:1;letter-spacing:1px;color:#1C1A18;font-weight:700">AGENCY</div>' +
+          '<div style="font-family:\'Bebas Neue\',\'Arial Narrow\',Arial,sans-serif;font-size:11px;line-height:1;letter-spacing:4px;color:#974930;margin-top:4px;font-weight:600">ROOFING CO.</div></td>' +
+        '</tr></table></td></tr>' +
+        '<tr><td style="background:#FDFCFA;border-radius:16px;border:1px solid #E3DCD1;padding:30px 26px 26px;font-family:' + SANS + ';font-size:15.5px;line-height:1.65;color:#2B2826">' +
+          html + '</td></tr>' +
+        '<tr><td align="center" style="padding:18px 10px 0;font-family:' + SANS + ';font-size:11px;letter-spacing:1.5px;color:#8A847C">AGENCY ROOFING CO. LLC &middot; ALBUQUERQUE, NM</td></tr>' +
+      '</table></td></tr></table></body></html>';
   }
   function buildRaw(m) {
     return fileB64(m.file).then(function (pdf) {
@@ -134,8 +169,8 @@
       var name = (m.file.name || 'document.pdf').replace(/[\r\n"]/g, '');
       var asciiName = name.replace(/[^\x20-\x7E]/g, '-');
       var text = ['Content-Type: text/plain; charset="UTF-8"', 'Content-Transfer-Encoding: base64', '', wrap76(b64utf8(m.body))];
-      // With a sign-online link: plain text + an HTML version where the link is a REVIEW & SIGN button
-      var html = m.signUrl && m.body.indexOf(m.signUrl) > -1 ? htmlBody(m.body, m.signUrl) : '';
+      // Plain text + the branded HTML version; a sign-online link in the message becomes the REVIEW & SIGN button
+      var html = htmlBody(m.body, m.signUrl && m.body.indexOf(m.signUrl) > -1 ? m.signUrl : '');
       var alt = bd + '_alt';
       var bodyPart = html ? [
         'Content-Type: multipart/alternative; boundary="' + alt + '"',

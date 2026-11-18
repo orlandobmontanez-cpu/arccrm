@@ -123,9 +123,12 @@
     var SANS = "-apple-system,BlinkMacSystemFont,'Helvetica Neue',Inter,Helvetica,Arial,sans-serif";
     var SERIF = "Lora,Georgia,'Times New Roman',serif";
     var url = signUrl ? e(signUrl) : '';
+    // Rose-gold button = email/sign-button.gif (tools/make-sign-button.py): a glint crosses it right to left every few
+    // seconds. A GIF because Gmail/Outlook drop CSS animation. If images are blocked, the alt text shows on a rose-gold pill.
     var button = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 10px"><tr>' +
-      '<td style="background:#1C1A18;border-radius:999px"><a href="' + url + '" style="display:inline-block;padding:14px 30px;font-family:' + SANS +
-      ';font-size:12px;font-weight:600;letter-spacing:2.6px;color:#F2EDE6;text-decoration:none">REVIEW &amp; SIGN ONLINE</a></td>' +
+      '<td style="background:#DEA096;border-radius:999px"><a href="' + url + '" style="display:block;text-decoration:none;color:#1C1A18">' +
+      '<img src="' + ARC_SITE + 'email/sign-button.gif" width="300" height="52" alt="REVIEW &amp; SIGN ONLINE" ' +
+      'style="display:block;border:0;width:300px;max-width:100%;height:auto;font-family:' + SANS + ';font-size:13px;font-weight:600;letter-spacing:2.4px;color:#1C1A18;text-align:center;line-height:52px"></a></td>' +
       '</tr></table><p style="margin:0 0 22px;font-family:' + SANS + ';font-size:12.5px;line-height:1.5;color:#8A847C">Or <a href="' + url +
       '" style="color:#8A847C;text-decoration:underline">open it in your browser</a>.</p>';
     var TAG = 'built with agency. driven by obligation.';

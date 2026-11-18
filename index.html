@@ -1675,11 +1675,11 @@
           <div class="form-grid cols-1">
             <div class="form-group">
               <label>Scope Description</label>
-              <textarea id="f-scope" rows="4" placeholder="Describe the work to be performed..."></textarea>
+              <textarea id="f-scope" autocapitalize="sentences" autocorrect="on" spellcheck="true" rows="4" placeholder="Describe the work to be performed..."></textarea>
             </div>
             <div class="form-group">
               <label>Customer Requests / Notes</label>
-              <textarea id="f-requests" rows="3" placeholder="Any specific customer requests or concerns..."></textarea>
+              <textarea id="f-requests" autocapitalize="sentences" autocorrect="on" spellcheck="true" rows="3" placeholder="Any specific customer requests or concerns..."></textarea>
             </div>
           </div>
         </div>
@@ -1757,7 +1757,7 @@
           <div class="form-section-title">Relationship</div>
           <div class="form-group">
             <label for="f-relnotes">Relationship builders</label>
-            <textarea id="f-relnotes" rows="4" placeholder="Pets, kids, what they care about, what you talked about last visit. e.g. Dog Max (lab), daughter starting at UNM, wants a patio cover next spring."></textarea>
+            <textarea id="f-relnotes" autocapitalize="sentences" autocorrect="on" spellcheck="true" rows="4" placeholder="Pets, kids, what they care about, what you talked about last visit. e.g. Dog Max (lab), daughter starting at UNM, wants a patio cover next spring."></textarea>
           </div>
           <div class="rel-next" id="rel-next" hidden></div>
           <div class="rel-log" id="rel-log"></div>
@@ -4340,9 +4340,9 @@ function quoteForm(q) {
       <div class="form-section-title">Scope of Work</div>
       <div class="form-grid cols-1">
         <div class="form-group"><label for="xe-scope">Scope description</label>
-          <textarea id="xe-scope" data-f="scope" rows="5" placeholder="One item per line. Each line prints as a bullet.">${v('scope')}</textarea></div>
+          <textarea id="xe-scope" autocapitalize="sentences" autocorrect="on" spellcheck="true" data-f="scope" rows="5" placeholder="One item per line. Each line prints as a bullet.">${v('scope')}</textarea></div>
         <div class="form-group"><label for="xe-req">Customer requests / notes</label>
-          <textarea id="xe-req" data-f="requests" rows="3" placeholder="Optional">${v('requests')}</textarea></div>
+          <textarea id="xe-req" autocapitalize="sentences" autocorrect="on" spellcheck="true" data-f="requests" rows="3" placeholder="Optional">${v('requests')}</textarea></div>
       </div>
     </div>
     <div class="form-section">
@@ -4386,7 +4386,7 @@ function coForm(o) {
       <div class="form-section-title">Description of Change</div>
       <div class="form-grid cols-1">
         <div class="form-group"><label for="xe-desc">Work added or removed</label>
-          <textarea id="xe-desc" data-f="description" rows="5" placeholder="One item per line. Each line prints as a bullet.">${v('description')}</textarea></div>
+          <textarea id="xe-desc" autocapitalize="sentences" autocorrect="on" spellcheck="true" data-f="description" rows="5" placeholder="One item per line. Each line prints as a bullet.">${v('description')}</textarea></div>
         <div class="form-group"><label for="xe-days">Schedule impact (working days)</label>
           <input type="number" id="xe-days" data-f="days" value="${v('days')}" placeholder="0 = no change" min="0" step="1" inputmode="numeric"></div>
       </div>
@@ -4738,7 +4738,7 @@ function renderExpenseForm(busyMsg) {
       '<div class="ex-f"><label for="ex-tax">TAX</label><input id="ex-tax" type="text" inputmode="decimal" value="' + money(d.tax) + '" placeholder="0.00"' + dis + '></div>' +
       '<div class="ex-f"><label for="ex-total">TOTAL PAID</label><input id="ex-total" type="text" inputmode="decimal" value="' + money(d.total) + '" placeholder="0.00"' + dis + '></div></div>' +
     '<div class="ex-check" id="ex-check"></div>' +
-    '<div class="ex-f"><label for="ex-note">NOTE</label><textarea id="ex-note" placeholder="What it was for, returns, anything that changed"' + dis + '>' + v(d.note) + '</textarea></div>';
+    '<div class="ex-f"><label for="ex-note">NOTE</label><textarea id="ex-note" autocapitalize="sentences" autocorrect="on" spellcheck="true" placeholder="What it was for, returns, anything that changed"' + dis + '>' + v(d.note) + '</textarea></div>';
   document.getElementById('exp-inner').innerHTML = h;
   document.getElementById('exp-save').disabled = !!busyMsg;
   exCheck();
@@ -5142,7 +5142,7 @@ function coFormHtml(c) {
       bf('co-zip', 'ZIP', c.zip, 'type="text" inputmode="numeric" maxlength="10"') + '</div>' +
     '<div class="ex-f"><label for="co-terms">DEFAULT TERMS</label><select id="co-terms" class="b-sel">' + BILL_TERMS.map(function (t) { return '<option value="' + t[0] + '"' + (c.terms === t[0] ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') + '</select></div>' +
     '<label class="b-check"><input type="checkbox" id="co-nttc"' + (c.nttc ? ' checked' : '') + '><span><b>NTTC on file</b> New invoices to this company start with gross receipts tax off.</span></label>' +
-    '<div class="ex-f"><label for="co-notes">NOTES (ONLY YOU SEE THESE)</label><textarea id="co-notes" placeholder="Vendor #, who approves invoices, how they pay">' + esc(c.notes) + '</textarea></div>' +
+    '<div class="ex-f"><label for="co-notes">NOTES (ONLY YOU SEE THESE)</label><textarea id="co-notes" autocapitalize="sentences" autocorrect="on" spellcheck="true" placeholder="Vendor #, who approves invoices, how they pay">' + esc(c.notes) + '</textarea></div>' +
     '';
 }
 function coFoot() {
@@ -5261,10 +5261,10 @@ function timeHtml(co) {
       '<div class="tm-2">' + tf('tm-a', 'START', d.a, 'now-a') + tf('tm-b', 'FINISH', d.b, 'now-b') + '</div>' +
       '<div class="tm-live" id="tm-live"></div>' +
       '<div class="ex-f"><label for="tm-who">CUSTOMERS · PASTE THE TEXT OR TYPE</label>' +
-        '<textarea id="tm-who" class="tm-paste" rows="4" autocapitalize="words" autocomplete="off" placeholder="Paste the list they texted you, or type a last name. One home per line.">' + esc(d.who) + '</textarea>' +
+        '<textarea id="tm-who" class="tm-paste" rows="4" autocapitalize="words" autocorrect="on" spellcheck="true" placeholder="Paste the list they texted you, or type who you saw. One home per line.">' + esc(d.who) + '</textarea>' +
         '<div class="tm-pv" id="tm-pv"></div>' +
         '<div class="tm-qk"><button type="button" class="tm-now" data-b="who-training">TRAINING</button><button type="button" class="tm-now" data-b="who-clear">CLEAR</button></div></div>' +
-      bf('tm-note', 'REASON / NOTE (OPTIONAL, PRINTS ON THE HOURS LOG)', d.note, 'type="text" autocomplete="off" placeholder="Site visits, ride-along, crew training"') +
+      bf('tm-note', 'REASON / NOTE (OPTIONAL, PRINTS ON THE HOURS LOG)', d.note, 'type="text" autocapitalize="sentences" autocorrect="on" spellcheck="true" placeholder="Site visits, ride-along, crew training"') +
       (ed ? '<div class="tm-btns"><button type="button" class="proposal-btn xe-del" data-b="tm-del">DELETE</button><button type="button" class="proposal-btn proposal-btn-secondary" data-b="tm-cancel">CANCEL</button>' +
               '<button type="button" class="proposal-btn proposal-btn-primary" data-b="tm-save">SAVE CHANGES</button></div>'
           : '<button type="button" class="proposal-btn proposal-btn-primary" style="width:100%;" data-b="tm-save">SAVE ENTRY</button>') +
@@ -5392,7 +5392,7 @@ function invFormHtml(v) {
     '<div class="bi-tax"><label class="b-check"><input type="checkbox" id="bi-taxon"' + (v.taxOn ? ' checked' : '') + '><span><b>Charge gross receipts tax</b> Turn off when they gave you an NTTC.</span></label>' +
       '<div class="bi-taxcity"' + (v.taxOn ? '' : ' hidden') + '>' + bf('bi-taxcity', 'TAX CITY (WHERE THE WORK IS)', v.taxCity, 'type="text" placeholder="Albuquerque"') + '<div class="bi-rate" id="bi-rate"></div></div></div>' +
     '<div class="xe-calc" id="bi-calc"></div>' +
-    '<div class="ex-f" style="margin-top:12px;"><label for="bi-note">NOTE ON THE INVOICE (OPTIONAL)</label><textarea id="bi-note" placeholder="Prints on the invoice. e.g. Work completed Nov 8–10.">' + esc(v.note) + '</textarea></div>';
+    '<div class="ex-f" style="margin-top:12px;"><label for="bi-note">NOTE ON THE INVOICE (OPTIONAL)</label><textarea id="bi-note" autocapitalize="sentences" autocorrect="on" spellcheck="true" placeholder="Prints on the invoice. e.g. Work completed Nov 8–10.">' + esc(v.note) + '</textarea></div>';
   // Payments
   h += '<div class="form-section-title" style="margin-top:22px;">Payments &amp; receipts</div>' +
     '<div class="x-list" id="bi-pays">' + (v.payments.length ? v.payments.map(function (p) {
@@ -7943,7 +7943,7 @@ if (_eib) _eib.addEventListener('click', exportData);
         } }
     ]);
     $('modal-body').innerHTML = '<p style="margin:0 0 10px;text-align:left;">How did it go? Anything new to remember next time?</p>' +
-      '<textarea id="ci-note" class="ci-ta" placeholder="Roof holding up great. Max had puppies. Thinking about a patio cover in spring."></textarea>' +
+      '<textarea id="ci-note" autocapitalize="sentences" autocorrect="on" spellcheck="true" class="ci-ta" placeholder="Roof holding up great. Max had puppies. Thinking about a patio cover in spring."></textarea>' +
       '<label class="b-check" style="margin-top:10px;text-align:left;"><input type="checkbox" id="ci-add" checked><span><b>Add this to relationship builders</b></span></label>';
     setTimeout(function () { var t = $('ci-note'); if (t) t.focus(); }, 60);
   }

@@ -1374,6 +1374,18 @@
     font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: .16em; text-decoration: none; }
   .ci-more { font-size: 12px; color: var(--ink-muted); padding: 2px 0 6px; }
   #f-relnotes { min-height: 96px; resize: vertical; line-height: 1.45; }
+  .ty-row { display: flex; align-items: center; gap: 12px; min-height: 52px; margin: 2px 0 12px; padding: 10px 14px; border-radius: 14px;
+    border: 1px solid #E3C1BB; background: #FBF5F3; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .ty-row input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .ty-box { flex: none; width: 24px; height: 24px; border-radius: 7px; border: 1.5px solid #C97E78; background: #fff; position: relative; transition: background .2s, border-color .2s; }
+  .ty-row input:checked + .ty-box { background: #974930; border-color: #974930; }
+  .ty-row input:checked + .ty-box::after { content: ''; position: absolute; left: 8px; top: 3px; width: 6px; height: 12px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .ty-row input:focus-visible + .ty-box { outline: 2px solid #974930; outline-offset: 2px; }
+  .ty-t, .ty-d { text-transform: none; letter-spacing: normal; font-family: Inter, -apple-system, sans-serif; }
+  .ty-t { display: flex; flex-direction: column; font-weight: 600; color: #1C1A18; font-size: 15px; }
+  .ty-d { font-weight: 400; font-size: 12.5px; color: #8A6A64; margin-top: 2px; }
+  .ty-d:empty { display: none; }
+  .card-tag.ty-tag { background: rgba(240,200,194,.18); color: #F0C8C2; border-color: rgba(240,200,194,.35); }
   .rel-next { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding: 12px; border-radius: 14px;
     background: var(--stone); border: 1px solid rgba(201,126,120,.5); }
   .rel-next[hidden] { display: none; }
@@ -1755,6 +1767,8 @@
         <!-- FOLLOW-UP -->
         <div class="form-section rel-sec" id="section-relationship">
           <div class="form-section-title">Relationship</div>
+          <label class="ty-row" for="f-thankyou"><input type="checkbox" id="f-thankyou"><span class="ty-box" aria-hidden="true"></span>
+            <span class="ty-t">Thank-you letter sent<span class="ty-d" id="ty-date"></span></span></label>
           <div class="form-group">
             <label for="f-relnotes">Relationship builders</label>
             <textarea id="f-relnotes" autocapitalize="sentences" autocorrect="on" spellcheck="true" rows="4" placeholder="Pets, kids, what they care about, what you talked about last visit. e.g. Dog Max (lab), daughter starting at UNM, wants a patio cover next spring."></textarea>
@@ -2344,7 +2358,7 @@ function toStored(c) {
 function extOf(c) {
   const e = { state: c.state, jobType: c.jobType, items: c.items, completedAt: c.completedAt, nextInspection: c.nextInspection, lastInspected: c.lastInspected,
     taxRate: c.taxRate, taxAuto: c.taxAuto, followUp: c.followUp, followNote: c.followNote,
-    closedAt: c.closedAt, lastCheckIn: c.lastCheckIn, relNotes: c.relNotes, checkIns: c.checkIns };
+    closedAt: c.closedAt, lastCheckIn: c.lastCheckIn, relNotes: c.relNotes, checkIns: c.checkIns, thankYou: c.thankYou };
   // No "mirror": older versions then load repair jobs as replacement jobs at the same price
   const qs = {};
   c.quotes.forEach(q => { if (isRepair(q)) qs[q.id] = { type: q.type, items: [] }; });
@@ -2357,7 +2371,7 @@ function extOf(c) {
 function applyExt(r, e) {
   if (!e) return r;
   const c = Object.assign({}, r);
-  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto', 'followUp', 'followNote', 'closedAt', 'lastCheckIn', 'relNotes', 'checkIns'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
+  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto', 'followUp', 'followNote', 'closedAt', 'lastCheckIn', 'relNotes', 'checkIns', 'thankYou'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
   if (e.state && !/^[A-Za-z]{2}[\s,]/.test(String(r.zip || ''))) c.state = e.state;
   const mirrored = (o, x) => String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0';
   if (e.jobType === 'repair') {
@@ -2485,6 +2499,7 @@ function normalize(c) {
     closedAt: /^\d{4}-\d{2}-\d{2}$/.test(c.closedAt || '') ? c.closedAt : '',
     lastCheckIn: /^\d{4}-\d{2}-\d{2}$/.test(c.lastCheckIn || '') ? c.lastCheckIn : '',
     relNotes: typeof c.relNotes === 'string' ? c.relNotes.slice(0, 4000) : '',
+    thankYou: /^\d{4}-\d{2}-\d{2}$/.test(c.thankYou || '') ? c.thankYou : '',   // date the thank-you letter (+ stickers) went out
     checkIns: Array.isArray(c.checkIns) ? c.checkIns.filter(x => x && x.d).slice(0, 60).map(x => ({ d: String(x.d).slice(0, 10), n: String(x.n || '').slice(0, 1000) })) : [],
     expenses: normExpenses(c.expenses),
     quotes: Array.isArray(c.quotes) ? c.quotes.map(normQuote) : [],
@@ -2544,7 +2559,8 @@ function renderList() {
     const tags = (inProg && c.id === currentId ? '<span class="in-progress-tag">IN PROGRESS</span>' : '') +
       (c.quotes && c.quotes.length ? `<span class="card-tag">+${c.quotes.length} QUOTE${c.quotes.length > 1 ? 'S' : ''}</span>` : '') +
       (c.changeOrders && c.changeOrders.length ? `<span class="card-tag">${c.changeOrders.length} CO</span>` : '') +
-      followTag(c);
+      followTag(c) +
+      (c.thankYou ? '<span class="card-tag ty-tag">THANK-YOU SENT</span>' : '');
     return `<div class="customer-card${c.id === currentId ? ' active' : ''}" data-id="${c.id}" onclick="selectCustomer('${c.id}')">
       <div class="cc-l">
         <div class="card-name">${esc(name)}</div>
@@ -2558,6 +2574,14 @@ function renderList() {
     </div>`;
   }).join('');
 }
+
+// Thank-you letter checkbox (Relationship section). thankYou = date it was sent ('' = not yet). Saved with the form.
+function tySet(d) {
+  const cb = document.getElementById('f-thankyou');
+  cb.checked = !!d; cb.dataset.d = d || '';
+  document.getElementById('ty-date').textContent = d ? 'Sent ' + new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · stickers included' : '';
+}
+document.getElementById('f-thankyou').addEventListener('change', function () { tySet(this.checked ? (this.dataset.d || localISODate()) : ''); });
 
 // Follow-up badge on the customer list: due today or overdue
 function followTag(c) {
@@ -2630,6 +2654,7 @@ function loadDetail() {
   document.getElementById('f-followup').value = c.followUp || '';
   document.getElementById('f-follownote').value = c.followNote || '';
   document.getElementById('f-relnotes').value = c.relNotes || '';
+  tySet(c.thankYou || '');
   document.getElementById('f-paylink').value = c.payLink || '';
   document.getElementById('f-completed').value = c.completedAt || '';
   document.getElementById('f-nextinsp').value = c.nextInspection || '';
@@ -2779,6 +2804,9 @@ function saveCustomer(toast = true) {
   if (c.followUp !== prevFollow) logActivity(c.followUp ? 'Follow-up set for ' + longDate(c.followUp) : 'Follow-up cleared');
   c.followNote = document.getElementById('f-follownote').value.trim();
   c.relNotes = document.getElementById('f-relnotes').value.trim();
+  const prevTy = c.thankYou || '';
+  c.thankYou = document.getElementById('f-thankyou').checked ? (document.getElementById('f-thankyou').dataset.d || localISODate()) : '';
+  if (c.thankYou !== prevTy) logActivity(c.thankYou ? 'Thank-you letter sent' : 'Thank-you letter unchecked');
   c.payLink = document.getElementById('f-paylink').value.trim();
   c.jobType = formJobType;
   c.items = normItems(formItems);

@@ -316,6 +316,9 @@ small note under the address on the customer file (`#wx-job`).
 - Due = (`lastCheckIn` || `closedAt`) + 6 months. When due, `#ci-banner` drops down on the customer list (stone card, rose-gold border,
   topo corner) with name, last call / closed date, the first relationship line, and a CALL button (tel: link). Tap the name to open
   the customer at the **Relationship** section.
+- **Thank-you letter** (Nov 18 2026): checkbox at the top of the Relationship section, "Thank-you letter sent" (he mails a letter
+  with Agency stickers). Field `thankYou` = date it was ticked ('' = not sent), in `normalize`/`extOf`/`applyExt` (lives in `arc_ext`),
+  saved with the form, logged in activity. The customer list shows a THANK-YOU SENT tag.
 - Relationship section (customer file, above Next Follow-Up): the notes box, the next call date, LOG CHECK-IN CALL (asks how it went;
   can append that to the notes; logs activity; resets the 6-month clock), and the call history.
 

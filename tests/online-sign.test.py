@@ -169,7 +169,7 @@ with sync_playwright() as p:
     ok('multipart/alternative' in raw and 'text/html' in raw and 'application/pdf' in raw, 'email = text + HTML + PDF attachment')
     parts = re.findall(r'Content-Type: text/html; charset="UTF-8"\r\nContent-Transfer-Encoding: base64\r\n\r\n([A-Za-z0-9+/=\r\n]+)', raw)
     html = base64.b64decode(parts[0].replace('\r\n', '')).decode() if parts else ''
-    ok('REVIEW &amp; SIGN ONLINE' in html and ('href="' + BASE + 'sign.html#' + tok) in html, 'HTML email has the Review & Sign button')
+    ok('REVIEW &amp; SIGN ONLINE' in html and 'sign-button.gif' in html and ('href="' + BASE + 'sign.html#' + tok) in html, 'HTML email has the Review & Sign button')
     open('/tmp/email.html', 'w').write(html)
     page.wait_for_timeout(500)
     page.evaluate("closePreview()")

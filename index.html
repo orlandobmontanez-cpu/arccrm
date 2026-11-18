@@ -1351,6 +1351,40 @@
     }
   }
 
+
+  /* ── Six-month check-in calls ── */
+  .ci-banner { position: relative; overflow: hidden; margin: 0 16px 12px; padding: 14px 14px 8px; border-radius: 16px; background: var(--stone); color: var(--ink);
+    border: 1.5px solid var(--copper-mid); box-shadow: 0 0 0 3px rgba(240,200,194,.35), 0 10px 24px rgba(0,0,0,.25); }
+  .ci-banner[hidden] { display: none; }
+  .ci-banner.drop { animation: ciDrop .62s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes ciDrop { from { opacity: 0; transform: translateY(-18px); clip-path: inset(0 0 100% 0 round 16px); } to { opacity: 1; transform: none; clip-path: inset(0 0 0 0 round 16px); } }
+  .ci-banner::before { content: ""; position: absolute; top: 0; right: 0; width: 170px; height: 156px; pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 220'%3E%3Cg fill='none' stroke='%23974930' stroke-width='1' opacity='0.2'%3E%3Cpath d='M250 150 C 214 146, 196 120, 190 92 C 184 62, 160 44, 150 -10'/%3E%3Cpath d='M250 176 C 204 172, 176 142, 168 106 C 160 70, 132 52, 122 -10'/%3E%3Cpath d='M250 202 C 194 198, 156 164, 146 120 C 136 78, 104 60, 94 -10'/%3E%3Cpath d='M250 124 C 224 120, 214 100, 210 80 C 206 56, 186 38, 178 -10'/%3E%3Cpath d='M250 98 C 236 94, 230 80, 228 66 C 225 46, 212 30, 206 -10'/%3E%3Cpath d='M250 70 C 244 62, 242 48, 240 36 C 238 22, 234 10, 232 -10'/%3E%3C/g%3E%3C/svg%3E") no-repeat right top / contain; }
+  .ci-banner > * { position: relative; }
+  .ci-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+  .ci-h span { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: .18em; color: var(--copper); }
+  .ci-h small { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 12px; color: var(--ink-muted); }
+  .ci-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(151,73,48,.18); }
+  .ci-row:first-of-type { border-top: 0; }
+  .ci-open { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 4px 0; min-height: 44px; border: 0; background: transparent; text-align: left; cursor: pointer; color: var(--ink); font-family: 'Inter', sans-serif; }
+  .ci-open b { font-size: 15px; font-weight: 600; }
+  .ci-open small { font-size: 12px; color: var(--ink-muted); }
+  .ci-open em { font-family: 'Lora', Georgia, serif; font-size: 13px; color: var(--copper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ci-call { flex: none; display: flex; align-items: center; justify-content: center; height: 44px; padding: 2px 14px 0; border-radius: 999px; background: var(--ink); color: var(--stone-light);
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: .16em; text-decoration: none; }
+  .ci-more { font-size: 12px; color: var(--ink-muted); padding: 2px 0 6px; }
+  #f-relnotes { min-height: 96px; resize: vertical; line-height: 1.45; }
+  .rel-next { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding: 12px; border-radius: 14px;
+    background: var(--stone); border: 1px solid rgba(201,126,120,.5); }
+  .rel-next[hidden] { display: none; }
+  .rel-next.due { background: rgba(240,200,194,.45); border-color: var(--copper-mid); }
+  .rel-next span { font-size: 14px; line-height: 1.35; }
+  .rel-next span b { display: block; font-family: 'Bebas Neue', sans-serif; font-weight: 400; font-size: 12px; letter-spacing: .16em; color: var(--copper); }
+  .rel-log { margin-top: 10px; }
+  .rel-log:empty { display: none; }
+  .rel-li { padding: 8px 0; border-top: 1px solid rgba(28,26,24,.08); font-size: 13px; line-height: 1.45; }
+  .rel-li b { font-family: 'Bebas Neue', sans-serif; font-weight: 400; font-size: 12px; letter-spacing: .14em; color: var(--copper); display: block; }
+  .ci-ta { width: 100%; min-height: 110px; font-size: 16px; padding: 10px 12px; border: 1px solid var(--stone-dark); border-radius: 12px; background: #F8F5EF; box-sizing: border-box; text-align: left; font-family: 'Inter', sans-serif; }
 </style>
 <script src="arcsync.js"></script>
 <script src="arcmail.js"></script>
@@ -1429,6 +1463,7 @@
 
     <button type="button" id="sync-line" class="sync-line" hidden></button>
     <div id="wx-banner" class="wx-banner" role="status" hidden></div>
+    <div id="ci-banner" class="ci-banner" hidden></div>
 
     <div id="search-wrap">
       <input type="text" id="search" placeholder="Search customers..." oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -1718,6 +1753,16 @@
 
         <!-- SCHEDULED DATE (appears when stage = Scheduled) -->
         <!-- FOLLOW-UP -->
+        <div class="form-section rel-sec" id="section-relationship">
+          <div class="form-section-title">Relationship</div>
+          <div class="form-group">
+            <label for="f-relnotes">Relationship builders</label>
+            <textarea id="f-relnotes" rows="4" placeholder="Pets, kids, what they care about, what you talked about last visit. e.g. Dog Max (lab), daughter starting at UNM, wants a patio cover next spring."></textarea>
+          </div>
+          <div class="rel-next" id="rel-next" hidden></div>
+          <div class="rel-log" id="rel-log"></div>
+        </div>
+
         <div class="form-section" id="section-follow">
           <div class="form-section-title">Next Follow-Up</div>
           <div class="form-grid">
@@ -2298,7 +2343,8 @@ function toStored(c) {
 
 function extOf(c) {
   const e = { state: c.state, jobType: c.jobType, items: c.items, completedAt: c.completedAt, nextInspection: c.nextInspection, lastInspected: c.lastInspected,
-    taxRate: c.taxRate, taxAuto: c.taxAuto, followUp: c.followUp, followNote: c.followNote };
+    taxRate: c.taxRate, taxAuto: c.taxAuto, followUp: c.followUp, followNote: c.followNote,
+    closedAt: c.closedAt, lastCheckIn: c.lastCheckIn, relNotes: c.relNotes, checkIns: c.checkIns };
   // No "mirror": older versions then load repair jobs as replacement jobs at the same price
   const qs = {};
   c.quotes.forEach(q => { if (isRepair(q)) qs[q.id] = { type: q.type, items: [] }; });
@@ -2311,7 +2357,7 @@ function extOf(c) {
 function applyExt(r, e) {
   if (!e) return r;
   const c = Object.assign({}, r);
-  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto', 'followUp', 'followNote'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
+  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto', 'followUp', 'followNote', 'closedAt', 'lastCheckIn', 'relNotes', 'checkIns'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
   if (e.state && !/^[A-Za-z]{2}[\s,]/.test(String(r.zip || ''))) c.state = e.state;
   const mirrored = (o, x) => String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0';
   if (e.jobType === 'repair') {
@@ -2435,6 +2481,11 @@ function normalize(c) {
     lastInspected: c.lastInspected || '',
     followUp: c.followUp || '',
     followNote: c.followNote || '',
+    // Six-month check-in calls (Closed jobs) + relationship notes
+    closedAt: /^\d{4}-\d{2}-\d{2}$/.test(c.closedAt || '') ? c.closedAt : '',
+    lastCheckIn: /^\d{4}-\d{2}-\d{2}$/.test(c.lastCheckIn || '') ? c.lastCheckIn : '',
+    relNotes: typeof c.relNotes === 'string' ? c.relNotes.slice(0, 4000) : '',
+    checkIns: Array.isArray(c.checkIns) ? c.checkIns.filter(x => x && x.d).slice(0, 60).map(x => ({ d: String(x.d).slice(0, 10), n: String(x.n || '').slice(0, 1000) })) : [],
     expenses: normExpenses(c.expenses),
     quotes: Array.isArray(c.quotes) ? c.quotes.map(normQuote) : [],
     changeOrders: Array.isArray(c.changeOrders) ? c.changeOrders.map(normCO) : [],
@@ -2578,6 +2629,7 @@ function loadDetail() {
   document.getElementById('f-scheddate').value = c.scheddate;
   document.getElementById('f-followup').value = c.followUp || '';
   document.getElementById('f-follownote').value = c.followNote || '';
+  document.getElementById('f-relnotes').value = c.relNotes || '';
   document.getElementById('f-paylink').value = c.payLink || '';
   document.getElementById('f-completed').value = c.completedAt || '';
   document.getElementById('f-nextinsp').value = c.nextInspection || '';
@@ -2649,7 +2701,7 @@ function stageNext() {
     const next = STAGES[si + 1];
     logActivity('Stage moved to ' + next);
     c.stage = next;
-    if (next === 'Closed') markJobComplete(c);
+    if (next === 'Closed') { markJobComplete(c); if (!c.closedAt) c.closedAt = localISODate(); }
     saveCustomer(false);
     renderPipeline();
     renderList();
@@ -2726,6 +2778,7 @@ function saveCustomer(toast = true) {
   c.followUp = document.getElementById('f-followup').value;
   if (c.followUp !== prevFollow) logActivity(c.followUp ? 'Follow-up set for ' + longDate(c.followUp) : 'Follow-up cleared');
   c.followNote = document.getElementById('f-follownote').value.trim();
+  c.relNotes = document.getElementById('f-relnotes').value.trim();
   c.payLink = document.getElementById('f-paylink').value.trim();
   c.jobType = formJobType;
   c.items = normItems(formItems);
@@ -7789,6 +7842,130 @@ if (_eib) _eib.addEventListener('click', exportData);
   }
   window.ARCWeather = { refresh: refresh, _risk: dailyRisk, _place: placeOf };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else setTimeout(init, 0);
+})();
+
+</script>
+<script>
+
+// ══ SIX-MONTH CHECK-IN CALLS (Nov 2026) ══
+// A Closed job gets a check-in call 6 months after it closed, then every 6 months after each logged call.
+// When one is due, a banner drops down on the customer list. Declined jobs never get one.
+// Fields (arc_ext): closedAt, lastCheckIn (YYYY-MM-DD), relNotes (relationship builders), checkIns [{ d, n }].
+(function () {
+  'use strict';
+  var MONTHS = 6;
+  var $ = function (id) { return document.getElementById(id); };
+  function escC(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function addMonths(iso, n) {
+    var p = iso.split('-').map(Number), y = p[0], m = p[1] - 1 + n, d = p[2];
+    y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+    var last = new Date(y, m + 1, 0).getDate();
+    return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(Math.min(d, last)).padStart(2, '0');
+  }
+  function nice(iso) { return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+  function list() { return typeof customers !== 'undefined' ? customers : []; }
+  function dueOf(c) {
+    if (!c || c.stage !== 'Closed') return '';
+    var base = c.lastCheckIn || c.closedAt;
+    return base ? addMonths(base, MONTHS) : '';
+  }
+  function name(c) { return [c.first, c.last].filter(Boolean).join(' ') || 'Customer'; }
+  function telOf(c) { var d = String(c.phone || '').replace(/[^\d+]/g, ''); return d.length >= 7 ? 'tel:' + d : ''; }
+
+  // Closed jobs from before this feature: start their clock from when the job was completed, else last edited
+  function backfill() {
+    var changed = false;
+    list().forEach(function (c) {
+      if (c.stage === 'Closed' && !c.closedAt) {
+        c.closedAt = c.completedAt || (c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('en-CA') : localISODate());
+        changed = true;
+      }
+    });
+    if (changed) { try { save(); } catch (e) {} }
+  }
+
+  var shownKey = '';
+  function renderBanner() {
+    var el = $('ci-banner'); if (!el) return;
+    var today = localISODate();
+    var due = list().map(function (c) { return { c: c, due: dueOf(c) }; }).filter(function (x) { return x.due && x.due <= today; })
+      .sort(function (a, b) { return a.due < b.due ? -1 : 1; });
+    if (!due.length) { el.hidden = true; el.innerHTML = ''; shownKey = ''; return; }
+    var key = due.map(function (x) { return x.c.id + x.due; }).join('|');
+    el.innerHTML = '<div class="ci-h"><span>CHECK-IN CALLS DUE</span><small>every 6 months</small></div>' +
+      due.slice(0, 4).map(function (x) {
+        var c = x.c, first = String(c.relNotes || '').split('\n').map(function (s) { return s.trim(); }).filter(Boolean)[0] || '';
+        var tel = telOf(c);
+        return '<div class="ci-row"><button type="button" class="ci-open" data-ci="' + escC(c.id) + '"><b>' + escC(name(c)) + '</b>' +
+          '<small>' + (c.lastCheckIn ? 'Last call ' + escC(nice(c.lastCheckIn)) : 'Closed ' + escC(nice(c.closedAt))) + '</small>' +
+          (first ? '<em>' + escC(first) + '</em>' : '') + '</button>' +
+          (tel ? '<a class="ci-call" href="' + escC(tel) + '" data-cicall="' + escC(c.id) + '">CALL</a>' : '') + '</div>';
+      }).join('') + (due.length > 4 ? '<div class="ci-more">+' + (due.length - 4) + ' more due</div>' : '');
+    var fresh = key !== shownKey; shownKey = key;
+    el.hidden = false;
+    if (fresh) { el.classList.remove('drop'); void el.offsetWidth; el.classList.add('drop'); }
+  }
+
+  // The Relationship section on the customer file
+  function renderSection() {
+    var c = typeof getCurrent === 'function' ? getCurrent() : null;
+    var nx = $('rel-next'), lg = $('rel-log'); if (!nx || !lg || !c) return;
+    var due = dueOf(c), today = localISODate();
+    if (c.stage === 'Closed' && due) {
+      nx.className = 'rel-next' + (due <= today ? ' due' : '');
+      nx.innerHTML = '<span><b>' + (due <= today ? 'CHECK-IN CALL DUE' : 'NEXT CHECK-IN CALL') + '</b>' + escC(nice(due)) +
+        (c.lastCheckIn ? ' · last call ' + escC(nice(c.lastCheckIn)) : ' · 6 months after closing') + '</span>' +
+        '<button type="button" class="proposal-btn proposal-btn-primary" id="ci-log">LOG CHECK-IN CALL</button>';
+      nx.hidden = false;
+    } else { nx.hidden = true; nx.innerHTML = ''; }
+    lg.innerHTML = (c.checkIns || []).slice(0, 10).map(function (x) {
+      return '<div class="rel-li"><b>CHECK-IN · ' + escC(nice(x.d)) + '</b>' + escC(x.n || 'Called') + '</div>';
+    }).join('');
+  }
+
+  function logCall() {
+    var c = typeof getCurrent === 'function' ? getCurrent() : null; if (!c) return;
+    showModal('CHECK-IN CALL', '', [
+      { label: 'CANCEL', cls: 'modal-btn modal-btn-cancel', fn: closeModal },
+      { label: 'SAVE CALL', cls: 'modal-btn modal-btn-confirm', fn: function () {
+          var n = ($('ci-note') || {}).value || '', add = ($('ci-add') || {}).checked;
+          var cur = getCurrent(); if (!cur) { closeModal(); return; }
+          cur.relNotes = $('f-relnotes').value.trim();
+          var today = localISODate();
+          cur.checkIns = [{ d: today, n: n.trim() }].concat(cur.checkIns || []).slice(0, 60);
+          cur.lastCheckIn = today;
+          if (add && n.trim()) { cur.relNotes = (cur.relNotes ? cur.relNotes + '\n' : '') + n.trim(); $('f-relnotes').value = cur.relNotes; }
+          closeModal();
+          logActivity('Check-in call logged · next ' + nice(addMonths(today, MONTHS)));
+          saveCustomer(false);
+          renderSection(); renderBanner();
+          showToast('CALL LOGGED · NEXT IN 6 MONTHS');
+        } }
+    ]);
+    $('modal-body').innerHTML = '<p style="margin:0 0 10px;text-align:left;">How did it go? Anything new to remember next time?</p>' +
+      '<textarea id="ci-note" class="ci-ta" placeholder="Roof holding up great. Max had puppies. Thinking about a patio cover in spring."></textarea>' +
+      '<label class="b-check" style="margin-top:10px;text-align:left;"><input type="checkbox" id="ci-add" checked><span><b>Add this to relationship builders</b></span></label>';
+    setTimeout(function () { var t = $('ci-note'); if (t) t.focus(); }, 60);
+  }
+
+  try {
+    backfill();
+    $('ci-banner').addEventListener('click', function (e) {
+      if (e.target.closest('[data-cicall]')) return;   // the CALL link dials
+      var b = e.target.closest('[data-ci]'); if (!b) return;
+      selectCustomer(b.getAttribute('data-ci'));
+      setTimeout(function () { var s = $('section-relationship'); if (s) s.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 520);
+    });
+    $('section-relationship').addEventListener('click', function (e) { if (e.target.id === 'ci-log') logCall(); });
+    var oSel = window.selectCustomer;
+    if (oSel) window.selectCustomer = function () { var r = oSel.apply(this, arguments); setTimeout(renderSection, 0); return r; };
+    var oSave = window.saveCustomer;
+    if (oSave) window.saveCustomer = function () { var r = oSave.apply(this, arguments); setTimeout(function () { renderSection(); renderBanner(); }, 0); return r; };
+    window.addEventListener('arc:synced', function () { setTimeout(function () { backfill(); renderBanner(); }, 300); });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) renderBanner(); });
+    setTimeout(renderBanner, 450);
+    window.ARCCheckIns = { due: dueOf, render: renderBanner };
+  } catch (e) {}
 })();
 
 </script>

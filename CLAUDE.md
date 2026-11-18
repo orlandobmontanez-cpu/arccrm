@@ -303,6 +303,19 @@ small note under the address on the customer file (`#wx-job`).
 - The banner's X hides it until the warnings change (`arc_wx_hide`). Read-only: it never writes customer data.
 - Not push notifications: real lock-screen alerts would need the home-screen app + a push service. Banner only for now.
 
+## Six-month check-in calls + relationship notes (Nov 17 2026)
+
+- Purpose: repeat business. Every **Closed** job gets a check-in phone call 6 months after it closed, then every 6 months after each
+  logged call. **Declined jobs never get one.**
+- Fields (in `normalize`, `extOf`/`applyExt`, so they live in `arc_ext` and survive older versions): `closedAt` (set by `stageNext` when
+  a job reaches Closed; Closed jobs without it are backfilled on load from `completedAt`, else the last-edit date), `lastCheckIn`,
+  `relNotes` (free-text "relationship builders": pets, family, last visit), `checkIns` `[{ d, n }]` newest first.
+- Due = (`lastCheckIn` || `closedAt`) + 6 months. When due, `#ci-banner` drops down on the customer list (stone card, rose-gold border,
+  topo corner) with name, last call / closed date, the first relationship line, and a CALL button (tel: link). Tap the name to open
+  the customer at the **Relationship** section.
+- Relationship section (customer file, above Next Follow-Up): the notes box, the next call date, LOG CHECK-IN CALL (asks how it went;
+  can append that to the notes; logs activity; resets the 6-month clock), and the call history.
+
 ## Privacy and security rules (Nov 16 2026)
 
 - **This repository is public.** Never put a real customer's or client's name, address, phone, email, job number, price, or any

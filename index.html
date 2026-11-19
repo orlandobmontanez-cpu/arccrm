@@ -1188,6 +1188,17 @@
     #side-scroll #list-sheet { flex: none; overflow: visible; min-height: 100%; }
     #side-scroll #customer-list { flex: none; overflow: visible; padding: 0 0 6px; }
     #side-scroll #sidebar-actions { position: sticky; bottom: 0; order: 99; }
+    /* Stone dock + rose-gold New Customer (Nov 18 2026): the dark sheet is framed in stone top and bottom, and Safari tints its
+       bottom bar stone to match. The sheet keeps rounded bottom corners against the dock. */
+    #side-scroll #sidebar-actions { pointer-events: auto; background: var(--stone); padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px)); }
+    #side-scroll #sidebar-actions::before, #side-scroll #sidebar-actions::after { content: ""; position: absolute; bottom: 100%; width: 26px; height: 26px; pointer-events: none; }
+    #side-scroll #sidebar-actions::before { left: 0; background: radial-gradient(circle at 100% 0, rgba(234,228,218,0) 25px, var(--stone) 26px); }
+    #side-scroll #sidebar-actions::after { right: 0; background: radial-gradient(circle at 0 0, rgba(234,228,218,0) 25px, var(--stone) 26px); }
+    #side-scroll #sidebar-actions .btn-new {
+      background: linear-gradient(180deg, #F6D6CF 0%, #E3AAA0 42%, #C27A70 100%); color: var(--ink);
+      border: 1px solid rgba(151,73,48,.55); box-shadow: 0 6px 16px rgba(151,73,48,.22), inset 0 1px 0 rgba(255,255,255,.65), inset 0 -1px 0 rgba(151,73,48,.25);
+    }
+    #side-scroll #sidebar-actions .btn-new:active { filter: brightness(.96); transform: scale(.985); }
     /* Stone bar that stays: once the big lockup has scrolled away, a slim stone header (#hd-mini) holds the top and the
        dark sheet slides up and disappears under it. The pinned search keeps the sheet's rounded top corners. */
     #hd-mini { position: absolute; top: 0; left: 0; right: 0; z-index: 8; height: calc(env(safe-area-inset-top, 0px) + 60px);

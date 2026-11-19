@@ -288,6 +288,10 @@ documents and PDFs are untouched) and one `PREMIUM LAYER` `<script>` at the end 
   cards ripple in; swipe right to go back (starts 24px+ from the edge so it never fights Safari's own back swipe; ignored on
   inputs, canvases/signature pads and anything that scrolls sideways); sheets and pop-ups rise; Job Board numbers count up;
   pages cross-fade (`@view-transition`). Nothing waits on an animation, and everything is skipped under Reduce Motion.
+- **Collapsing header (Nov 18 2026):** the customers screen scrolls as one (`#side-scroll` wraps `#sidebar-header` + `#list-sheet`;
+  `#wx-panel`, `#list-dim`, `#menu-scrim`, `#sidebar-footer` stay outside it). Scrolling up lifts and fades the lockup, the dark sheet rises
+  to the top, `#search-wrap` pins under the status bar (sticky), and New Customer (`#sidebar-actions`, sticky bottom) stays pinned.
+  `#customer-list` no longer scrolls on its own. He found the fixed top block clunky.
 - **Shield glint:** one band of light crosses the header shield **right to left**, once per browser session (`sessionStorage`
   `arc_glint`), then never again. The shield itself never moves. He wants it to "hold its ground".
 - **Haptic taps: removed (Nov 13 2026).** Apple closed the scripted `<input switch>` trick in iOS 26.5, so it was silent on his

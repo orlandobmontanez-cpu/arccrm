@@ -59,6 +59,7 @@
     transition: transform 0.3s ease;
   }
 
+  #side-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   #sidebar-header {
     padding: 20px 20px 16px;
     border-bottom: 1px solid rgba(234,228,218,0.08);
@@ -1180,6 +1181,18 @@
     .btn-ins svg { width: 20px; height: 20px; color: var(--copper-mid); display: block; }
     .btn-ins svg { margin-top: -2px; }
     .btn-ins .ins-count { position: absolute; top: 50%; transform: translateY(-50%); right: 10px; letter-spacing: .04em; }
+    /* Collapsing header (Nov 18 2026): the whole customers screen scrolls as one. The lockup scrolls up and fades, the dark
+       sheet rises to the top, the search box pins under the status bar, New Customer stays pinned at the bottom. */
+    #side-scroll { display: block; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+      background: linear-gradient(var(--stone) 50%, var(--ink) 50%); }  /* stone shows on a top pull, ink on a bottom pull */
+    #side-scroll #list-sheet { flex: none; overflow: visible; min-height: 100%; }
+    #side-scroll #customer-list { flex: none; overflow: visible; padding: 0 0 6px; }
+    #side-scroll #sidebar-actions { position: sticky; bottom: 0; order: 99; }
+    #side-scroll #search-wrap { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 4; background: var(--ink); padding-top: 4px; padding-bottom: 12px; }
+    #side-scroll #search-wrap::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: calc(env(safe-area-inset-top, 0px) + 30px); background: var(--ink); }
+    #side-scroll #search-wrap::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 14px; pointer-events: none;
+      background: linear-gradient(var(--ink), rgba(28,26,24,0)); opacity: 0; transition: opacity .3s; }
+    #side-scroll.scrolled #search-wrap::after { opacity: 1; }
     #customer-list { padding: 0 0 130px; }
     .customer-card {
       display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 80px;
@@ -1406,6 +1419,7 @@
 <div id="app">
   <!-- SIDEBAR -->
   <div id="sidebar">
+    <div id="side-scroll">
     <div id="sidebar-header">
       <div class="brand-lockup" onclick="window.location.reload()">
         <!-- Shield SVG inline -->
@@ -1460,7 +1474,6 @@
       <div class="brand-tag">Built with agency. Driven by obligation.</div>
     </div>
 
-    <div id="wx-panel" class="wx-panel" role="dialog" aria-label="7-day weather" hidden></div>
     <div id="list-sheet">
     <div id="sidebar-actions">
       <button class="btn-new" id="btn-new-customer"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>NEW CUSTOMER</span></button>
@@ -1505,6 +1518,8 @@
 
     <div id="customer-list"></div>
     </div><!-- /list-sheet -->
+    </div><!-- /side-scroll -->
+    <div id="wx-panel" class="wx-panel" role="dialog" aria-label="7-day weather" hidden></div>
 
     <div id="list-dim" aria-hidden="true"></div>
     <div id="menu-scrim" aria-hidden="true"></div>
@@ -7619,6 +7634,20 @@ if (_eib) _eib.addEventListener('click', exportData);
     main.addEventListener('pointercancel', end);
     // a swipe is not a tap: swallow the click that follows a drag
     main.addEventListener('click', function (e) { if (moved) { moved = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  } catch (e) {}
+
+  // ── Collapsing header: lockup lifts and fades as the list scrolls up ──
+  try {
+    var sc = $('side-scroll'), hd = $('sidebar-header'), ticking = false;
+    if (sc && hd) sc.addEventListener('scroll', function () {
+      if (ticking) return; ticking = true;
+      requestAnimationFrame(function () {
+        ticking = false;
+        var y = Math.max(0, sc.scrollTop), h = hd.offsetHeight || 1, k = Math.min(1, y / h);
+        sc.classList.toggle('scrolled', y > h - 4);
+        if (!RM) { hd.style.opacity = String(1 - k * .9); hd.style.transform = y > 0 ? 'translateY(' + (y * .35).toFixed(1) + 'px) scale(' + (1 - k * .04).toFixed(3) + ')' : ''; }
+      });
+    }, { passive: true });
   } catch (e) {}
 
   // ── Back row works from the keyboard too ──

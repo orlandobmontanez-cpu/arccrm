@@ -290,7 +290,10 @@ documents and PDFs are untouched) and one `PREMIUM LAYER` `<script>` at the end 
   pages cross-fade (`@view-transition`). Nothing waits on an animation, and everything is skipped under Reduce Motion.
 - **Collapsing header (Nov 18 2026):** the customers screen scrolls as one (`#side-scroll` wraps `#sidebar-header` + `#list-sheet`;
   `#wx-panel`, `#list-dim`, `#menu-scrim`, `#sidebar-footer` stay outside it). Scrolling up lifts and fades the lockup, the dark sheet rises
-  to the top, `#search-wrap` pins under the status bar (sticky), and New Customer (`#sidebar-actions`, sticky bottom) stays pinned.
+  under a slim stone bar (`#hd-mini`, outside the scroller: copied shield + wordmark, tap = back to top, its menu button opens the same
+  menu) that fades in once the sheet reaches it (`#side-scroll.stuck`). `#search-wrap` pins right under that bar (sticky) with stone
+  rounded corners so the sheet keeps its shape; New Customer (`#sidebar-actions`, sticky bottom) stays pinned. He wanted the list to
+  disappear into a stone header so the contrast stays.
   `#customer-list` no longer scrolls on its own. He found the fixed top block clunky.
 - **Shield glint:** one band of light crosses the header shield **right to left**, once per browser session (`sessionStorage`
   `arc_glint`), then never again. The shield itself never moves. He wants it to "hold its ground".

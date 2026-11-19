@@ -294,6 +294,10 @@ documents and PDFs are untouched) and one `PREMIUM LAYER` `<script>` at the end 
   menu) that fades in once the sheet reaches it (`#side-scroll.stuck`). `#search-wrap` pins right under that bar (sticky) with stone
   rounded corners so the sheet keeps its shape; New Customer (`#sidebar-actions`, sticky bottom) stays pinned. He wanted the list to
   disappear into a stone header so the contrast stays.
+  New Customer sits on a **stone dock** at the bottom (rounded sheet corners above it) and is **polished rose-gold metal** (warm
+  peach-copper bands with a specular line and a reflected bottom edge, dark text, copper edge; a soft glint passes right to left behind the
+  letters every ~7 s, off under Reduce Motion) instead of copper, so the sheet is framed in stone top and bottom and Safari tints its bottom bar stone.
+  He wants rose gold + stone as the cohesive theme on this screen; copper stays elsewhere.
   `#customer-list` no longer scrolls on its own. He found the fixed top block clunky.
 - **Shield glint:** one band of light crosses the header shield **right to left**, once per browser session (`sessionStorage`
   `arc_glint`), then never again. The shield itself never moves. He wants it to "hold its ground".

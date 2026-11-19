@@ -1188,6 +1188,29 @@
     #side-scroll #list-sheet { flex: none; overflow: visible; min-height: 100%; }
     #side-scroll #customer-list { flex: none; overflow: visible; padding: 0 0 6px; }
     #side-scroll #sidebar-actions { position: sticky; bottom: 0; order: 99; }
+    /* Stone dock + rose-gold New Customer (Nov 18 2026): the dark sheet is framed in stone top and bottom, and Safari tints its
+       bottom bar stone to match. The sheet keeps rounded bottom corners against the dock. */
+    #side-scroll #sidebar-actions { pointer-events: auto; background: var(--stone); padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px)); }
+    #side-scroll #sidebar-actions::before, #side-scroll #sidebar-actions::after { content: ""; position: absolute; bottom: 100%; width: 26px; height: 26px; pointer-events: none; }
+    #side-scroll #sidebar-actions::before { left: 0; background: radial-gradient(circle at 100% 0, rgba(234,228,218,0) 25px, var(--stone) 26px); }
+    #side-scroll #sidebar-actions::after { right: 0; background: radial-gradient(circle at 0 0, rgba(234,228,218,0) 25px, var(--stone) 26px); }
+    /* Polished rose-gold metal: warm peach-copper bands like a ring under light: soft top, bright specular line, mid tone,
+       deep shadow band, then a warm reflected light along the bottom edge. A slow glint crosses right to left every ~7 s. */
+    #side-scroll #sidebar-actions .btn-new {
+      position: relative; overflow: hidden; isolation: isolate; color: #2A1A14;
+      background: linear-gradient(180deg, #F2CDB8 0%, #FCE9DE 16%, #EDBDA5 30%, #DFA286 48%, #C98265 66%, #A9603F 84%, #C98A6C 94%, #E2AC90 100%);
+      border: 1px solid #9C5A3C;
+      box-shadow: 0 8px 18px rgba(120,60,35,.28), inset 0 1px 0 rgba(255,246,240,.9), inset 0 -2px 3px rgba(255,214,192,.35), inset 0 0 0 1px rgba(255,236,226,.18);
+      text-shadow: 0 1px 0 rgba(255,236,226,.55);
+    }
+    #side-scroll #sidebar-actions .btn-new::after {
+      content: ""; position: absolute; z-index: -1; top: -20%; bottom: -20%; left: 0; width: 34%; pointer-events: none;
+      background: linear-gradient(100deg, rgba(255,250,246,0) 0%, rgba(255,250,246,.55) 50%, rgba(255,250,246,0) 100%);
+      transform: translateX(320%) skewX(-18deg); animation: arcRoseGlint 7s cubic-bezier(.45,0,.2,1) 2s infinite;
+    }
+    @keyframes arcRoseGlint { 0% { transform: translateX(320%) skewX(-18deg); } 14%, 100% { transform: translateX(-140%) skewX(-18deg); } }
+    @media (prefers-reduced-motion: reduce) { #side-scroll #sidebar-actions .btn-new::after { animation: none; display: none; } }
+    #side-scroll #sidebar-actions .btn-new:active { filter: brightness(.96); transform: scale(.985); }
     /* Stone bar that stays: once the big lockup has scrolled away, a slim stone header (#hd-mini) holds the top and the
        dark sheet slides up and disappears under it. The pinned search keeps the sheet's rounded top corners. */
     #hd-mini { position: absolute; top: 0; left: 0; right: 0; z-index: 8; height: calc(env(safe-area-inset-top, 0px) + 60px);

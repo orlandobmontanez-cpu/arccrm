@@ -724,6 +724,18 @@
   .bl-chip { min-height: 44px; border-radius: 6px; border: 1px solid var(--stone-dark); background: var(--white); font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--ink-soft); cursor: pointer; }
   .bl-chip.on { background: var(--ink); border-color: var(--ink); color: var(--stone); }
   .x-amt small { font-weight: 400; color: var(--ink-muted); font-size: 11px; }
+  .bl-item { display: flex; flex-direction: column; gap: 0; }
+  .bl-item[hidden], .bl-grp[hidden], .bl-mo[hidden] { display: none !important; }
+  .bl-item .x-row:has(+ .bl-paid), .bl-item .x-row:has(+ .bl-mp) { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+  .bl-paid { min-height: 48px; width: 100%; border: 1px solid var(--stone-dark); border-top: 0; border-radius: 0 0 16px 16px; background: var(--stone); color: var(--success);
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.14em; cursor: pointer; }
+  .bl-paid:active { background: var(--success); color: var(--white); }
+  .bl-mp { border: 1px solid var(--success); border-top: 0; border-radius: 0 0 16px 16px; background: var(--white); padding: 12px 14px 14px; }
+  .bl-mp-t { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.12em; color: var(--success); margin-bottom: 8px; }
+  .bl-ref { display: block; font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+  .bl-search { margin-bottom: 10px; }
+  .bl-search input { width: 100%; min-height: 48px; padding: 10px 14px; border: 1px solid var(--stone-dark); border-radius: 12px; background: var(--white); font: inherit; font-size: 16px; color: var(--ink); -webkit-appearance: none; appearance: none; }
+  .bl-mo { display: flex; justify-content: space-between; font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.14em; color: var(--ink-muted); margin: 6px 2px 6px; }
   .bs-pill { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.12em; padding: 2px 8px; border-radius: 3px; background: var(--stone); color: var(--ink-soft); white-space: nowrap; }
   .bs-pill.sent, .bs-pill.partly-paid { background: rgba(201,126,120,0.18); color: var(--copper); }
   .bs-pill.paid { background: var(--success); color: var(--white); }
@@ -5137,7 +5149,7 @@ var bv = { view: 'list', filter: 'open', invId: null, coId: null, draft: null, p
 function openInvoices() {
   saveCustomer(false);
   loadBilling();
-  bv = { view: 'list', filter: bv.filter || 'open', invId: null, coId: null, draft: null, payOpen: false, del: false, from: 'list' };
+  bv = { view: 'list', filter: bv.filter || 'open', mpId: null, invId: null, coId: null, draft: null, payOpen: false, del: false, from: 'list' };
   document.getElementById('inv-sheet').classList.add('active');
   renderBilling();
 }
@@ -5183,14 +5195,60 @@ function billListHtml() {
       '<div class="' + (late > 0 ? 'late' : '') + '"><b>OVERDUE</b><span>' + fmt(late) + '</span><small>past the due date</small></div>' +
       '<div><b>PAID ' + y + '</b><span>' + fmt(paidYr) + '</span><small>payments received</small></div></div>' +
     '<div class="bl-chips">' + chip('open', 'OPEN') + chip('overdue', 'OVERDUE') + chip('paid', 'PAID') + chip('all', 'ALL') + '</div>' +
-    '<div class="x-list">' + (show.length ? show.map(function (x) {
-      var v = x.v, k = x.k, cls = k.status.toLowerCase().replace(/\s+/g, '-');
-      var when = k.status === 'Paid' ? 'Paid ' + shortDate((v.payments[v.payments.length - 1] || {}).date) : k.status === 'Draft' ? 'Draft · ' + shortDate(v.date) : 'Due ' + shortDate(v.due || v.date);
-      return '<button class="x-row" type="button" data-inv="' + esc(v.id) + '"><span><span class="x-num">' + esc(v.num) + ' · ' + esc(when) + '</span>' +
-        '<span class="x-title">' + esc(coName(v.coId)) + (v.job ? ' <small>· ' + esc(v.job) + '</small>' : '') + '</span></span>' +
-        '<span class="x-right"><span class="bs-pill ' + cls + '">' + k.status.toUpperCase() + '</span><span class="x-amt">' +
-        (k.status === 'Paid' || k.status === 'Void' || k.status === 'Draft' ? fmt(k.total) : fmt(k.bal) + ' <small>due</small>') + '</span></span></button>';
-    }).join('') : '<div class="x-empty">' + (all.length ? 'Nothing here. Try ALL.' : 'No invoices yet. Tap + NEW INVOICE to bill a company.') + '</div>') + '</div>';
+    (f === 'paid' ? billPaidHtml(show) : '<div class="x-list">' + (show.length ? show.map(function (x) { return billRowHtml(x, f === 'open' || f === 'overdue'); }).join('') :
+      '<div class="x-empty">' + (all.length ? 'Nothing here. Try ALL.' : 'No invoices yet. Tap + NEW INVOICE to bill a company.') + '</div>') + '</div>');
+}
+function invPaidOn(v) { return (v.payments[v.payments.length - 1] || {}).date || v.date; }
+// One invoice row. Open invoices get a MARK PAID button under the row (its own button, never inside the row button).
+function billRowHtml(x, canPay) {
+  var v = x.v, k = x.k, cls = k.status.toLowerCase().replace(/\s+/g, '-');
+  var when = k.status === 'Paid' ? 'Paid ' + shortDate(invPaidOn(v)) : k.status === 'Draft' ? 'Draft · ' + shortDate(v.date) : 'Due ' + shortDate(v.due || v.date);
+  var refs = v.payments.map(function (p) { return [p.method, p.ref, fmt(p.amount)].join(' '); }).join(' ');
+  var row = '<button class="x-row" type="button" data-inv="' + esc(v.id) + '"><span><span class="x-num">' + esc(v.num) + ' · ' + esc(when) + '</span>' +
+    '<span class="x-title">' + esc(coName(v.coId)) + (v.job ? ' <small>· ' + esc(v.job) + '</small>' : '') + '</span>' +
+    (k.status === 'Paid' && v.payments.length ? '<span class="bl-ref">' + esc(v.payments.map(function (p) { return p.method + (p.ref ? ' #' + p.ref : ''); }).join(' · ')) + '</span>' : '') + '</span>' +
+    '<span class="x-right"><span class="bs-pill ' + cls + '">' + k.status.toUpperCase() + '</span><span class="x-amt">' +
+    (k.status === 'Paid' || k.status === 'Void' || k.status === 'Draft' ? fmt(k.total) : fmt(k.bal) + ' <small>due</small>') + '</span></span></button>';
+  var pay = '';
+  if (canPay && k.status !== 'Void' && k.total > 0 && k.bal > 0.004) {
+    if (bv.mpId === v.id) {
+      pay = '<div class="bl-mp"><div class="bl-mp-t">CONFIRM PAID IN FULL · ' + fmt(k.bal) + '</div>' +
+        '<div class="ex-2"><div class="ex-f"><label for="mp-method">PAID BY</label><select id="mp-method" class="b-sel">' + PAY_METHODS.map(function (m) { return '<option' + (m === 'Check' ? ' selected' : '') + '>' + m + '</option>'; }).join('') + '</select></div>' +
+        bf('mp-ref', 'CHECK / REF #', '', 'type="text" inputmode="numeric" autocomplete="off" placeholder="Optional"') + '</div>' +
+        bf('mp-date', 'DATE RECEIVED', localISODate(), 'type="date"') +
+        '<div class="bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="mp-cancel">CANCEL</button><button type="button" class="proposal-btn proposal-btn-primary" data-b="mp-save">CONFIRM PAID</button></div></div>';
+    } else pay = '<button type="button" class="bl-paid" data-mpaid="' + esc(v.id) + '">✓ MARK PAID</button>';
+  }
+  return '<div class="bl-item" data-q="' + esc([v.num, coName(v.coId), v.job, v.po, fmt(k.total), refs].join(' ').toLowerCase()) + '">' + row + pay + '</div>';
+}
+// The PAID tab: an archive, newest payment first, grouped by month, with a search box.
+function billPaidHtml(show) {
+  show = show.slice().sort(function (a, b) { return invPaidOn(b.v) < invPaidOn(a.v) ? -1 : invPaidOn(b.v) > invPaidOn(a.v) ? 1 : b.v.seq - a.v.seq; });
+  if (!show.length) return '<div class="x-empty">No paid invoices yet. Tap MARK PAID on an open invoice when the check comes in.</div>';
+  var h = '<div class="bl-search"><input id="bl-search" type="search" placeholder="Search company, invoice #, job, check #" autocomplete="off" autocapitalize="off" aria-label="Search paid invoices"></div>', mo = '';
+  show.forEach(function (x) {
+    var d = invPaidOn(x.v), m = d.slice(0, 7);
+    if (m !== mo) {
+      if (mo) h += '</div>';
+      var tot = cents(show.filter(function (y) { return invPaidOn(y.v).slice(0, 7) === m; }).reduce(function (s, y) { return s + y.k.total; }, 0));
+      h += '<div class="bl-mo"><span>' + new Date(m + '-15T12:00:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() + '</span><span>' + fmt(tot) + '</span></div><div class="x-list bl-grp">';
+      mo = m;
+    }
+    h += billRowHtml(x, false);
+  });
+  return h + '</div><div class="x-empty" id="bl-none" hidden>No paid invoice matches that.</div>';
+}
+function markPaidSave() {
+  var v = billing.inv[bv.mpId]; if (!v) return;
+  var k = invCalc(v); if (!(k.bal > 0.004)) { bv.mpId = null; renderBilling(); return; }
+  var p = { id: billId('p'), n: v.payments.reduce(function (m, x) { return Math.max(m, x.n); }, 0) + 1, date: document.getElementById('mp-date').value || localISODate(),
+    amount: k.bal, method: document.getElementById('mp-method').value, ref: document.getElementById('mp-ref').value.trim() };
+  v.payments.push(p);
+  if (v.status === 'Draft') v.status = 'Sent';
+  invLog(v, 'Marked paid: ' + fmt(p.amount) + ' (' + p.method + (p.ref ? ' #' + p.ref : '') + ') — paid in full');
+  v.upd = Date.now(); billing.inv[v.id] = normInvoice(v); saveBilling();
+  bv.mpId = null; renderBilling(); renderInvCount && renderInvCount();
+  showToast(v.num + ' PAID · FIND IT UNDER PAID');
 }
 function billListFoot() {
   return '<div class="xe-foot-in bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="cos">COMPANIES</button>' +
@@ -5484,7 +5542,8 @@ function invFormHtml(v) {
       bf('bp-ref', 'CHECK / REF #', pd.ref, 'type="text" autocomplete="off" placeholder="Optional"') + '</div>' +
       '<div class="bf-2"><button type="button" class="proposal-btn proposal-btn-secondary" data-b="paycancel">CANCEL</button><button type="button" class="proposal-btn proposal-btn-primary" data-b="paysave">SAVE PAYMENT</button></div></div>';
   } else if (k.status !== 'Void' && k.total > 0 && k.bal > 0.004) {
-    h += '<button type="button" class="proposal-btn proposal-btn-secondary x-add" data-b="payopen">+ RECORD A PAYMENT</button>';
+    h += '<button type="button" class="proposal-btn proposal-btn-primary x-add" data-b="payopen">✓ MARK PAID · ' + fmt(k.bal) + '</button>' +
+      '<p class="xsec-note" style="margin:6px 0 0;">Opens with the full balance filled in. Change the amount for a partial payment.</p>';
   }
   if (v.log.length) h += '<div class="form-section-title" style="margin-top:22px;">History</div><div class="bi-log">' + v.log.map(function (l) { return '<div><span>' + esc(l.ts) + '</span>' + esc(l.msg) + '</div>'; }).join('') + '</div>';
   if (v.status !== 'Void') h += '<button type="button" class="b-void" data-b="void">' + (v.status === 'Draft' && !v.payments.length ? (v.time.length ? 'DELETE THIS DRAFT (HOURS GO BACK TO THE TRACKER)' : 'DELETE THIS DRAFT') : 'VOID THIS INVOICE') + '</button>';
@@ -5741,7 +5800,8 @@ function previewReceipt(pid) {
   document.getElementById('inv-close').addEventListener('click', function (e) { e.preventDefault(); closeInvoices(); });
   sheet.addEventListener('click', function (e) {
     var t = e.target;
-    var f = t.closest('[data-filter]'); if (f) { bv.filter = f.dataset.filter; renderBilling(); return; }
+    var f = t.closest('[data-filter]'); if (f) { bv.filter = f.dataset.filter; bv.mpId = null; renderBilling(); return; }
+    var mp = t.closest('[data-mpaid]'); if (mp) { bv.mpId = mp.dataset.mpaid; renderBilling(); var mr = document.getElementById('mp-ref'); if (mr) mr.closest('.bl-mp').scrollIntoView({ block: 'center' }); return; }
     var tmc = t.closest('[data-time]'); if (tmc) { openTime(tmc.dataset.time); return; }
     var te = t.closest('[data-tedit]');
     if (te) { var tco = billing.co[bv.coId], tt = tco && tco.time.find(function (x) { return x.id === te.dataset.tedit; }); if (tt) { bv.tEdit = tt.id; bv.tDraft = { date: tt.date, a: tt.a, b: tt.b, who: tt.who, note: tt.note }; renderBilling(); var tf2 = document.getElementById('tm-form'); if (tf2) tf2.scrollIntoView({ block: 'start' }); } return; }
@@ -5805,6 +5865,8 @@ function previewReceipt(pid) {
     else if (a === 'previnv') previewInvoice();
     else if (a === 'payopen') { var k = invCalc(invRead()); bv.payOpen = true; bv.payDraft = { amount: k.bal, date: localISODate(), method: 'Check', ref: '' }; commitInvoice(); renderBilling(); var pa = document.getElementById('bp-amount'); if (pa) pa.scrollIntoView({ block: 'center' }); }
     else if (a === 'paycancel') { bv.payOpen = false; renderBilling(); }
+    else if (a === 'mp-cancel') { bv.mpId = null; renderBilling(); }
+    else if (a === 'mp-save') markPaidSave();
     else if (a === 'paysave') savePayment();
     else if (a === 'void') {
       if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = bv.draft.status === 'Draft' && !bv.draft.payments.length ? 'TAP AGAIN TO DELETE THIS DRAFT' : 'TAP AGAIN TO VOID ' + bv.draft.num; b.classList.add('armed'); return; }
@@ -5833,6 +5895,14 @@ function previewReceipt(pid) {
     if (e.target.classList) e.target.classList.remove('bad');
     if (bv.view === 'time') timeLive();
     if (bv.view === 'inv') invRecalc();
+    if (e.target.id === 'bl-search') {
+      var q = e.target.value.trim().toLowerCase(), any = false;
+      [].forEach.call(document.querySelectorAll('#inv-inner .bl-grp'), function (g) {
+        var n = 0; [].forEach.call(g.querySelectorAll('.bl-item'), function (it) { var hit = !q || it.dataset.q.indexOf(q) > -1; it.hidden = !hit; if (hit) n++; });
+        g.hidden = !n; g.previousElementSibling.hidden = !n; if (n) any = true;
+      });
+      var none = document.getElementById('bl-none'); if (none) none.hidden = any;
+    }
   });
   sheet.addEventListener('change', function (e) {
     if (e.target.id === 'hs-co') { var nw = document.getElementById('hs-new'); if (nw) nw.hidden = e.target.value !== '__new'; if (e.target.value === '__new') document.getElementById('hs-name').focus(); return; }

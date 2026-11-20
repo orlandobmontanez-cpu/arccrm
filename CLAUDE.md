@@ -158,6 +158,11 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
 - Line items (description, qty × rate), every amount editable. Tax switch per invoice (on by default, off for NTTC
   companies), rate from the tax city via `ARCSign.cityRate`. Statuses: Draft, Sent, Partly paid, Paid, Overdue (past due
   with a balance), Void (`invCalc`). Payments `{ n, date, amount, method, ref }`; each has a receipt `INV-1001-R<n>`.
+- **Mark Paid (Nov 20 2026):** each open invoice in the list has a **✓ MARK PAID** bar under it (`data-mpaid`, its own button, never
+  inside the row button). Tap → inline confirm (Paid by, Check/Ref #, date) → CONFIRM PAID records one payment for the full balance
+  (`markPaidSave`), so it becomes Paid through `invCalc` and leaves OPEN. Inside an invoice the payment button reads ✓ MARK PAID · $balance
+  (same pay form, amount editable for partials). No new fields. The **PAID** tab is the archive: newest payment first, grouped by month with
+  totals, check #s on each row, and a search box (`#bl-search`, filters by company, invoice #, job, PO, amount, check #). Test: `python3 tests/mark-paid.test.py`.
 - Invoice and receipt documents use `docShell` + `BILL_DOC_CSS` (one Letter page; Pay Online QR for the balance).
   Line items ARE shown on invoices (these are billed prices, not internal costs).
 - Email through the same `ARCMail.compose` panel via `openPreview({ ext })`: To = billing email, CC = company CC,

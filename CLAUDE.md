@@ -143,7 +143,11 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   expenses, contract before tax, profit + margin. Internal only, never on a customer document.
   Add receipt: tap 1 connects Google if needed (pop-up must be in a tap), tap 2 opens the file picker. The scan uploads to
   Receipts & Invoices, Google reads it (copy as a Google Doc = Drive text recognition → export text → delete the copy),
-  `ReadReceipt.parse` (between `READ-RECEIPT` markers) fills the form, Orlando checks and saves. On save the scan is renamed
+  `ReadReceipt.parse` (between `READ-RECEIPT` markers) fills the form, Orlando checks and saves.
+  Returns (Nov 21 2026): amounts in brackets `(761.93)` are negative; a CREDIT MEMO is read as all-negative (items keep a positive
+  qty, negative amount); a scan holding several documents (split at their own INVOICE / CREDIT MEMO heading line) becomes one
+  net entry with both numbers in `ref` and a note like "Invoice … $311.93 + Credit memo (return) … −$761.93 = net −$450.00".
+  Supplier column rows ("-2 -2 DR -2.000 DR 273.760") give qty = shipped; "5GAL" is a pail size, never the quantity. On save the scan is renamed
   `YYYY-MM-DD · Vendor · $Total · ARC-00007.ext` and its Drive description holds the full record (`driveRecord`).
   Every change rewrites the **Agency Roofing Expenses** Google Sheet from the CRM (`expenseCsv`, formula-safe); its link is
   `settings.expSheet`. Offline/no Google pass: saved in the CRM with `driveStale`, Drive catches up on the next connect.

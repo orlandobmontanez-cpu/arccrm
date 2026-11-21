@@ -114,6 +114,110 @@ Total Due 4,000.00`,
     want: { vendor: 'J. Archuleta Roofing Services', cat: 'labor', date: '2026-11-08', ref: '1043', total: 4000.00, tax: 0, items: 2 },
   },
   {
+    name: 'ABC invoice + credit memo (return) in one PDF → one net entry, returns negative',
+    text: `                                                                                                                                          INVOICE
+                                                              ABC Supply Co                                                               Customer Number                             1000001-0001
+                                                              1 ABC Pkwy
+                                                              Beloit WI, 53511                                                            Invoice Number                             5550001001-001
+                                                              http://www.abcsupply.com
+                                                                                                                                          Invoice Date                                    11/20/26
+                                                                                                                                          Customer PO#                                    Pat Sample
+                                                                                                                                          Payment Due Date                                12/31/26
+                                                                                                                                          Total Invoice Amt                                 311.93
+                                                                                                                                          Total Amount Due                                  311.93
+
+
+
+
+                                                                                                                                                   Ship To: 0002
+                  Sample Roofing LLC                                                                                                       Sample Roofing-Shop
+                  123 Sample St SE                                                                                                                 123 Sample St SE
+                  Albuquerque, NM 87100                                                                                                            Albuquerque, NM 87100
+
+
+
+
+          Ship Via                 Order Type Order Date Ship Date                        Sales Agent              Ordered By                     Reference                                   Job
+             CPU                        CPU            11/20/26         11/20/26             J Sample
+    Shipping Branch               61 Albuquerque, NM (505) 555-0100
+                                                                                                            Quantity      Quantity       Extended Price Price Per                                   Extended
+         Item Code                                       Item Description                                                           UOM
+                                                                                                            Ordered       Shipped        Quantity UOM     UOM                                         Price
+ 8505566964                       Gacoroof Silicone Tan 5GAL                                                            1         1   DR     1.000   DR   293.750                                        293.75
+
+                                  SUBTOTAL                                                                                                                                                                  293.75
+
+                                  Sales Tax 6.1875%                                                                                                                                                          18.18
+
+
+
+
+End of Month                                                                           Make Checks Payable & Remit To:
+                                                                                                                                                                              TOTAL
+                                                                                       ABC SUPPLY CO                                                                       PAYABLE IN                       311.93
+                                                                                       PO BOX 748242                                                                      U.S. DOLLARS
+                                                                                       LOS ANGELES,CA 90074-8242
+be subject to a monthly late payment charge, not to exceed the maximum allowable by state or federal law. When you provide a check as payment, you authorize us either to use this information from your check to
+
+
+
+
+                                                                                                                                                                                           Page 1 of 1
+                                                                                                                                          CREDIT MEMO
+                                                              ABC Supply Co                                                                 Customer Number                           1000001-0001
+                                                              1 ABC Pkwy
+                                                              Beloit WI, 53511                                                              Invoice Number                           5550001002-001
+                                                              http://www.abcsupply.com
+                                                                                                                                            Orig. Inv. Number                        5550000900-001
+                                                                                                                                            Invoice Date                                  11/20/26
+                                                                                                                                            Customer PO#                                  Pat Sample
+                                                                                                                                            Total Credit Amt                               (761.93)
+                                                                                                                                            Total Amount Due                               (761.93)
+
+
+
+
+                                                                                                                                                   Ship To: 0002
+                  Sample Roofing LLC                                                                                                       Sample Roofing-Shop
+                  123 Sample St SE                                                                                                                 123 Sample St SE
+                  Albuquerque, NM 87100                                                                                                            Albuquerque, NM 87100
+
+
+
+
+          Ship Via                 Order Type Order Date Ship Date                        Sales Agent              Ordered By                     Reference                                   Job
+             CPU                        CPU            11/20/26         11/20/26             J Sample                                            C2-00000001                               Pat Sample
+    Shipping Branch               61 Albuquerque, NM (505) 555-0100
+                                                                                                            Quantity   Quantity       Extended Price Price Per                                      Extended
+         Item Code                                       Item Description                                                        UOM
+                                                                                                            Ordered    Shipped        Quantity UOM     UOM                                            Price
+ 8505566942                       Gacoroof Silicone White 5GAL                                                      -2        -2   DR    -2.000   DR   273.760                                         (547.52)
+                                  Orig Inv#: 5550000900-001
+ 16MHMBSB5                        MH Multibase SB 5gal                                                                 -1              -1      DR          -1.000         DR         170.010              (170.01)
+                                  Orig Inv#: 5550000900-001
+
+                                  SUBTOTAL                                                                                                                                                                (717.53)
+
+                                  Sales Tax 6.1875%                                                                                                                                                        (44.40)
+
+
+
+
+End of Month                                                                           Make Checks Payable & Remit To:
+                                                                                                                                                                              TOTAL
+                                                                                       ABC SUPPLY CO                                                                       PAYABLE IN                     (761.93)
+                                                                                       PO BOX 748242                                                                      U.S. DOLLARS
+                                                                                       LOS ANGELES,CA 90074-8242
+be subject to a monthly late payment charge, not to exceed the maximum allowable by state or federal law. When you provide a check as payment, you authorize us either to use this information from your check to
+
+
+
+
+                                                                                                                                                                                           Page 1 of 1
+`,
+    want: { vendor: 'ABC Supply', cat: 'materials', date: '2026-11-20', ref: '5550001001-001 + 5550001002-001', sub: -423.78, tax: -26.22, total: -450, items: 3, firstItem: 293.75, firstQty: 1, firstDesc: 'Gacoroof Silicone Tan 5GAL' },
+  },
+  {
     name: 'Nothing readable',
     text: `   \n  ~~ \n`,
     want: { vendor: '', total: null, items: 0 },

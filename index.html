@@ -4138,16 +4138,17 @@ const ReadReceipt = (function () {
     [/\bsinclair\b/i, 'Sinclair', 'other'],
   ];
   const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
-  const MONEY = /(-?)\$?\s?(\d{1,3}(?:,\d{3})+|\d+)\.(\d{2})(-?)(?!\d)/g;
-  const SUMMARY = /\b(sub\s*-?\s*total|merch(?:andise)?\s*total|total|tax|balance|amount\s*due|change\b|cash\b|tender|visa|master\s*card|mastercard|amex|discover|debit|credit\b|card\b|payment|paid\b|you\s*saved|savings|rounding|auth|approval|account|acct)/i;
+  // (761.93) in brackets = negative, the way supplier credit memos print it
+  const MONEY = /(\(?)(-?)\$?\s?(\d{1,3}(?:,\d{3})+|\d+)\.(\d{2})(-?)(\)?)(?!\d)/g;
+  const SUMMARY = /\b(payable|remit|sub\s*-?\s*total|merch(?:andise)?\s*total|total|tax|balance|amount\s*due|change\b|cash\b|tender|visa|master\s*card|mastercard|amex|discover|debit|credit\b|card\b|payment|paid\b|you\s*saved|savings|rounding|auth|approval|account|acct)/i;
   const JUNK = /\b(phone|tel|fax|www\.|\.com|invoice|receipt|order|store|cashier|register|terminal|date|time|page|customer|ship\s*to|bill\s*to|sold\s*to|po\s*#|p\.o\.|job\s*name|sales\s*rep|thank|return|policy|survey|signature|approved|member|reference|ref\s*#|trans)/i;
 
   function cents(x) { return Math.round(Number((x * 100).toPrecision(12))) / 100; }
   function amounts(line) {
     const out = []; let m; MONEY.lastIndex = 0;
     while ((m = MONEY.exec(line))) {
-      const v = parseFloat(m[2].replace(/,/g, '') + '.' + m[3]);
-      out.push((m[1] || m[4]) ? -v : v);
+      const v = parseFloat(m[3].replace(/,/g, '') + '.' + m[4]);
+      out.push((m[2] || m[5] || (m[1] && m[6])) ? -v : v);
     }
     return out;
   }
@@ -4182,7 +4183,7 @@ const ReadReceipt = (function () {
     return s.toLowerCase().replace(/\b([a-z])/g, (x) => x.toUpperCase()).replace(/\b(Llc|Inc|Co)\b/g, (x) => x === 'Llc' ? 'LLC' : x);
   }
 
-  function parse(text) {
+  function parseOne(text) {
     const lines = String(text || '').replace(/\r/g, '').split('\n').map(l => l.replace(/\t+/g, '  ').replace(/\s+$/, '')).filter(l => l.trim());
     const all = lines.join('\n');
     const r = { vendor: '', cat: 'materials', date: '', ref: '', sub: null, tax: null, total: null, items: [] };
@@ -4241,10 +4242,14 @@ const ReadReceipt = (function () {
       if (SUMMARY.test(l) || JUNK.test(l) || datesIn(l).length) return;
       let desc = l.replace(MONEY, ' ').replace(/\s{2,}/g, ' ').trim();
       if (!/[a-z]{3}/i.test(desc)) return;
-      let q = 1;
-      const qm = desc.match(/^(\d{1,4})\s+(?=\D)/) || desc.match(/\b(\d{1,4})\s*(?:@|x|ea\b|each\b|pcs?\b|rl\b|rolls?\b|bdl\b|bundles?\b|sq\b|bx\b|box(?:es)?\b|pails?\b|gal\b|tubes?\b)/i) || desc.match(/\bqty:?\s*(\d{1,4})\b/i);
+      let q = 1, cols = null;
+      // Supplier columns after the description: "-2 -2 DR -2.000 DR 273.760" (ordered, shipped, unit…, price per unit)
+      cols = desc.match(/\s(-?\d{1,4})\s+(-?\d{1,4})\s+[A-Z]{1,3}\s+-?\d+\.\d{3}\s+[A-Z]{1,3}\s+-?[\d,]+\.\d{2,4}\s*$/);
+      if (cols) { desc = desc.slice(0, cols.index).trim(); q = Math.abs(parseInt(cols[2], 10)) || 1; }
+      let qm = cols ? null : desc.match(/^(\d{1,4})\s+(?=\D)/) || desc.match(/\b(\d{1,4})\s*(?:@|x|ea\b|each\b|pcs?\b|rl\b|rolls?\b|bdl\b|bundles?\b|sq\b|bx\b|box(?:es)?\b|pails?\b|gal\b|tubes?\b)/i) || desc.match(/\bqty:?\s*(\d{1,4})\b/i);
+      if (qm && /^\d+(gal|gl)\b/i.test(qm[0])) qm = null;   // "5GAL" is the pail size, not how many
       if (qm) { q = parseInt(qm[1], 10) || 1; if (qm.index === 0 && /^\d{1,4}\s/.test(desc)) desc = desc.replace(/^\d{1,4}\s+/, ''); }
-      desc = desc.replace(/^\d{6,}\s+/, '').replace(/\s+\d{6,}$/, '').replace(/\s*@\s*$/, '').trim();
+      desc = desc.replace(/^\d{6,}\s+/, '').replace(/^(?=[A-Z0-9]*\d)[A-Z0-9]{6,}\s+(?=[A-Za-z])/, '').replace(/\s+\d{6,}$/, '').replace(/\s*@\s*$/, '').trim();
       const p = a[a.length - 1];
       if (r.total != null && Math.abs(p) > r.total + 0.01) return;
       r.items.push({ d: desc.slice(0, 120), q: q, p: p });
@@ -4254,6 +4259,47 @@ const ReadReceipt = (function () {
     const LAB = /\b(labor|subcontract|crew|day\s*rate|man\s*hours?|install(?:ation)?\s*services?)\b/i;
     if (r.cat === 'materials' && LAB.test(all) && (r.items.length ? r.items.every(x => LAB.test(x.d)) : true)) r.cat = 'labor';
     return r;
+  }
+
+  // One scan can hold several documents (an invoice and a credit memo for a return). Read each on its own, turn
+  // credit memos negative, then add them into one entry so the job shows the net.
+  function split(text) {
+    const docs = [[]], has = (d) => d.some(l => amounts(l).length);
+    String(text || '').replace(/\r/g, '').split('\n').forEach(l => {
+      const cur = docs[docs.length - 1];
+      // a new document starts at its own INVOICE / CREDIT MEMO heading, once the one before has amounts
+      if (/^\s*(invoice|credit\s*memo)\s*$/i.test(l) && has(cur) && cur.some(x => /\b(invoice|credit)\s*(number|no|#)/i.test(x))) docs.push([]);
+      docs[docs.length - 1].push(l);
+    });
+    return docs.filter(has).map(d => d.join('\n'));
+  }
+  function parse(text) {
+    const docs = split(text);
+    if (docs.length < 1) return parseOne(text);
+    const parts = docs.map(d => {
+      const credit = /\bcredit\s*memo\b|\btotal\s*credit\b/i.test(d);
+      if (!credit) return { r: parseOne(d), credit: false };
+      const pos = d.replace(/\((\$?\s?[\d,]+\.\d{2})\)/g, '$1').replace(/(^|\s)-(?=\$?\d)/gm, '$1');
+      const r = parseOne(pos), neg = (v) => v == null ? v : -Math.abs(v);
+      r.sub = neg(r.sub); r.tax = neg(r.tax); r.total = neg(r.total);
+      r.items.forEach(i => { i.p = -Math.abs(i.p); i.q = Math.abs(i.q); });
+      return { r: r, credit: true };
+    });
+    if (parts.length === 1) {
+      const r = parts[0].r;
+      if (parts[0].credit) r.note = 'Credit memo (return)' + (r.ref ? ' ' + r.ref : '') + '.';
+      return r;
+    }
+    const out = Object.assign({}, parts[0].r), add = (k) => cents(parts.reduce((a, p) => a + (p.r[k] || 0), 0));
+    out.vendor = (parts.find(p => p.r.vendor) || parts[0]).r.vendor;
+    out.date = (parts.find(p => p.r.date) || parts[0]).r.date;
+    out.ref = parts.map(p => p.r.ref).filter(Boolean).join(' + ');
+    out.items = parts.reduce((a, p) => a.concat(p.r.items), []).slice(0, 40);
+    out.sub = add('sub'); out.tax = add('tax'); out.total = add('total');
+    const money = (v) => (v < 0 ? '−$' : '$') + Math.abs(v).toFixed(2);
+    out.note = parts.map(p => (p.credit ? 'Credit memo (return)' : 'Invoice') + (p.r.ref ? ' ' + p.r.ref : '') + (p.r.total != null ? ' ' + money(p.r.total) : '')).join(' + ') +
+      ' = net ' + money(out.total) + '.';
+    return out;
   }
   return { parse: parse };
 })();
@@ -4868,6 +4914,7 @@ function readScan(c, file) {
       if (r.ref) dr.ref = r.ref;
       if (r.total != null) { dr.total = cents(r.total); dr.sub = cents(r.sub != null ? r.sub : r.total); dr.tax = cents(r.tax || 0); }
       if (r.items.length) dr.items = r.items.map(function (i) { return { d: i.d, q: i.q, p: cents(i.p) }; });
+      if (r.note && !dr.note) dr.note = r.note;
       ex_state.note = got ? 'Read from the scan. Check every number against the paper before you save.'
         : 'Google couldn’t read this scan clearly. The scan is saved in Drive. Fill in the details below.';
     }, function (e) {

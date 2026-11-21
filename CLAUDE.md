@@ -254,7 +254,32 @@ Orlando consults by the hour for some clients (invoiced weekly). Lives inside th
     then `arc_sign_notified`. ARC_KEY lives in `arc_secret` (no API access) and in the script's Script Properties, never in the repo.
   - Signing in person voids open links for that document (`rsVoid`). Nothing new is stored on the phone; requests live in Supabase.
   - `sign.html` contains a copy of `ARCSign` — keep it in step with `index.html`.
-- Pay Online: Stripe Payment Link from Settings (or per-customer `payLink`). A QR code (bundled MIT `qrcode-generator`) prints for the 50% deposit, change order amount, or receipt balance due. No QR on credits.
+- Pay Online: Stripe Payment Link from Settings (or per-customer `payLink`). A QR code (bundled MIT `qrcode-generator`) prints on
+  **payment invoices** (deposit due), billing invoices and receipts (balance due). **Never on proposals, quotes or change orders**
+  (Nov 20 2026: he felt a pay box under the total read as "PAY NOW" before the customer had said yes). No QR on credits.
+
+## Payment invoice (deposits) — Nov 20 2026. Three steps: Quote → Payment Invoice → Receipt
+
+- **Promises Made** (`c.promises`, text, one per line): field in Scope of Work, and an "Any promises made?" sheet (`#pm-sheet`,
+  `askPromises`) before a proposal/quote preview — only when that document is unsigned, once per document per visit (`sessionStorage`
+  `arc_pm_<id>_<proposal|q:id>`). NO PROMISES = nothing prints. Promises print only on the payment invoice (and its receipt).
+- **SEND PAYMENT INVOICE** (Payment Invoice section after Change Orders, `#dp-sheet`, `openDeposit`) unlocks when the proposal is signed
+  (or the stage is Signed/In Production/Closed) or a quote is Accepted (`depTargets`). One per signed item by default.
+- `c.deposits` = `[{ id, n, num 'ARC-00007-D1', target 'proposal'|'q:<quoteId>', base, pct, amount, synopsis, promises, date, sentAt, void,
+  payments: [{ id, date, amount, method, ref, note, status: cleared|pending|bounced, at }] }]` (`normDeposit`). Both fields live in
+  `arc_ext` (`extOf`/`applyExt`), so they sync with `c:<id>` and older versions never drop them.
+- Deposit = **slider** (0–100 %, steps of 5) **or a typed amount** (any amount he's handed; the slider follows). Locked once a payment exists.
+- Payments: Check (Check #, **pending until he ticks "cleared"**; still counts, marked pending), Cash, Card (online), ACH, Zelle, Financing,
+  **Other (note required)**. Bounced checks don't count. Paid in full → the same document becomes the **Deposit Receipt** (stamp, payment
+  lines, balance at completion, Orlando's signature). Delete only if never sent and no payments; otherwise Void (Restore undoes it).
+- Document `depositDoc` (`docShell` + `BILL_DOC_CSS`, one Letter page): The Work (synopsis), Our Commitments to You (promises, only if any),
+  Agency Promise (`AGENCY_PROMISE_HTML`, same text as the proposal), contract total, deposit %, due now + pay QR.
+  Email via `openPreview({ ext })` to the customer, copy to him, PDF filed in the customer's Drive folder.
+- **Final receipt** (`receipt.html`) subtracts deposits received: hidden `tDep` / `tDepL`, a green "Deposit Received (ARC-…-D1)" line,
+  "Amount Paid" becomes "Final Payment", Balance = total − deposit − final payment. Old drafts (no `tDep`) are unchanged; the deposit joins
+  the signature fingerprint only when there is one. A receipt draft saved before the deposit was recorded needs Start over to pick it up.
+- Test: `python3 tests/deposit-invoice.test.py`.
+- Not built yet (his list): Job Board flag for unpaid deposits after X days; automatic Stripe matching; cancellation policy wording (later).
 
 ## iPhone Safari rules (learned the hard way)
 

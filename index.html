@@ -842,6 +842,29 @@
     flex-direction: column; height: 100vh; height: 100dvh;
   }
   .x-sheet.active { display: flex; }
+  /* Payment invoice (deposit) sheet + promises prompt */
+  #pm-sheet { z-index: 960; }
+  .st-pill.paid { background: #2A5C3A; color: var(--white); }
+  .st-pill.partly-paid, .st-pill.draft { background: rgba(201,126,120,0.18); color: var(--copper); }
+  .st-pill.void { background: rgba(28,26,24,0.08); color: var(--ink-muted); text-decoration: line-through; }
+  .dp-void { padding: 12px; border-radius: 8px; background: rgba(139,32,32,0.08); color: var(--danger); font-size: 13px; margin-bottom: 14px; }
+  .dp-amt { padding: 14px; border: 1px solid var(--stone-dark); border-radius: 10px; background: var(--white); margin-bottom: 14px; }
+  .dp-amt-top { display: flex; align-items: baseline; gap: 10px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.14em; color: var(--copper); font-size: 13px; }
+  .dp-amt-top b { font-family: 'Anton', sans-serif; font-weight: 400; font-size: 26px; letter-spacing: 0.02em; color: var(--ink); }
+  .dp-of { margin-left: auto; color: var(--ink-muted); }
+  #dp-pct { width: 100%; height: 44px; accent-color: var(--copper); margin-top: 4px; }
+  .dp-sum { display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; font-size: 13px; color: var(--ink-soft); padding: 10px 12px; background: var(--white); border: 1px solid var(--stone-dark); border-radius: 8px; margin-bottom: 10px; }
+  .dp-sum b { color: var(--copper); }
+  .dp-pays { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .dp-pay { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 12px; background: var(--white); border: 1px solid var(--stone-dark); border-radius: 8px; font-size: 14px; color: var(--ink); }
+  .dp-pay.bounced .dp-pay-main { text-decoration: line-through; color: var(--ink-muted); }
+  .dp-pay-sub { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+  .dp-prm { min-height: 44px; border: 1px solid var(--stone-dark); border-radius: 6px; background: transparent; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.12em; color: var(--ink-muted); font-size: 13px; }
+  .dp-prm.armed { color: var(--white); background: var(--danger); border-color: var(--danger); }
+  .dp-pf { padding: 14px; border: 1.5px solid var(--copper); border-radius: 10px; background: var(--white); margin-bottom: 10px; }
+  .dp-pf-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .dp-pf-btns .proposal-btn { min-height: 48px; justify-content: center; }
+  #btn-new-dep:disabled { opacity: 0.45; }
   .sg-row-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 12px; font-weight: 500; color: var(--ink-soft); text-transform: none; letter-spacing: 0; cursor: pointer; }
   .sg-row-check input { width: 20px; height: 20px; accent-color: var(--copper); }
   .set-qr { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--ink-muted); }
@@ -1755,6 +1778,11 @@
               <label>Customer Requests / Notes</label>
               <textarea id="f-requests" autocapitalize="sentences" autocorrect="on" spellcheck="true" rows="3" placeholder="Any specific customer requests or concerns..."></textarea>
             </div>
+            <div class="form-group">
+              <label for="f-promises">Promises Made to the Customer</label>
+              <textarea id="f-promises" autocapitalize="sentences" autocorrect="on" spellcheck="true" rows="2" placeholder="One per line, e.g. Crew parks on the street, not the driveway"></textarea>
+              <p class="xsec-note" style="margin:6px 0 0;">Prints on the payment invoice. Leave blank and it stays off.</p>
+            </div>
           </div>
         </div>
 
@@ -1929,6 +1957,15 @@
           <button class="proposal-btn proposal-btn-secondary x-add" id="btn-new-co" type="button">+ NEW CHANGE ORDER</button>
         </div>
 
+        <!-- PAYMENT INVOICE (step 2 of 3: Quote → Payment Invoice → Receipt) -->
+        <div class="form-section" id="section-deposit">
+          <div class="form-section-title">Payment Invoice</div>
+          <p class="xsec-note">Step 2 of 3: Quote → <b>Payment Invoice</b> → Receipt. Send it once the customer signs. When the deposit is paid it becomes their deposit receipt, and the final receipt subtracts it.</p>
+          <div class="x-list" id="dep-list"></div>
+          <button class="proposal-btn proposal-btn-primary x-add" id="btn-new-dep" type="button">SEND PAYMENT INVOICE</button>
+          <p class="jc-hint" id="dep-hint" role="status" aria-live="polite"></p>
+        </div>
+
         <!-- JOB COSTING -->
         <div class="form-section" id="section-cost">
           <div class="form-section-title">Job Costing</div>
@@ -2012,6 +2049,36 @@
     <button class="proposal-btn xe-del" id="exp-del" type="button">DELETE</button>
     <button class="proposal-btn proposal-btn-secondary" id="exp-cancel" type="button">CANCEL</button>
     <button class="proposal-btn proposal-btn-primary" id="exp-save" type="button">SAVE</button>
+  </div></div>
+</div>
+
+<!-- PAYMENT INVOICE (deposit) -->
+<div class="x-sheet" id="dp-sheet" role="dialog" aria-modal="true" aria-labelledby="dp-title">
+  <div class="xe-head">
+    <div><span class="xe-kind" id="dp-kind">PAYMENT INVOICE</span><span class="xe-num" id="dp-title">—</span></div>
+    <button class="xe-close" id="dp-x" type="button" aria-label="Save and close">&times;</button>
+  </div>
+  <div class="xe-body" id="dp-body"><div class="xe-inner" id="dp-inner"></div></div>
+  <div class="xe-foot"><div class="xe-foot-in">
+    <button class="proposal-btn xe-del" id="dp-del" type="button">DELETE</button>
+    <button class="proposal-btn proposal-btn-secondary" id="dp-close" type="button">SAVE &amp; CLOSE</button>
+    <button class="proposal-btn proposal-btn-primary" id="dp-pdf" type="button">PREVIEW</button>
+  </div></div>
+</div>
+
+<!-- "ANY PROMISES MADE?" — asked before a proposal or quote preview -->
+<div class="x-sheet" id="pm-sheet" role="dialog" aria-modal="true" aria-labelledby="pm-title">
+  <div class="xe-head">
+    <div><span class="xe-kind">BEFORE YOU SEND</span><span class="xe-num" id="pm-title">Any promises made?</span></div>
+    <button class="xe-close" id="pm-x" type="button" aria-label="Close">&times;</button>
+  </div>
+  <div class="xe-body"><div class="xe-inner">
+    <p class="xsec-note">Anything you told this customer you would do: parking, start time, protecting plants, a crew lead. These print on their payment invoice. If there are none, tap NO PROMISES and nothing prints.</p>
+    <div class="ex-f"><label for="pm-text">PROMISES MADE</label><textarea id="pm-text" rows="4" autocapitalize="sentences" autocorrect="on" spellcheck="true" placeholder="One per line"></textarea></div>
+  </div></div>
+  <div class="xe-foot"><div class="xe-foot-in" style="grid-template-columns:1fr 1fr;">
+    <button class="proposal-btn proposal-btn-secondary" id="pm-none" type="button">NO PROMISES</button>
+    <button class="proposal-btn proposal-btn-primary" id="pm-save" type="button">SAVE &amp; CONTINUE</button>
   </div></div>
 </div>
 
@@ -2376,6 +2443,7 @@ const STAGES = ['Lead','Inspected','Proposed','Signed','In Production','Closed',
 const LEGACY_TAX = 7.3125;
 const ARC_EMAIL = 'orlando.montanez@agencyroofingco.com';
 const ARC_PHONE = '(505) 900-1711';
+const AGENCY_PROMISE_HTML = 'When you call Agency Roofing Co., someone capable, knowledgeable, and obligated to serve will answer. We promise to listen before we climb, to protect what matters most, and to show up &mdash; not because it&rsquo;s convenient, but because it&rsquo;s our responsibility. Every roof we touch is someone&rsquo;s safety, peace of mind, and home. We treat it that way. Every time.';
 
 let customers = [];
 let currentId = null;
@@ -2420,7 +2488,8 @@ function toStored(c) {
 function extOf(c) {
   const e = { state: c.state, jobType: c.jobType, items: c.items, completedAt: c.completedAt, nextInspection: c.nextInspection, lastInspected: c.lastInspected,
     taxRate: c.taxRate, taxAuto: c.taxAuto, followUp: c.followUp, followNote: c.followNote,
-    closedAt: c.closedAt, lastCheckIn: c.lastCheckIn, relNotes: c.relNotes, checkIns: c.checkIns, thankYou: c.thankYou };
+    closedAt: c.closedAt, lastCheckIn: c.lastCheckIn, relNotes: c.relNotes, checkIns: c.checkIns, thankYou: c.thankYou,
+    promises: c.promises, deposits: c.deposits };
   // No "mirror": older versions then load repair jobs as replacement jobs at the same price
   const qs = {};
   c.quotes.forEach(q => { if (isRepair(q)) qs[q.id] = { type: q.type, items: [] }; });
@@ -2433,7 +2502,7 @@ function extOf(c) {
 function applyExt(r, e) {
   if (!e) return r;
   const c = Object.assign({}, r);
-  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto', 'followUp', 'followNote', 'closedAt', 'lastCheckIn', 'relNotes', 'checkIns', 'thankYou'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
+  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto', 'followUp', 'followNote', 'closedAt', 'lastCheckIn', 'relNotes', 'checkIns', 'thankYou', 'promises', 'deposits'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
   if (e.state && !/^[A-Za-z]{2}[\s,]/.test(String(r.zip || ''))) c.state = e.state;
   const mirrored = (o, x) => String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0';
   if (e.jobType === 'repair') {
@@ -2564,6 +2633,8 @@ function normalize(c) {
     thankYou: /^\d{4}-\d{2}-\d{2}$/.test(c.thankYou || '') ? c.thankYou : '',   // date the thank-you letter (+ stickers) went out
     checkIns: Array.isArray(c.checkIns) ? c.checkIns.filter(x => x && x.d).slice(0, 60).map(x => ({ d: String(x.d).slice(0, 10), n: String(x.n || '').slice(0, 1000) })) : [],
     expenses: normExpenses(c.expenses),
+    promises: typeof c.promises === 'string' ? c.promises.slice(0, 4000) : '',   // promises made at quote time (print on the payment invoice)
+    deposits: Array.isArray(c.deposits) ? c.deposits.map(normDeposit).filter(Boolean) : [],   // payment invoices (deposits)
     quotes: Array.isArray(c.quotes) ? c.quotes.map(normQuote) : [],
     changeOrders: Array.isArray(c.changeOrders) ? c.changeOrders.map(normCO) : [],
   });
@@ -2706,6 +2777,7 @@ function loadDetail() {
   document.getElementById('f-roofsize').value = c.roofsize;
   document.getElementById('f-scope').value = c.scope;
   document.getElementById('f-requests').value = c.requests;
+  document.getElementById('f-promises').value = c.promises || '';
   document.getElementById('f-materials').value = c.materials;
   document.getElementById('f-labor').value = c.labor;
   document.getElementById('f-other').value = c.other;
@@ -2854,6 +2926,7 @@ function saveCustomer(toast = true) {
   c.roofsize = document.getElementById('f-roofsize').value;
   c.scope = document.getElementById('f-scope').value.trim();
   c.requests = document.getElementById('f-requests').value.trim();
+  c.promises = document.getElementById('f-promises').value.trim();
   c.materials = document.getElementById('f-materials').value;
   c.labor = document.getElementById('f-labor').value;
   c.other = document.getElementById('f-other').value;
@@ -3395,7 +3468,6 @@ function generateProposal(opts) {
         <div class="pr pr-sub"><span>Subtotal</span><span>${fmt(p.sub)}</span></div>
         <div class="pr pr-tax"><span>${esc(taxLine(rate, taxCity))}</span><span>${fmt(p.tax)}</span></div>
         <div class="pr pr-final"><span class="lbl">Final Investment</span><span class="amt">${fmt(p.total)}</span></div>
-        ${payBlock(cust, p.total * 0.5, '50% deposit due', c.arcNum)}
       </div>
     </div>
   </div>
@@ -3405,7 +3477,7 @@ function generateProposal(opts) {
     <div class="section-block">
       <div class="sh">Agency Promise</div>
       <div class="sh-rule"></div>
-      <div class="promise-text">When you call Agency Roofing Co., someone capable, knowledgeable, and obligated to serve will answer. We promise to listen before we climb, to protect what matters most, and to show up &mdash; not because it&rsquo;s convenient, but because it&rsquo;s our responsibility. Every roof we touch is someone&rsquo;s safety, peace of mind, and home. We treat it that way. Every time.</div>
+      <div class="promise-text">${AGENCY_PROMISE_HTML}</div>
     </div>
     <div class="section-block">
       <div class="sh">Terms &amp; Conditions</div>
@@ -4338,6 +4410,7 @@ function renderExtras() {
   }).join('') : '<div class="x-empty">No change orders yet.</div>';
 
   renderContractStrip();
+  renderDeposits();
 }
 
 function renderContractStrip() {
@@ -4608,7 +4681,6 @@ function generateChangeOrder(o, autoLink) {
         <div class="pr pr-sub${credit ? ' pr-credit' : ''}"><span>Subtotal</span><span>${fmtSigned(p.sub)}</span></div>
         <div class="pr pr-tax"><span>${esc(taxLine(rate, taxCity))}</span><span>${fmtSigned(p.tax)}</span></div>
         <div class="pr pr-final"><span class="lbl">Final Investment</span><span class="amt">${fmtSigned(p.total)}</span></div>
-        ${credit ? '' : payBlock(c, p.total, 'Change order amount', o.num)}
       </div>
     </div>
   </div>
@@ -5995,7 +6067,7 @@ function previewReceipt(pid) {
     const it = xeItem();
     if (!it) return;
     touchItem();
-    if (xe.kind === 'quote') generateProposal({ quote: it });
+    if (xe.kind === 'quote') { const c = getCurrent(); askPromises('q:' + it.id, !!(c && validSig(it, quoteContent(c, it))), () => generateProposal({ quote: it })); }
     else generateChangeOrder(it);
   });
 
@@ -6604,7 +6676,7 @@ function openSettings() {
     </div>
     <div class="form-section">
       <div class="form-section-title">Pay Online</div>
-      <p class="xsec-note">Paste your Stripe payment link. Proposals and quotes show a QR code for the 50% deposit, change orders for their amount, and receipts for any balance due.</p>
+      <p class="xsec-note">Paste your Stripe payment link. Payment invoices show a QR code for the deposit, and invoices and receipts for any balance due. Proposals, quotes and change orders never show one.</p>
       <div class="form-grid cols-1">
         <div class="form-group"><label for="set-paylink">Stripe payment link</label>
           <input type="text" id="set-paylink" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://buy.stripe.com/…" value="${esc(st.payLink)}"></div>
@@ -6637,7 +6709,7 @@ function syncCanApply() {
   if (formDirty) return false;
   const a = document.activeElement;
   if (a && a.closest && a.closest('#detail') && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return false;
-  return !document.querySelector('#am-sheet.on, #sg.on, #modal-overlay.active, #x-editor.active, #set-sheet.active, #exp-sheet.active, #inv-sheet.active, #pv-sheet.active, #ins-sheet.active, #rs-sheet.active');
+  return !document.querySelector('#am-sheet.on, #sg.on, #modal-overlay.active, #x-editor.active, #set-sheet.active, #exp-sheet.active, #inv-sheet.active, #pv-sheet.active, #ins-sheet.active, #rs-sheet.active, #dp-sheet.active, #pm-sheet.active');
 }
 function syncTime(ms) {
   if (!ms) return '';
@@ -7459,7 +7531,7 @@ function closePreview() {
   });
   document.getElementById('pv-send').addEventListener('click', pvSend);
   document.getElementById('pv-save').addEventListener('click', pvSave);
-  document.getElementById('btn-generate').addEventListener('click', e => { e.preventDefault(); generateProposal(); });
+  document.getElementById('btn-generate').addEventListener('click', e => { e.preventDefault(); const c = getCurrent(); if (!c) return; saveCustomer(false); askPromises('proposal', !!validSig(c, proposalContent(c)), () => generateProposal()); });
 })();
 
 function reloadFromStorage() {
@@ -7545,6 +7617,394 @@ document.getElementById('btn-new-customer').addEventListener('click', function(e
   newCustomer();
 });
 document.addEventListener('touchstart', function(){}, {passive: true});
+
+
+// ── PAYMENT INVOICE (deposit) — step 2 of 3: Quote → Payment Invoice → Receipt ──
+// Lives on the customer as c.deposits (arc_ext, so it syncs, backs up, and older versions never drop it).
+// Deposit = { id, n, num 'ARC-00007-D1', target 'proposal' | 'q:<quoteId>', base (signed total), pct, amount,
+//   synopsis, promises (snapshot, '' = none), date, sentAt, void, payments: [{ id, date, amount, method, ref, note, status, at }] }
+// A payment's status: 'cleared' | 'pending' (a check not cleared yet) | 'bounced' (doesn't count).
+var DEP_METHODS = ['Check', 'Cash', 'Card (online)', 'ACH / bank transfer', 'Zelle', 'Financing', 'Other'];
+function normDepPay(x) {
+  if (!x || typeof x !== 'object') return null;
+  var st = ['cleared', 'pending', 'bounced'].indexOf(x.status) >= 0 ? x.status : 'cleared';
+  return { id: x.id || ('p_' + Date.now() + Math.random().toString(36).slice(2, 6)), date: /^\d{4}-\d{2}-\d{2}$/.test(x.date || '') ? x.date : localISODate(),
+    amount: cents(Math.max(0, parseFloat(x.amount) || 0)), method: String(x.method || 'Other').slice(0, 40), ref: String(x.ref || '').slice(0, 80),
+    note: String(x.note || '').slice(0, 300), status: st, at: x.at || Date.now() };
+}
+function normDeposit(d) {
+  if (!d || typeof d !== 'object') return null;
+  var pct = parseFloat(d.pct); if (!isFinite(pct)) pct = 50;
+  return { id: d.id || ('d_' + Date.now() + Math.random().toString(36).slice(2, 6)), n: parseInt(d.n, 10) || 1, num: String(d.num || ''),
+    target: String(d.target || 'proposal'), base: cents(parseFloat(d.base) || 0), pct: Math.max(0, Math.min(100, pct)),
+    amount: cents(Math.max(0, parseFloat(d.amount) || 0)), synopsis: String(d.synopsis || '').slice(0, 4000), promises: String(d.promises || '').slice(0, 4000),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(d.date || '') ? d.date : localISODate(), sentAt: d.sentAt || 0, void: d.void === true,
+    payments: Array.isArray(d.payments) ? d.payments.map(normDepPay).filter(Boolean) : [], createdAt: d.createdAt || Date.now() };
+}
+function depPaid(d) { return cents(d.payments.filter(function (p) { return p.status !== 'bounced'; }).reduce(function (s, p) { return s + p.amount; }, 0)); }
+function depCalc(d) {
+  var paid = depPaid(d), bal = cents(d.amount - paid);
+  var pending = d.payments.some(function (p) { return p.status === 'pending'; });
+  var status = d.void ? 'Void' : (paid > 0 && bal <= 0.004) ? 'Paid' : paid > 0 ? 'Partly paid' : d.sentAt ? 'Sent' : 'Draft';
+  return { paid: paid, bal: Math.max(0, bal), status: status, pending: pending };
+}
+// Deposits received on this job (for the final receipt): every non-void deposit, bounced checks excluded
+function depositsReceived(c) { return cents((c.deposits || []).filter(function (d) { return !d.void; }).reduce(function (s, d) { return s + depPaid(d); }, 0)); }
+
+// Signed work a deposit can be for: the main proposal (signed) and accepted additional quotes
+function depTargets(c) {
+  var out = [];
+  var ps = validSig(c, proposalContent(c));
+  if (ps || ['Signed', 'In Production', 'Closed'].indexOf(c.stage) >= 0) {
+    out.push({ key: 'proposal', num: c.arcNum, label: 'Proposal ' + c.arcNum, total: priceOf(c, mainRate(c)).total, scope: c.scope, signed: !!ps });
+  }
+  (c.quotes || []).forEach(function (q) {
+    if (q.status !== 'Accepted') return;
+    out.push({ key: 'q:' + q.id, num: q.num, label: 'Quote ' + q.num + (q.title ? ' · ' + q.title : ''), total: priceOf(q, quoteRate(c, q)).total, scope: q.scope, signed: !!validSig(q, quoteContent(c, q)) });
+  });
+  return out;
+}
+function depTarget(c, d) { return depTargets(c).find(function (t) { return t.key === d.target; }) || null; }
+function depForLabel(c, d) {
+  var t = depTarget(c, d); if (t) return t.label;
+  if (d.target === 'proposal') return 'Proposal ' + c.arcNum;
+  var q = (c.quotes || []).find(function (x) { return 'q:' + x.id === d.target; });
+  return q ? 'Quote ' + q.num : 'Signed work';
+}
+function nextDepNum(c) {
+  var n = (c.deposits || []).reduce(function (m, d) { return Math.max(m, d.n || 0); }, 0) + 1;
+  return { n: n, num: c.arcNum + '-D' + n };
+}
+// First few scope lines make the work summary (he can edit it before sending)
+function depSynopsis(scope) {
+  var lines = String(scope || '').split('\n').map(plainLine).filter(Boolean);
+  return lines.slice(0, 6).join('\n');
+}
+
+function renderDeposits() {
+  var c = getCurrent(), el = document.getElementById('dep-list'), btn = document.getElementById('btn-new-dep'), hint = document.getElementById('dep-hint');
+  if (!c || !el) return;
+  el.innerHTML = c.deposits.length ? c.deposits.slice().sort(function (a, b) { return a.n - b.n; }).map(function (d) {
+    var k = depCalc(d);
+    return '<button class="x-row" type="button" data-dep="' + esc(d.id) + '">' +
+      '<span><span class="x-num">' + esc(d.num) + '</span><span class="x-title">' + esc(depForLabel(c, d)) + ' · ' + (+d.pct.toFixed(1)) + '%' + (k.pending ? ' · check pending' : '') + '</span></span>' +
+      '<span class="x-right"><span class="st-pill ' + k.status.toLowerCase().replace(/\s+/g, '-') + '">' + esc(k.status) + '</span><span class="x-amt">' + fmt(d.amount) + '</span></span></button>';
+  }).join('') : '<div class="x-empty">No payment invoices yet.</div>';
+  var ok = depTargets(c).length > 0;
+  btn.disabled = !ok;
+  hint.textContent = ok ? '' : 'Unlocks once the proposal is signed or a quote is accepted.';
+}
+
+var dp = null;   // { cid, id, draft, isNew, payForm }
+function openDeposit(id) {
+  var c = getCurrent(); if (!c) return;
+  saveCustomer(false);
+  var cur = id ? c.deposits.find(function (d) { return d.id === id; }) : null;
+  var draft;
+  if (cur) draft = normDeposit(JSON.parse(JSON.stringify(cur)));
+  else {
+    var ts = depTargets(c); if (!ts.length) { showToast('SIGN THE PROPOSAL OR ACCEPT A QUOTE FIRST'); return; }
+    // Default to signed work that doesn't have a deposit yet
+    var t = ts.find(function (x) { return !c.deposits.some(function (d) { return !d.void && d.target === x.key; }); }) || ts[0];
+    var nn = nextDepNum(c);
+    draft = normDeposit({ n: nn.n, num: nn.num, target: t.key, base: t.total, pct: 50, amount: cents(t.total * 0.5),
+      synopsis: depSynopsis(t.scope), promises: c.promises || '' });
+  }
+  dp = { cid: c.id, id: draft.id, draft: draft, isNew: !cur, payForm: null };
+  document.getElementById('dp-kind').textContent = 'PAYMENT INVOICE · ' + (c.arcNum || '');
+  document.getElementById('dp-title').textContent = draft.num;
+  var del = document.getElementById('dp-del'); del.classList.remove('armed');
+  depDelLabel();
+  document.getElementById('dp-sheet').classList.add('active');
+  document.getElementById('dp-body').scrollTop = 0;
+  renderDepForm();
+}
+function depDelLabel() {
+  var del = document.getElementById('dp-del'), d = dp && dp.draft;
+  if (!d) return;
+  var canDelete = !d.sentAt && !d.payments.length;
+  del.dataset.mode = d.void ? 'restore' : canDelete ? 'delete' : 'void';
+  del.textContent = d.void ? 'RESTORE' : canDelete ? 'DELETE' : 'VOID';
+  del.style.visibility = dp.isNew ? 'hidden' : '';
+}
+function depCust() { return dp ? customers.find(function (x) { return x.id === dp.cid; }) : null; }
+
+function depSumHtml(d) { var k = depCalc(d); return '<span>Deposit ' + fmt(d.amount) + '</span><span>Received ' + fmt(k.paid) + '</span><b>Due ' + fmt(k.bal) + '</b>'; }
+function renderDepForm() {
+  var c = depCust(); if (!c || !dp) return;
+  var d = dp.draft, k = depCalc(d), ts = depTargets(c);
+  if (!ts.some(function (t) { return t.key === d.target; })) ts.push({ key: d.target, label: depForLabel(c, d), total: d.base });
+  var locked = d.payments.length > 0;
+  var h = '';
+  if (d.void) h += '<div class="dp-void">This payment invoice is void. Tap RESTORE to bring it back.</div>';
+  h += '<div class="ex-f"><label for="dp-for">FOR</label><select id="dp-for" class="b-sel"' + (locked ? ' disabled' : '') + '>' +
+    ts.map(function (t) { return '<option value="' + esc(t.key) + '"' + (t.key === d.target ? ' selected' : '') + '>' + esc(t.label) + ' · ' + fmt(t.total) + '</option>'; }).join('') + '</select></div>';
+  h += '<div class="dp-amt">' +
+    '<div class="dp-amt-top"><span>DEPOSIT</span><b id="dp-pct-l">' + (+d.pct.toFixed(1)) + '%</b><span class="dp-of">of ' + fmt(d.base) + '</span></div>' +
+    '<input type="range" id="dp-pct" min="0" max="100" step="5" value="' + Math.round(d.pct) + '" aria-label="Deposit percent"' + (locked ? ' disabled' : '') + '>' +
+    '<div class="ex-f" style="margin:10px 0 0;"><label for="dp-amount">AMOUNT (TYPE ANY AMOUNT)</label><input id="dp-amount" inputmode="decimal" value="' + d.amount.toFixed(2) + '"' + (locked ? ' disabled' : '') + '></div>' +
+    (locked ? '<p class="xsec-note" style="margin:6px 0 0;">Locked because a payment is recorded. Remove the payment to change it.</p>' : '') + '</div>';
+  h += '<div class="ex-f"><label for="dp-syn">WORK SUMMARY (PRINTS ON THE INVOICE)</label><textarea id="dp-syn" rows="5" autocapitalize="sentences" autocorrect="on" spellcheck="true">' + esc(d.synopsis) + '</textarea></div>';
+  h += '<div class="ex-f"><label for="dp-prom">PROMISES MADE (BLANK = LEFT OFF)</label><textarea id="dp-prom" rows="3" autocapitalize="sentences" autocorrect="on" spellcheck="true" placeholder="One per line">' + esc(d.promises) + '</textarea></div>';
+  // Payments
+  h += '<div class="form-section-title" style="margin-top:18px;">Payments</div>';
+  h += '<div class="dp-sum" id="dp-sum">' + depSumHtml(d) + '</div>';
+  h += d.payments.length ? '<div class="dp-pays">' + d.payments.map(function (p) {
+    return '<div class="dp-pay' + (p.status === 'bounced' ? ' bounced' : '') + '"><div class="dp-pay-main"><b>' + fmt(p.amount) + '</b> · ' + esc(p.method) + (p.ref ? ' #' + esc(p.ref) : '') +
+      '<div class="dp-pay-sub">' + esc(shortDate(p.date)) + (p.note ? ' · ' + esc(p.note) : '') + '</div></div>' +
+      '<select class="b-sel dp-pst" data-pid="' + esc(p.id) + '" aria-label="Payment status">' +
+      [['cleared', 'Received'], ['pending', 'Check pending'], ['bounced', 'Bounced']].map(function (o) { return '<option value="' + o[0] + '"' + (p.status === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
+      '</select><button type="button" class="dp-prm" data-pid="' + esc(p.id) + '" aria-label="Remove payment">REMOVE</button></div>';
+  }).join('') + '</div>' : '<div class="x-empty">No payments recorded yet.</div>';
+  if (dp.payForm) {
+    var f = dp.payForm;
+    h += '<div class="dp-pf">' +
+      '<div class="ex-f"><label for="dpp-amt">AMOUNT RECEIVED</label><input id="dpp-amt" inputmode="decimal" value="' + esc(f.amount) + '"></div>' +
+      '<div class="ex-f"><label for="dpp-m">PAID BY</label><select id="dpp-m" class="b-sel">' + DEP_METHODS.map(function (m) { return '<option' + (m === f.method ? ' selected' : '') + '>' + esc(m) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="ex-f"><label for="dpp-ref" id="dpp-ref-l">' + (f.method === 'Check' ? 'CHECK #' : 'REFERENCE / CONFIRMATION #') + '</label><input id="dpp-ref" value="' + esc(f.ref) + '" autocapitalize="off" autocorrect="off" spellcheck="false"></div>' +
+      '<div class="ex-f"><label for="dpp-note">' + (f.method === 'Other' ? 'WHAT WAS IT? (REQUIRED)' : 'NOTE (OPTIONAL)') + '</label><input id="dpp-note" value="' + esc(f.note) + '" autocapitalize="sentences"></div>' +
+      '<div class="ex-f"><label for="dpp-date">DATE</label><input id="dpp-date" type="date" value="' + esc(f.date) + '"></div>' +
+      (f.method === 'Check' ? '<label class="b-check"><input type="checkbox" id="dpp-clr"' + (f.cleared ? ' checked' : '') + '><span><b>Check has cleared</b> Leave off until the bank clears it. It still counts, marked pending.</span></label>' : '') +
+      '<div class="dp-pf-btns"><button type="button" class="proposal-btn proposal-btn-secondary" id="dpp-cancel">CANCEL</button><button type="button" class="proposal-btn proposal-btn-primary" id="dpp-save">SAVE PAYMENT</button></div></div>';
+  } else if (!d.void) {
+    h += '<button type="button" class="proposal-btn proposal-btn-primary x-add" id="dp-addpay">' + (k.bal > 0 ? 'RECORD PAYMENT · ' + fmt(k.bal) : 'RECORD ANOTHER PAYMENT') + '</button>';
+  }
+  document.getElementById('dp-inner').innerHTML = h;
+  document.getElementById('dp-pdf').textContent = k.status === 'Paid' ? 'PREVIEW RECEIPT' : 'PREVIEW INVOICE';
+  depDelLabel();
+}
+
+// Read the inputs back into the draft
+function depRead() {
+  if (!dp) return;
+  var d = dp.draft, g = function (id) { return document.getElementById(id); };
+  if (g('dp-syn')) d.synopsis = g('dp-syn').value.trim();
+  if (g('dp-prom')) d.promises = g('dp-prom').value.trim();
+  if (dp.payForm && g('dpp-amt')) {
+    dp.payForm.amount = g('dpp-amt').value; dp.payForm.method = g('dpp-m').value; dp.payForm.ref = g('dpp-ref').value.trim();
+    dp.payForm.note = g('dpp-note').value.trim(); dp.payForm.date = g('dpp-date').value || localISODate();
+    dp.payForm.cleared = g('dpp-clr') ? g('dpp-clr').checked : true;
+  }
+}
+function depSetTarget(key) {
+  var c = depCust(), d = dp.draft, t = depTargets(c).find(function (x) { return x.key === key; });
+  if (!t) return;
+  var oldSyn = depSynopsis((depTarget(c, d) || {}).scope);
+  d.target = key; d.base = t.total; d.amount = cents(t.total * d.pct / 100);
+  if (!d.synopsis || d.synopsis === oldSyn) d.synopsis = depSynopsis(t.scope);   // follow the new work unless he edited it
+}
+// Commit the draft to the customer and save (returns the saved deposit)
+function depCommit(logMsg) {
+  var c = depCust(); if (!c || !dp) return null;
+  depRead();
+  var d = normDeposit(dp.draft), i = c.deposits.findIndex(function (x) { return x.id === d.id; });
+  if (i >= 0) c.deposits[i] = d; else c.deposits.push(d);
+  dp.isNew = false; dp.draft = normDeposit(JSON.parse(JSON.stringify(d)));
+  if (logMsg) c.activityLog.unshift({ ts: new Date().toLocaleString('en-US'), msg: logMsg });
+  c.updatedAt = Date.now();
+  save(); renderDeposits(); renderActivityLog();
+  return d;
+}
+function closeDeposit(saveIt) {
+  if (saveIt && dp && !dp.draft.void) {
+    var c = depCust();
+    var was = c && c.deposits.find(function (x) { return x.id === dp.id; });
+    depCommit(was ? '' : 'Payment invoice ' + dp.draft.num + ' created (' + fmt(dp.draft.amount) + ')');
+  }
+  document.getElementById('dp-sheet').classList.remove('active');
+  dp = null;
+  renderDeposits();
+}
+
+// ── The document: payment invoice, or deposit receipt once paid in full ──
+var DEP_DOC_CSS = `<style>
+  .dp-cols { display: grid; grid-template-columns: 1.35fr 1fr; gap: 26px; margin-top: 14px; }
+  .dp-pr { color: #3A3734; }
+  .dp-note { font-size: 9.5px; line-height: 1.5; color: #3A3734; margin-top: 8px; }
+  .dp-pend { color: #974930; font-weight: 600; }
+</style>`;
+function depositDoc(c, d) {
+  var k = depCalc(d), paidFull = k.status === 'Paid';
+  var name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer';
+  var forLbl = depForLabel(c, d);
+  var lines = function (t) { return String(t || '').split('\n').map(richLine).filter(Boolean).map(function (x) { return '<li>' + x + '</li>'; }).join(''); };
+  var syn = lines(d.synopsis), prom = lines(d.promises);
+  var remaining = cents(d.base - (paidFull ? k.paid : 0));
+  var pays = d.payments.filter(function (p) { return p.status !== 'bounced'; });
+  var flow = ARC_DOC_HEAD + '<hr class="div-thin" data-keep>' +
+    '<div class="hero-title" data-keep>' + (paidFull ? 'Deposit Receipt for ' : 'Payment Invoice for ') + '<span class="name">' + esc(name) + '</span></div>' +
+    '<div class="hero-sub" data-keep><b>' + (paidFull ? 'Deposit received. Your place on the schedule is secured.' : 'Deposit to secure your place on the schedule.') + '</b> · ' + esc(forLbl) + '</div>' +
+    '<div class="meta" data-keep>' +
+      '<div class="meta-cell"><span class="meta-label">' + (paidFull ? 'Receipt No.' : 'Invoice No.') + '</span><span class="meta-value">' + esc(d.num) + '</span></div>' +
+      '<div class="meta-cell"><span class="meta-label">Date</span><span class="meta-value">' + esc(shortDate(paidFull ? pays[pays.length - 1].date : d.date)) + '</span></div>' +
+      '<div class="meta-cell"><span class="meta-label">Project Address</span><span class="meta-value">' + esc(c.address || '') + (cityLine(c) ? '<br>' + esc(cityLine(c)) : '') + '</span></div>' +
+      '<div class="meta-cell"><span class="meta-label">For</span><span class="meta-value">' + esc(forLbl) + '</span></div></div>' +
+    '<div class="dp-cols"><div>' +
+      (syn ? '<div class="section-block" data-keep><div class="sh">The Work</div><div class="sh-rule"></div><ul class="b-list">' + syn + '</ul></div>' : '') +
+      (prom ? '<div class="section-block" data-keep><div class="sh">Our Commitments to You</div><div class="sh-rule"></div><ul class="b-list">' + prom + '</ul></div>' : '') +
+      '<div class="section-block" data-keep><div class="sh">Agency Promise</div><div class="sh-rule"></div><div class="promise-text">' + AGENCY_PROMISE_HTML + '</div></div>' +
+    '</div><div><div class="pbox">' +
+      (paidFull ? '<span class="stamp full">DEPOSIT RECEIVED</span>' : '') +
+      '<div class="pbox-title">' + (paidFull ? 'Payment Summary' : 'Deposit Due') + '</div><div class="pbox-rule"></div>' +
+      '<div class="pr pr-sub"><span>Contract Total</span><span>' + fmt(d.base) + '</span></div>' +
+      '<div class="pr pr-sub"><span>Deposit (' + (+d.pct.toFixed(1)) + '%)</span><span>' + fmt(d.amount) + '</span></div>' +
+      (k.paid && !paidFull ? '<div class="pr pr-paid"><span>Received</span><span>− ' + fmt(k.paid) + '</span></div>' : '') +
+      (paidFull
+        ? pays.map(function (p) { return '<div class="pr pr-paid"><span>' + esc(shortDate(p.date)) + ' · ' + esc(p.method) + (p.ref ? ' #' + esc(p.ref) : '') + (p.status === 'pending' ? ' <span class="dp-pend">(pending)</span>' : '') + '</span><span>' + fmt(p.amount) + '</span></div>'; }).join('') +
+          '<div class="pr pr-final"><span class="lbl">Balance at Completion</span><span class="amt">' + fmt(Math.max(0, remaining)) + '</span></div>'
+        : '<div class="pr pr-final"><span class="lbl">Due Now</span><span class="amt">' + fmt(k.bal) + '</span></div>' + payBlock(c, k.bal, 'Deposit due', d.num)) +
+      '<p class="dp-note">' + (paidFull
+        ? 'The remaining balance is due upon completion and will show on your final receipt.' + (pays.some(function (p) { return p.status === 'pending'; }) ? ' Checks marked pending are credited once they clear.' : '')
+        : 'Checks payable to <b>Agency Roofing Co. LLC</b>. Cash accepted in person with a receipt. Please include <b>' + esc(d.num) + '</b> with your payment.') + '</p>' +
+    '</div></div></div>';
+  var own = ARCSign.ownerSig();
+  var tail = paidFull
+    ? '<div class="rcv-sig">' + (own && own.img ? '<img src="' + own.img + '" alt="">' : '') + '<div class="ln">RECEIVED BY ORLANDO MONTANEZ, OWNER · ' + esc(shortDate(pays[pays.length - 1].date)).toUpperCase() + '</div></div>'
+    : '<div class="ty">Thank you for choosing Agency Roofing Co.</div><div class="ty-sub">Questions: ' + ARC_PHONE + ' · ' + BILL_ME + '</div>';
+  return docShell({ title: (paidFull ? 'Deposit Receipt ' : 'Payment Invoice ') + d.num + ' — ' + name, css: BILL_DOC_CSS + DEP_DOC_CSS, flow: flow, tail: tail });
+}
+
+function previewDeposit() {
+  var c = depCust(); if (!c || !dp) return;
+  if (!(dp.draft.amount > 0)) { showToast('SET A DEPOSIT AMOUNT FIRST'); return; }
+  var d = depCommit(dp.isNew ? 'Payment invoice ' + dp.draft.num + ' created (' + fmt(dp.draft.amount) + ')' : '');
+  if (!d) return;
+  var k = depCalc(d), paidFull = k.status === 'Paid', word = paidFull ? 'Deposit Receipt' : 'Payment Invoice';
+  var who = String(c.last || c.first || 'Customer').replace(/[\\/:*?"<>|]+/g, '').trim() || 'Customer';
+  var name = [c.first, c.last].filter(Boolean).join(' ') || 'Customer', addr = (c.address || '').trim();
+  openPreview({ html: depositDoc(c, d), word: word, num: d.num, cust: null, ext: {
+    fileName: 'ARC ' + word + ' - ' + who + ' - ' + d.num + '.pdf',
+    drive: { key: c.id, folder: driveFolderName(c) },
+    mail: function () {
+      var link = payLinkFor(c);
+      return { to: c.email || '', bcc: BILL_ME,
+        subject: paidFull ? name + ', your Agency Roofing Co. deposit receipt' + (addr ? ' for ' + addr : '') + ' · ' + d.num
+                          : name + ', your Agency Roofing Co. payment invoice' + (addr ? ' for ' + addr : '') + ' · ' + d.num,
+        body: 'Hi ' + (c.first || name) + ',\n\n' + (paidFull
+          ? 'Thank you. We received your deposit of ' + fmt(k.paid) + ' for ' + depForLabel(c, d) + ', and your place on our schedule is secured. Your deposit receipt (' + d.num + ') is attached. The remaining balance is due upon completion.'
+          : 'Thank you for choosing Agency Roofing Co. Attached is your payment invoice (' + d.num + ') for the ' + (+d.pct.toFixed(1)) + '% deposit on ' + depForLabel(c, d) + '. The deposit of ' + fmt(k.bal) + ' secures your place on our schedule.\n\n' +
+            'You can pay by check (payable to Agency Roofing Co. LLC), in person, ' + (link ? 'or online here: ' + link : 'or by card or bank transfer') + '. Please include ' + d.num + ' with your payment.') +
+          '\n\nIf you have any questions, call or text me anytime.\n\nBuilt with agency. Driven by obligation.\n\nOrlando\nAgency Roofing Co.\n' + ARC_PHONE };
+    },
+    onSent: function (r) {
+      var cc = customers.find(function (x) { return x.id === c.id; }); if (!cc) return;
+      var cur = cc.deposits.find(function (x) { return x.id === d.id; }); if (!cur) return;
+      if (!cur.sentAt) cur.sentAt = Date.now();
+      cc.activityLog.unshift({ ts: new Date().toLocaleString('en-US'), msg: word + ' ' + d.num + (r.mailApp ? ' opened in Mail to ' : ' emailed to ') + (r.to || 'customer') });
+      cc.updatedAt = Date.now(); save(); renderDeposits(); renderActivityLog();
+      if (dp && dp.id === d.id) { dp.draft.sentAt = cur.sentAt; renderDepForm(); }
+    },
+    onDrive: function (r) {
+      var cc = customers.find(function (x) { return x.id === c.id; });
+      if (r.ok && cc) { cc.activityLog.unshift({ ts: new Date().toLocaleString('en-US'), msg: word + ' ' + d.num + ' saved to Google Drive' }); save(); renderActivityLog(); }
+    },
+  } });
+}
+
+// ── "Any promises made?" before a proposal / quote preview (once per document per visit, only when unsigned) ──
+var pmNext = null;
+function askPromises(key, signed, next) {
+  var c = getCurrent();
+  var k = 'arc_pm_' + (c ? c.id : '') + '_' + key, asked = false;
+  try { asked = sessionStorage.getItem(k) === '1'; } catch (e) {}
+  if (!c || signed || asked) { next(); return; }
+  try { sessionStorage.setItem(k, '1'); } catch (e) {}
+  pmNext = next;
+  document.getElementById('pm-text').value = c.promises || document.getElementById('f-promises').value || '';
+  document.getElementById('pm-sheet').classList.add('active');
+}
+function pmDone(text) {
+  var c = getCurrent();
+  if (c && text != null) {
+    var t = text.trim();
+    if (t !== (c.promises || '')) {
+      c.promises = t; document.getElementById('f-promises').value = t;
+      c.activityLog.unshift({ ts: new Date().toLocaleString('en-US'), msg: t ? 'Promises made recorded' : 'Promises made cleared' });
+      c.updatedAt = Date.now(); save(); renderActivityLog();
+    }
+  }
+  document.getElementById('pm-sheet').classList.remove('active');
+  var n = pmNext; pmNext = null;
+  if (n) n();
+}
+
+(function wireDeposits() {
+  var $ = function (id) { return document.getElementById(id); };
+  $('btn-new-dep').addEventListener('click', function (e) { e.preventDefault(); openDeposit(null); });
+  $('dep-list').addEventListener('click', function (e) { var b = e.target.closest('[data-dep]'); if (b) { e.preventDefault(); openDeposit(b.dataset.dep); } });
+  $('dp-x').addEventListener('click', function (e) { e.preventDefault(); closeDeposit(true); });
+  $('dp-close').addEventListener('click', function (e) { e.preventDefault(); closeDeposit(true); });
+  $('dp-pdf').addEventListener('click', function (e) { e.preventDefault(); depRead(); previewDeposit(); });
+  $('dp-del').addEventListener('click', function (e) {
+    e.preventDefault();
+    var b = e.currentTarget, mode = b.dataset.mode, c = depCust(); if (!c || !dp) return;
+    if (mode === 'restore') { dp.draft.void = false; depCommit('Payment invoice ' + dp.draft.num + ' restored'); renderDepForm(); return; }
+    if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = mode === 'delete' ? 'TAP TO DELETE' : 'TAP TO VOID'; return; }
+    b.classList.remove('armed');
+    if (mode === 'delete') {
+      c.deposits = c.deposits.filter(function (x) { return x.id !== dp.id; });
+      c.activityLog.unshift({ ts: new Date().toLocaleString('en-US'), msg: 'Payment invoice ' + dp.draft.num + ' deleted' });
+      c.updatedAt = Date.now(); save(); renderActivityLog();
+      document.getElementById('dp-sheet').classList.remove('active'); dp = null; renderDeposits();
+    } else { dp.draft.void = true; depCommit('Payment invoice ' + dp.draft.num + ' voided'); renderDepForm(); }
+  });
+  var inner = $('dp-inner');
+  inner.addEventListener('input', function (e) {
+    if (!dp) return;
+    var d = dp.draft, t = e.target;
+    if (t.id === 'dp-pct') {
+      d.pct = parseFloat(t.value) || 0; d.amount = cents(d.base * d.pct / 100);
+      $('dp-pct-l').textContent = (+d.pct.toFixed(1)) + '%'; $('dp-amount').value = d.amount.toFixed(2);
+    } else if (t.id === 'dp-amount') {
+      // Any amount he's handed on the spot: the slider follows
+      var a = cents(Math.max(0, parseFloat(String(t.value).replace(/[$,\s]/g, '')) || 0));
+      d.amount = a; d.pct = d.base > 0 ? Math.min(100, a / d.base * 100) : 0;
+      $('dp-pct-l').textContent = (+d.pct.toFixed(1)) + '%'; $('dp-pct').value = Math.round(d.pct);
+    }
+    if ((t.id === 'dp-pct' || t.id === 'dp-amount') && $('dp-sum')) $('dp-sum').innerHTML = depSumHtml(d);
+  });
+  inner.addEventListener('change', function (e) {
+    if (!dp) return;
+    var t = e.target;
+    if (t.id === 'dp-for') { depRead(); depSetTarget(t.value); renderDepForm(); }
+    else if (t.id === 'dpp-m') { depRead(); renderDepForm(); }
+    else if (t.classList.contains('dp-pst')) {
+      var p = dp.draft.payments.find(function (x) { return x.id === t.dataset.pid; });
+      if (p) { p.status = t.value; depCommit('Payment ' + fmt(p.amount) + ' on ' + dp.draft.num + ' marked ' + (t.value === 'cleared' ? 'received' : t.value === 'pending' ? 'check pending' : 'bounced')); renderDepForm(); }
+    }
+  });
+  inner.addEventListener('click', function (e) {
+    if (!dp) return;
+    var t = e.target.closest('button'); if (!t) return;
+    e.preventDefault();
+    if (t.id === 'dp-addpay') {
+      depRead();
+      var k = depCalc(dp.draft);
+      dp.payForm = { amount: (k.bal || 0).toFixed(2), method: 'Check', ref: '', note: '', date: localISODate(), cleared: false };
+      renderDepForm(); setTimeout(function () { var a = $('dpp-amt'); if (a) a.scrollIntoView({ block: 'center' }); }, 30);
+    } else if (t.id === 'dpp-cancel') { depRead(); dp.payForm = null; renderDepForm(); }
+    else if (t.id === 'dpp-save') {
+      depRead();
+      var f = dp.payForm, amt = cents(parseFloat(String(f.amount).replace(/[$,\s]/g, '')) || 0);
+      if (!(amt > 0)) { showToast('ENTER THE AMOUNT RECEIVED'); return; }
+      if (f.method === 'Other' && !f.note) { showToast('SAY WHAT THE PAYMENT WAS'); return; }
+      var p = normDepPay({ date: f.date, amount: amt, method: f.method, ref: f.ref, note: f.note, status: f.method === 'Check' && !f.cleared ? 'pending' : 'cleared' });
+      dp.draft.payments.push(p); dp.payForm = null;
+      depCommit('Payment ' + fmt(amt) + ' received on ' + dp.draft.num + ' (' + p.method + (p.ref ? ' #' + p.ref : '') + (p.status === 'pending' ? ', check pending' : '') + ')');
+      renderDepForm();
+      showToast(depCalc(dp.draft).status === 'Paid' ? 'DEPOSIT PAID · PREVIEW RECEIPT TO SEND IT' : 'PAYMENT SAVED');
+    } else if (t.classList.contains('dp-prm')) {
+      if (!t.classList.contains('armed')) { t.classList.add('armed'); t.textContent = 'TAP TO REMOVE'; return; }
+      var pid = t.dataset.pid, p2 = dp.draft.payments.find(function (x) { return x.id === pid; });
+      dp.draft.payments = dp.draft.payments.filter(function (x) { return x.id !== pid; });
+      depCommit('Payment ' + (p2 ? fmt(p2.amount) : '') + ' removed from ' + dp.draft.num);
+      renderDepForm();
+    }
+  });
+  $('pm-none').addEventListener('click', function (e) { e.preventDefault(); pmDone(''); });
+  $('pm-save').addEventListener('click', function (e) { e.preventDefault(); pmDone($('pm-text').value); });
+  $('pm-x').addEventListener('click', function (e) { e.preventDefault(); pmDone(null); });
+})();
 
 // ── RECEIPT ────────────────────────────────────────────
 var _rb = document.getElementById('btn-receipt');

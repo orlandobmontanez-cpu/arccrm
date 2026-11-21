@@ -2994,7 +2994,8 @@ function calcTotals() {
 }
 
 function fmt(n) {
-  return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  // credits and returns read −$450.00, never $-450.00
+  return (n < 0 ? '−$' : '$') + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 // ── ACTIVITY LOG ───────────────────────────────────────

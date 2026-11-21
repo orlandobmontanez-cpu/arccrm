@@ -4716,7 +4716,7 @@ function generateChangeOrder(o, autoLink) {
 // var/function only: normalize() calls normExpenses() during the first load.
 var EXP_CATS = ['materials', 'labor', 'other'];
 var CAT_LABEL = { materials: 'Materials', labor: 'Labor', other: 'Other' };
-function num2(v) { var n = parseFloat(String(v == null ? '' : v).replace(/[$,\s]/g, '')); return isFinite(n) ? cents(n) : 0; }
+function num2(v) { var t = String(v == null ? '' : v).replace(/[$,\s]/g, ''); var neg = /^\(.*\)$/.test(t); var n = parseFloat(t.replace(/[()]/g, '')); return isFinite(n) ? cents(neg ? -Math.abs(n) : n) : 0; }   // (761.93) on a credit memo = -761.93
 function normExpense(x) {
   x = x || {};
   var items = Array.isArray(x.items) ? x.items.filter(function (i) { return i && (String(i.d || '').trim() || +i.p); })
@@ -4806,7 +4806,9 @@ function googleMsg(e) {
     'no-pass': 'Connect Google first: tap ADD RECEIPT / INVOICE.',
     'drive-off': 'Google Drive is turned off for the CRM. In Google Cloud (project ARC-CRM), enable the Google Drive API.',
     'not-ready': 'Still connecting to Google. Tap again in a second.',
-  })[k] || 'Google Drive didn’t answer. Try again in a moment.';
+    'drive-scope': 'Google didn’t give the CRM Drive permission. Tap ADD RECEIPT / INVOICE again and, on the Google screen, tick the Google Drive box.',
+    'drive-busy': 'Google Drive is busy. Wait a minute and try again.',
+  })[k] || ('Google Drive said no' + (e && e.google ? ': “' + e.google + '”' : '') + '. Try again in a moment.');
 }
 function driveFail(e) { if (e && e.message === 'expired' && window.ARCMail) ARCMail.forget(); }
 
@@ -4870,7 +4872,7 @@ function readScan(c, file) {
         : 'Google couldn’t read this scan clearly. The scan is saved in Drive. Fill in the details below.';
     }, function (e) {
       driveFail(e);
-      if (ex_state) ex_state.note = (e && e.message === 'drive-off') ? googleMsg(e) : 'The scan is saved in Drive, but Google couldn’t read it. Fill in the details below.';
+      if (ex_state) ex_state.note = (e && /^drive-(off|scope|busy|403)$/.test(e.message)) ? googleMsg(e) : 'The scan is saved in Drive, but Google couldn’t read it. Fill in the details below.';
     });
   }).catch(function (e) {
     driveFail(e);

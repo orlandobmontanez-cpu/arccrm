@@ -224,7 +224,18 @@
     opt = opt || {}; opt.headers = Object.assign({ Authorization: 'Bearer ' + token }, opt.headers || {});
     return fetch(url, opt).then(function (r) {
       if (r.ok) return r.json();
-      return r.text().then(function (t) { var e = new Error(r.status === 401 ? 'expired' : r.status === 403 ? 'drive-off' : 'drive'); e.detail = r.status + ' ' + t.slice(0, 300); throw e; });
+      return r.text().then(function (t) {
+        // A 403 has several causes; read Google's reason instead of assuming the API is off.
+        var k = r.status === 401 ? 'expired' : 'drive';
+        if (r.status === 403) {
+          k = /accessNotConfigured|SERVICE_DISABLED|has not been used|is disabled/i.test(t) ? 'drive-off'
+            : /insufficient|SCOPE_INSUFFICIENT|insufficientPermissions/i.test(t) ? 'drive-scope'
+            : /rateLimit|userRateLimit|quota/i.test(t) ? 'drive-busy' : 'drive-403';
+        }
+        var e = new Error(k); e.detail = r.status + ' ' + t.slice(0, 300);
+        try { e.google = (JSON.parse(t).error || {}).message || ''; } catch (x) { e.google = ''; }
+        throw e;
+      });
     }, function () { throw new Error('offline'); });
   }
   function qs(v) { return "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"; }

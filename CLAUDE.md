@@ -340,6 +340,16 @@ documents and PDFs are untouched) and one `PREMIUM LAYER` `<script>` at the end 
 - Not built, his call still open: "Dusk" dark variant (he said leave it for now).
 - When adding screens or buttons, style them inside the layer and keep to these rules.
 
+## Inspections screen (Nov 22 2026 polish)
+
+- `renderInspections`: three counts on top (OVERDUE / NEXT 30 DAYS / LATER), the list shows only inspections due within 30 days
+  (overdue first), everything later is tucked under a **COMING UP LATER** drawer (`<details>`, open state kept in `insLaterOpen`).
+  Nothing due = an "All caught up" card with the next one up. Cards: status rail on the left, CALL (when there's a phone), CALENDAR,
+  rose-gold MARK INSPECTED (two taps).
+- Confirming turns the button green "✓ INSPECTED" and the card **falls away** (`insDropAway`: lift, drop + tilt + fade, gap closes,
+  ~0.8 s; plain update under Reduce Motion), then the list re-renders and that customer sits in the later drawer a year out.
+  `markInspected` itself is unchanged (same fields as before). He asked for it to keep the list clean and be fun.
+
 ## Weather watch (Nov 16 2026)
 
 Minimal by request: an icon in the top-right corner (`#wx-btn`, today's icon + high), a 7-day panel on tap (`#wx-panel`), a banner

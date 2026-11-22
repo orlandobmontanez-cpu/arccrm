@@ -1371,6 +1371,59 @@
     #form-area label { letter-spacing: .12em; }
     .proposal-btn { border-radius: 14px; min-height: 50px; font-size: 15px; letter-spacing: .14em; padding: 12px 18px 10px; justify-content: center; }
     .x-row, .jc-card, .ins-card { border-radius: 16px; border-color: rgba(28,26,24,.1); }
+    /* Inspections (Nov 22 2026) */
+    .ins-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 16px; }
+    .ins-stat { background: #fff; border: 1px solid rgba(28,26,24,.08); border-radius: 14px; padding: 12px 10px 10px; text-align: center; }
+    .ins-stat b { display: block; font-family: 'Anton', sans-serif; font-weight: 400; font-size: 26px; line-height: 1; color: var(--ink); }
+    .ins-stat span { display: block; margin-top: 6px; font-family: 'Bebas Neue', sans-serif; letter-spacing: .14em; font-size: 12px; color: var(--ink-muted); }
+    .ins-stat.hot { background: linear-gradient(180deg, #FBF1EE, #F6E3DE); border-color: #E3C1BB; }
+    .ins-stat.hot b { color: var(--copper); }
+    .ins-list { gap: 12px; }
+    .ins-card { position: relative; background: #fff; box-shadow: 0 1px 2px rgba(28,26,24,.04), 0 6px 18px rgba(28,26,24,.05); }
+    .ins-card::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 0 3px 3px 0; background: var(--stone-dark); }
+    .ins-card.st-overdue::before { background: var(--danger); }
+    .ins-card.st-soon::before { background: linear-gradient(180deg, #E8B4A6, #B8664A); }
+    .ins-open { display: flex; flex-direction: column; gap: 4px; padding: 16px 16px 14px 20px; }
+    .ins-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .ins-name { font-size: 16px; font-weight: 600; letter-spacing: -.005em; }
+    .ins-badge { border-radius: 999px; padding: 4px 10px 3px; font-size: 11.5px; }
+    .ins-badge.upcoming { background: rgba(234,228,218,.7); }
+    .ins-addr { font-size: 13px; }
+    .ins-due { font-size: 13px; color: var(--ink-soft); }
+    .ins-due b { font-weight: 600; color: var(--ink); }
+    .ins-last { font-size: 12px; color: var(--ink-muted); }
+    .ins-acts { display: flex; background: rgba(28,26,24,.07); border-top: 1px solid rgba(28,26,24,.07); }
+    .ins-acts > * { flex: 1 1 0; background: #FBFAF8; min-height: 50px; letter-spacing: .14em; transition: background .2s, color .2s; }
+    .ins-acts > * + * { margin-left: 1px; }
+    .ins-acts .ins-go { flex: 1.6 1 0; color: #2A1A14;
+      background: linear-gradient(180deg, #F7DCCD 0%, #EDBDA5 45%, #D99A7E 100%); text-shadow: 0 1px 0 rgba(255,236,226,.5); }
+    .ins-acts .ins-go.armed { background: var(--copper); color: #fff; text-shadow: none; }
+    .ins-acts .ins-go.done { background: #5E7A52; color: #fff; text-shadow: none; }
+    .ins-clear { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 30px 20px 28px; margin-bottom: 14px;
+      background: #fff; border: 1px solid rgba(28,26,24,.08); border-radius: 18px; }
+    .ins-clear b { font-family: 'Anton', sans-serif; font-weight: 400; font-size: 22px; letter-spacing: .02em; color: var(--ink); }
+    .ins-clear span:not(.ins-clear-mark) { font-size: 13.5px; color: var(--ink-muted); max-width: 300px; line-height: 1.45; }
+    .ins-clear-mark { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;
+      font-size: 22px; color: #2A1A14; background: linear-gradient(180deg, #F7DCCD, #D99A7E); box-shadow: inset 0 1px 0 rgba(255,246,240,.9); }
+    .ins-clear { animation: insClearIn .5s var(--ease) both; }
+    .ins-clear-mark { animation: insPop .6s cubic-bezier(.34,1.56,.64,1) .12s both; }
+    @keyframes insClearIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    @keyframes insPop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .ins-clear, .ins-clear-mark { animation: none; } }
+    .ins-later { margin-top: 18px; }
+    .ins-later summary { list-style: none; display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 16px;
+      border-radius: 14px; background: rgba(28,26,24,.05); cursor: pointer; font-family: 'Bebas Neue', sans-serif; letter-spacing: .16em; font-size: 15px; color: var(--ink-soft); }
+    .ins-later summary::-webkit-details-marker { display: none; }
+    .ins-later summary::after { content: "›"; font-family: 'Inter', sans-serif; font-size: 20px; transition: transform .3s var(--ease); margin-left: 10px; }
+    .ins-later[open] summary::after { transform: rotate(90deg); }
+    .ins-later-n { margin-left: auto; background: #fff; border-radius: 999px; padding: 2px 10px 1px; font-size: 13px; color: var(--ink); }
+    .ins-later .ins-list { margin-top: 12px; }
+    /* Marked inspected: lift, then fall away and close the gap */
+    .ins-card.ins-leaving { transition: transform .45s cubic-bezier(.55,0,.75,.2), opacity .4s ease-in, height .38s var(--ease), margin .38s var(--ease), box-shadow .2s;
+      transform-origin: 20% 0; will-change: transform, opacity; overflow: hidden; box-shadow: 0 10px 28px rgba(151,73,48,.18), 0 0 0 2px rgba(201,126,120,.35); }
+    .ins-card.ins-fall { transform: translateY(46px) rotate(-4deg) scale(.96); opacity: 0; }
+    .ins-card.ins-collapse { margin-top: -12px; border-width: 0; }
+    @media (prefers-reduced-motion: reduce) { .ins-card.ins-leaving { transition: none; } }
     .sort-toggle { border-radius: 14px; min-height: 52px; background: rgba(240,200,194,.18); letter-spacing: .18em; }
     #calc-total { font-size: clamp(20px, 6.2vw, 26px) !important; width: auto !important; min-width: 0; white-space: nowrap; text-align: right; flex-shrink: 0; }
     /* The form must never slide sideways: nothing in it may be wider than the screen */
@@ -7167,30 +7220,66 @@ function markInspected(c) {
   showToast('NEXT INSPECTION ' + longDate(next).toUpperCase());
 }
 
+// Inspections screen (Nov 22 2026 polish): what's due in the next 30 days is the list; everything later is tucked under
+// LATER THIS YEAR so the screen stays clean. Marking one inspected drops its card away (next date moves a year out).
+let insLaterOpen = false;
 function renderInspections() {
   const list = customers.filter(c => c.nextInspection).sort((a, b) => a.nextInspection < b.nextInspection ? -1 : a.nextInspection > b.nextInspection ? 1 : 0);
   const el = document.getElementById('ins-inner');
   if (!list.length) {
-    el.innerHTML = '<p class="xsec-note" style="margin:0;">No inspections scheduled yet. When you close a repair or maintenance job, its yearly inspection shows up here.</p>';
+    el.innerHTML = '<div class="ins-clear"><span class="ins-clear-mark" aria-hidden="true">✓</span><b>No inspections scheduled yet</b>' +
+      '<span>When you close a repair or maintenance job, its yearly inspection shows up here.</span></div>';
     return;
   }
-  el.innerHTML = '<div class="ins-list">' + list.map(c => {
-    const st = inspectionStatus(c.nextInspection);
+  const rows = list.map(c => ({ c: c, st: inspectionStatus(c.nextInspection) }));
+  const due = rows.filter(r => r.st.days <= 30), later = rows.filter(r => r.st.days > 30);
+  const over = due.filter(r => r.st.days < 0).length;
+  const card = (r) => {
+    const c = r.c, st = r.st;
     const name = [c.first, c.last].filter(Boolean).join(' ') || 'Unnamed';
     const when = st.days < 0 ? Math.abs(st.days) + ' day' + (st.days === -1 ? '' : 's') + ' overdue' : st.days === 0 ? 'today' : 'in ' + st.days + ' day' + (st.days === 1 ? '' : 's');
-    return `<div class="ins-card">
+    const tel = (c.phone || '').replace(/[^\d+]/g, '');
+    return `<div class="ins-card st-${st.cls}" data-card="${c.id}">
       <button type="button" class="ins-open" data-open="${c.id}">
-        <span class="ins-name">${esc(name)}</span>
-        <span class="ins-badge ${st.cls}">${st.label}</span>
+        <span class="ins-top"><span class="ins-name">${esc(name)}</span><span class="ins-badge ${st.cls}">${st.cls === 'upcoming' ? 'SCHEDULED' : st.label}</span></span>
         <span class="ins-addr">${esc([c.address, cityLine(c)].filter(Boolean).join(', ') || c.arcNum)}</span>
-        <span class="ins-due">Due ${esc(longDate(c.nextInspection))} · ${when}</span>
+        <span class="ins-due"><b>${esc(longDate(c.nextInspection))}</b> · ${when}</span>
+        ${c.lastInspected ? `<span class="ins-last">Last inspected ${esc(longDate(c.lastInspected))}</span>` : ''}
       </button>
       <div class="ins-acts">
-        <a href="${esc(gcalUrl(c, c.nextInspection))}" target="_blank" rel="noopener">GOOGLE CALENDAR</a>
-        <button type="button" data-inspected="${c.id}">✓ MARK INSPECTED</button>
+        ${tel ? `<a href="tel:${esc(tel)}">CALL</a>` : ''}
+        <a href="${esc(gcalUrl(c, c.nextInspection))}" target="_blank" rel="noopener">CALENDAR</a>
+        <button type="button" class="ins-go" data-inspected="${c.id}">MARK INSPECTED</button>
       </div>
     </div>`;
-  }).join('') + '</div>';
+  };
+  const next = later[0];
+  el.innerHTML =
+    `<div class="ins-sum">
+      <div class="ins-stat${over ? ' hot' : ''}"><b>${over}</b><span>OVERDUE</span></div>
+      <div class="ins-stat"><b>${due.length - over}</b><span>NEXT 30 DAYS</span></div>
+      <div class="ins-stat"><b>${later.length}</b><span>LATER</span></div>
+    </div>` +
+    (due.length ? '<div class="ins-list" id="ins-due">' + due.map(card).join('') + '</div>'
+      : `<div class="ins-clear"><span class="ins-clear-mark" aria-hidden="true">✓</span><b>All caught up</b>` +
+        `<span>${next ? 'Next up: ' + esc(custName(next.c)) + ', ' + esc(longDate(next.c.nextInspection)) + '.' : 'Nothing due.'}</span></div>`) +
+    (later.length ? `<details class="ins-later"${insLaterOpen ? ' open' : ''}><summary><span>COMING UP LATER</span><span class="ins-later-n">${later.length}</span></summary>
+      <div class="ins-list">${later.map(card).join('')}</div></details>` : '');
+  const d = el.querySelector('.ins-later');
+  if (d) d.addEventListener('toggle', () => { insLaterOpen = d.open; });
+}
+
+// The card drops away: a soft lift, then it falls and fades while the list closes the gap.
+function insDropAway(card, done) {
+  const rm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!card || rm) { done(); return; }
+  const h = card.offsetHeight;
+  card.style.height = h + 'px';
+  card.classList.add('ins-leaving');
+  let fin = false; const end = () => { if (!fin) { fin = true; done(); } };
+  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('ins-fall')));
+  setTimeout(() => { card.style.height = '0px'; card.classList.add('ins-collapse'); }, 420);
+  setTimeout(end, 820);
 }
 
 (function wireInspections() {
@@ -7207,13 +7296,17 @@ function renderInspections() {
     if (open) { sheet.classList.remove('active'); selectCustomer(open.dataset.open); return; }
     const b = e.target.closest('[data-inspected]');
     if (!b) return;
+    if (b.classList.contains('done')) return;
     if (!b.classList.contains('armed')) {
       b.classList.add('armed'); b.textContent = 'TAP TO CONFIRM';
-      setTimeout(() => { if (b.isConnected) { b.classList.remove('armed'); b.textContent = '✓ MARK INSPECTED'; } }, 3000);
+      setTimeout(() => { if (b.isConnected && !b.classList.contains('done')) { b.classList.remove('armed'); b.textContent = 'MARK INSPECTED'; } }, 3000);
       return;
     }
     const c = customers.find(x => x.id === b.dataset.inspected);
-    if (c) { markInspected(c); renderInspections(); }
+    if (!c) return;
+    b.classList.remove('armed'); b.classList.add('done'); b.textContent = '✓ INSPECTED';
+    markInspected(c);
+    insDropAway(b.closest('.ins-card'), renderInspections);
   });
 
   const done = document.getElementById('f-completed'), next = document.getElementById('f-nextinsp');

@@ -1388,6 +1388,9 @@
     .ins-name { font-size: 16px; font-weight: 600; letter-spacing: -.005em; }
     .ins-badge { border-radius: 999px; padding: 4px 10px 3px; font-size: 11.5px; }
     .ins-badge.upcoming { background: rgba(234,228,218,.7); }
+    .ins-badge.done { background: #5E7A52; color: #fff; }
+    .ins-bump { animation: insBump .55s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes insBump { 0% { transform: scale(1); } 40% { transform: scale(1.12); box-shadow: 0 0 0 3px rgba(201,126,120,.35); } 100% { transform: scale(1); } }
     .ins-addr { font-size: 13px; }
     .ins-due { font-size: 13px; color: var(--ink-soft); }
     .ins-due b { font-weight: 600; color: var(--ink); }
@@ -7241,7 +7244,7 @@ function renderInspections() {
     const tel = (c.phone || '').replace(/[^\d+]/g, '');
     return `<div class="ins-card st-${st.cls}" data-card="${c.id}">
       <button type="button" class="ins-open" data-open="${c.id}">
-        <span class="ins-top"><span class="ins-name">${esc(name)}</span><span class="ins-badge ${st.cls}">${st.cls === 'upcoming' ? 'SCHEDULED' : st.label}</span></span>
+        <span class="ins-top"><span class="ins-name">${esc(name)}</span>${c.lastInspected === localISODate() ? '<span class="ins-badge done">✓ INSPECTED TODAY</span>' : `<span class="ins-badge ${st.cls}">${st.cls === 'upcoming' ? 'SCHEDULED' : st.label}</span>`}</span>
         <span class="ins-addr">${esc([c.address, cityLine(c)].filter(Boolean).join(', ') || c.arcNum)}</span>
         <span class="ins-due"><b>${esc(longDate(c.nextInspection))}</b> · ${when}</span>
         ${c.lastInspected ? `<span class="ins-last">Last inspected ${esc(longDate(c.lastInspected))}</span>` : ''}
@@ -7267,6 +7270,14 @@ function renderInspections() {
       <div class="ins-list">${later.map(card).join('')}</div></details>` : '');
   const d = el.querySelector('.ins-later');
   if (d) d.addEventListener('toggle', () => { insLaterOpen = d.open; });
+}
+
+function insBumpLater() {
+  const rm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (rm) return;
+  document.querySelectorAll('#ins-inner .ins-stat:last-child, #ins-inner .ins-later-n').forEach(el => {
+    el.classList.remove('ins-bump'); void el.offsetWidth; el.classList.add('ins-bump');
+  });
 }
 
 // The card drops away: a soft lift, then it falls and fades while the list closes the gap.
@@ -7306,7 +7317,8 @@ function insDropAway(card, done) {
     if (!c) return;
     b.classList.remove('armed'); b.classList.add('done'); b.textContent = '✓ INSPECTED';
     markInspected(c);
-    insDropAway(b.closest('.ins-card'), renderInspections);
+    // It moves to next year: close the later drawer so it doesn't pop straight back in view, and nudge the LATER count
+    insDropAway(b.closest('.ins-card'), () => { insLaterOpen = false; renderInspections(); insBumpLater(); });
   });
 
   const done = document.getElementById('f-completed'), next = document.getElementById('f-nextinsp');

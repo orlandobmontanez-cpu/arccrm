@@ -22,7 +22,7 @@ SALE SELF CHECKOUT
 SUBTOTAL 101.39
 SALES TAX 7.41
 TOTAL $108.80
-XXXXXXXXXXXX4415 VISA USD$ 108.80
+XXXXXXXXXXXX0000 VISA USD$ 108.80
 AUTH CODE 07734D/1047265 TA`,
     want: { vendor: 'The Home Depot', cat: 'materials', date: '2026-11-03', sub: 101.39, tax: 7.41, total: 108.80, items: 3, firstItem: 64.98 },
   },

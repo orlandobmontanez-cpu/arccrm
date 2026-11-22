@@ -4055,7 +4055,7 @@ const SortIt = (function () {
         const cm = m[1].match(/^\s*([A-Za-zÀ-ÿ'-]+)\s*,\s*([A-Za-zÀ-ÿ'-]+)\s*$/);
         add(cm ? [cm[2], cm[1]] : nameTokens(m[1]), 100, i);
       }
-      // "Serna, Jeanette"
+      // "Rivera, Jordan"
       m = ln.match(/^\s*([A-Za-zÀ-ÿ'-]{2,}),\s*([A-Za-zÀ-ÿ'-]{2,})(?:\s+([A-Za-z])\.?)?\s*$/);
       if (m && !STOP.has(m[1].toLowerCase()) && !STOP.has(m[2].toLowerCase()) && !knownCity(m[1]) && !knownCity(m[2]) &&
           STATES.indexOf(m[2].toUpperCase()) === -1 && !/^new mexico$/i.test(m[2])) add([m[2], m[1]], 70, i);
@@ -4069,7 +4069,7 @@ const SortIt = (function () {
       const caps = toks.every(isCap), initial = toks.some(t => t.length === 1);
       if (toks.length >= 2 || (toks.length === 1 && isCap(toks[0]))) add(toks, caps && !initial ? (toks.length >= 2 ? 56 : 55) : 40, -1);
     }
-    // Sign-offs: "Thanks,\nJeanette"
+    // Sign-offs: "Thanks,\nJordan"
     lines.forEach((ln, i) => {
       const sm = ln.match(/^\s*(?:thanks|thank you|thx|ty|regards|best regards|best|sincerely|cheers|respectfully|warm regards|kind regards|-{1,2}|—)\s*[,!.:-]*\s*(.*)$/i);
       if (!sm) return;

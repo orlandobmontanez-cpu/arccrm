@@ -12,8 +12,8 @@ const EMPTY = { first: '', last: '', phone: '', email: '', street: '', city: '',
 const cases = [
   {
     name: 'one-line text with emoji, lowercase, "my name is"',
-    text: 'Hi Orlando! 👋 My name is jeanette serna, I have a leak over my kitchen 😩 Address is 1234 montgomery blvd ne albuquerque nm 87111. Call me 505.555.0199 or JSerna@Example.com thanks!!',
-    want: { first: 'Jeanette', last: 'Serna', phone: '(505) 555-0199', email: 'jserna@example.com', street: '1234 Montgomery Blvd NE', city: 'Albuquerque', state: 'NM', zip: '87111' },
+    text: 'Hi Orlando! 👋 My name is jordan rivera, I have a leak over my kitchen 😩 Address is 1234 montgomery blvd ne albuquerque nm 87111. Call me 505.555.0199 or JRivera@Example.com thanks!!',
+    want: { first: 'Jordan', last: 'Rivera', phone: '(505) 555-0199', email: 'jrivera@example.com', street: '1234 Montgomery Blvd NE', city: 'Albuquerque', state: 'NM', zip: '87111' },
   },
   {
     name: 'email with signature block and "Sent from my iPhone"',
@@ -60,11 +60,11 @@ tom.garcia@example.com 505-555-0104`,
   },
   {
     name: 'Last, First on its own line, multi-line address',
-    text: `SERNA, JEANETTE
+    text: `RIVERA, JORDAN
 7400 Lomas Blvd NE
 Albuquerque NM 87110
 (505)555-0101`,
-    want: { first: 'Jeanette', last: 'Serna', phone: '(505) 555-0101', email: '', street: '7400 Lomas Blvd NE', city: 'Albuquerque', state: 'NM', zip: '87110' },
+    want: { first: 'Jordan', last: 'Rivera', phone: '(505) 555-0101', email: '', street: '7400 Lomas Blvd NE', city: 'Albuquerque', state: 'NM', zip: '87110' },
   },
   {
     name: 'everything in caps on one line, suite',
@@ -81,8 +81,8 @@ mike.t@example.com`,
   },
   {
     name: '7-digit local number, extension, no address',
-    text: 'Jeanette Serna here. my number is 555-4321 ext 2, call after 5pm',
-    want: { first: 'Jeanette', last: 'Serna', phone: '(505) 555-4321' },
+    text: 'Jordan Rivera here. my number is 555-4321 ext 2, call after 5pm',
+    want: { first: 'Jordan', last: 'Rivera', phone: '(505) 555-4321' },
   },
   {
     name: 'no street type, Corrales, comma-separated',
@@ -91,8 +91,8 @@ mike.t@example.com`,
   },
   {
     name: 'only name and phone',
-    text: 'Jeanette Serna 505 555 0101',
-    want: { first: 'Jeanette', last: 'Serna', phone: '(505) 555-0101' },
+    text: 'Jordan Rivera 505 555 0101',
+    want: { first: 'Jordan', last: 'Rivera', phone: '(505) 555-0101' },
   },
   {
     name: 'nothing useful',

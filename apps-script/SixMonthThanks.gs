@@ -110,40 +110,33 @@ function season_(d) {
 }
 
 // ── The email (subject, plain text, branded HTML) ──
-var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-var TIERS = [['Under $1,000', '$15'], ['$1,000 to under $2,500', '$65'], ['$2,500 to under $5,000', '$115'],
-  ['$5,000 to under $10,000', '$165'], ['$10,000 to under $15,000', '$215'], ['$15,000 and up', '$265']];
+// Kept short on purpose (Orlando, Nov 27 2026: "I just don't want it to be overwhelming"): thanks, a roof check, one
+// Good Neighbors teaser and a button. The reward table and rules live on the program page (good-neighbors.html).
+var PROGRAM_URL = SITE + 'good-neighbors.html';
 
 function build_(r, today) {
   var first = String(r.first || '').trim();
   var address = String(r.address || '').trim();
-  var month = /^\d{4}-\d{2}/.test(r.closed_at || '') ? MONTHS[Number(r.closed_at.slice(5, 7)) - 1] : '';
   var subject = first ? first + ', thank you for trusting us' : 'Thank you for trusting us';
   var hello = first ? 'Thank you, ' + first + '.' : 'Thank you.';
   var seasonal = season_(today);
-  var p1 = 'It’s been six months since we finished your roof' + (address ? ' at ' + address : '') + (month ? ' in ' + month : '') +
-    '. I wanted to stop and say thank you. You trusted us with your home, and that isn’t something I take lightly.';
-  var p2a = 'Has anything come up with the roof that you’ve been meaning to mention? If so, reply to this email or call me at ';
-  var p2b = ', and I’ll come take a look.';
+  var p1 = 'It’s been six months since we finished your roof' + (address ? ' at ' + address : '') +
+    '. Thank you for trusting us with your home. That isn’t something I take lightly.';
+  var p2a = 'Has anything come up with the roof that you’ve been meaning to mention? Reply here or call me at ';
   var promise = 'Every roof we touch is someone’s safety, peace of mind, and home. We treat it that way. Every time.';
-  var ask = 'It seems like most people find a roofer the same way: they ask someone they trust. You may know a neighbor, friend or family member who’s been putting off their roof. Would it be a bad idea to pass our name along to them?';
-  var s1 = ['Coffee’s on us.', 'When they complete a roof inspection or estimate, you get a $15 gift card to a local coffee shop. They don’t have to buy a thing.'];
-  var s2 = ['A bigger thank-you if they hire us.', 'Once their project is finished and paid, you earn a cash reward based on its size.'];
-  var how = 'Have them call ' + PHONE + ' and mention your name, or reply with their name and number once they’ve said it’s okay for us to reach out.';
-  var fine = 'The fine print: Referrals must be new customers, must name you before their estimate, and must agree to hear from us. One referrer per project, and there’s no limit on how many neighbors you introduce. Gift cards go out after the appointment. Cash rewards go out within 14 days of project completion and full payment; canceled or unpaid projects don’t qualify. Rewards never depend on a review. Referrals from insurance, real estate or other licensed professionals are handled separately. Reply anytime for the full program terms.';
+  var ask = 'You may know a neighbor who’s been putting off their roof. Would it be a bad idea to pass our name along?';
   var optout = 'You’re getting this because we worked on your roof. Prefer not to hear from us this way? Just reply “no thanks.”';
 
-  var text = [hello, '', seasonal, '', p1, '', p2a + PHONE + p2b, '', promise, '',
-    'GOOD NEIGHBORS REFERRAL PROGRAM', 'Good neighbors. Good roofs. Local rewards.', '', ask, '', 'If you do, here’s how we’ll say thank you.', '',
-    '1. ' + s1.join(' '), '2. ' + s2.join(' '), '',
-    'Their project / You receive:'].concat(TIERS.map(function (t) { return '  ' + t[0] + ': ' + t[1]; }),
-    ['Totals include the $15 coffee gift card.', '', how, '', fine, '',
-    'Thank you again for trusting us with your home.', '', 'Orlando Montanez, Owner', 'Agency Roofing Co.', PHONE,
+  var text = [hello, '', seasonal, '', p1, '', p2a + PHONE + '.', '', promise, '',
+    'GOOD NEIGHBORS REFERRAL PROGRAM', 'Good neighbors. Good roofs. Local rewards.', '', ask, '',
+    '$15: coffee on us for every neighbor you introduce.', 'Up to $265: when they hire us.', '',
+    'See how it works: ' + PROGRAM_URL, '',
+    'With gratitude,', 'Orlando', '', 'Orlando Montanez, Owner', 'Agency Roofing Co.', PHONE,
     OWNER_EMAIL, 'agencyroofingco.com', '', 'Built with agency. Driven by obligation.',
-    'Agency Roofing Co. LLC · Albuquerque, New Mexico · Flat Roof Specialists', '', optout]).join('\n');
+    'Agency Roofing Co. LLC · Albuquerque, New Mexico · Flat Roof Specialists', '', optout].join('\n');
 
-  return { subject: subject, text: text, html: html_({ hello: hello, seasonal: seasonal, p1: p1, p2a: p2a, p2b: p2b, promise: promise,
-    ask: ask, s1: s1, s2: s2, how: how, fine: fine, optout: optout, first: first }) };
+  return { subject: subject, text: text, html: html_({ hello: hello, seasonal: seasonal, p1: p1, p2a: p2a, promise: promise,
+    ask: ask, optout: optout }) };
 }
 
 function html_(v) {
@@ -153,70 +146,53 @@ function html_(v) {
   var BEBAS = "'Bebas Neue','Arial Narrow',Arial,sans-serif";
   var INK = '#1C1A18', COPPER = '#974930', MID = '#C97E78', HI = '#F0C8C2', STONE = '#EAE4DA', MUTED = '#5E5852';
   var tel = 'tel:+15059001711';
-  var A = 'color:' + COPPER + ';text-decoration:none;font-weight:bold';
-  var phoneLink = '<a href="' + tel + '" style="' + A + '">' + PHONE + '</a>';
-  var mailto = 'mailto:' + OWNER_EMAIL + '?subject=' + encodeURIComponent('Good Neighbors referral' + (v.first ? ' from ' + v.first : ''));
-  var P = 'margin:0 0 16px';
-  var step = function (n, s, last) {
-    return '<tr><td width="40" valign="top" style="padding:2px 0 ' + (last ? 6 : 18) + 'px"><div style="width:30px;height:30px;line-height:30px;border-radius:15px;background:' + INK +
-      ';color:' + HI + ';text-align:center;font-family:' + ANTON + ';font-size:15px">' + n + '</div></td>' +
-      '<td valign="top" style="padding:0 0 ' + (last ? 6 : 18) + 'px 8px;font-size:15px;line-height:23px"><strong style="font-size:16px">' + esc_(s[0]) + '</strong><br>' + esc_(s[1]) + '</td></tr>';
-  };
-  var rows = TIERS.map(function (t, i) {
-    var lastRow = i === TIERS.length - 1;
-    var bg = lastRow ? 'background:' + HI + ';' : 'border-bottom:1px solid ' + STONE + ';';
-    return '<tr><td style="padding:11px 16px;font-size:15px;line-height:20px;' + bg + '">' + esc_(t[0]) + '</td>' +
-      '<td align="right" style="padding:11px 16px;font-size:16px;line-height:20px;font-weight:bold;white-space:nowrap;' + bg + '">' + t[1] + '</td></tr>';
-  }).join('');
+  var phoneLink = '<a href="' + tel + '" style="color:' + COPPER + ';text-decoration:none;font-weight:bold">' + PHONE + '</a>';
   var px = 'padding-left:32px;padding-right:32px';
+  var stat = function (big, small) {
+    return '<td width="50%" valign="top" style="padding:0 6px"><div style="font-family:' + ANTON + ';font-size:40px;line-height:44px;color:' + HI + '">' + big + '</div>' +
+      '<div style="font-family:' + SANS + ';font-size:13px;line-height:18px;color:' + STONE + ';padding-top:4px">' + small + '</div></td>';
+  };
   return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<meta name="x-apple-disable-message-reformatting"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">' +
     '<title>Thank you from Agency Roofing Co.</title>' +
     '<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;700&family=Lora:ital@1&display=swap" rel="stylesheet">' +
-    '<style>@media (max-width:620px){.px{padding-left:22px !important;padding-right:22px !important}.h1{font-size:30px !important;line-height:36px !important}}</style></head>' +
+    '<style>@media (max-width:620px){.px{padding-left:22px !important;padding-right:22px !important}.h1{font-size:30px !important;line-height:36px !important}.gn{padding:26px 20px !important}}</style></head>' +
     '<body style="margin:0;padding:0;background:' + STONE + '">' +
     '<div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:' + STONE + '">Six months since we finished your roof. Thank you for trusting us with your home.</div>' +
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' + STONE + '"><tr><td align="center" style="padding:28px 12px 30px">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' + STONE + '"><tr><td align="center" style="padding:0 0 30px">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px">' +
-    // Header: shield + AGENCY / ROOFING CO. (same lockup as the CRM's other customer emails)
-    '<tr><td style="padding:0 6px 20px"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
-      '<td style="vertical-align:middle;padding-right:12px"><img src="' + SITE + 'apple-touch-icon.png" width="48" height="48" alt="" style="display:block;border:0;width:48px;height:48px"></td>' +
-      '<td style="vertical-align:middle"><div style="font-family:' + ANTON + ';font-size:26px;line-height:1;letter-spacing:1px;color:' + INK + '">AGENCY</div>' +
-      '<div style="font-family:' + BEBAS + ';font-size:12px;line-height:1;letter-spacing:4px;color:' + COPPER + ';margin-top:5px">ROOFING CO.</div></td>' +
-    '</tr></table></td></tr>' +
-    // Card
-    '<tr><td style="background:#FDFCFA;border:1px solid #E3DCD1;border-radius:16px;overflow:hidden">' +
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' +
+    // Logo: the approved lockup (shield, AGENCY, ROOFING CO.) as a PNG on stone (email/agency-lockup.png)
+    '<tr><td align="center" style="padding:34px 24px 26px"><img src="' + SITE + 'email/agency-lockup.png" width="230" alt="AGENCY ROOFING CO." ' +
+      'style="display:block;border:0;width:230px;max-width:70%;height:auto;font-family:' + ANTON + ';font-size:28px;letter-spacing:2px;color:' + INK + '"></td></tr>' +
+    // Tagline band
+    '<tr><td align="center" style="background:' + INK + ';border-bottom:3px solid ' + COPPER + ';padding:14px 20px;font-family:' + SERIF + ';font-style:italic;font-size:15px;line-height:20px;color:' + HI + '">Built with agency. Driven by obligation.</td></tr>' +
+    // Letter
+    '<tr><td style="background:#FDFCFA"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' +
       '<tr><td class="px" style="padding-top:36px;' + px + '"><div class="h1" style="font-family:' + SERIF + ';font-style:italic;font-size:34px;line-height:40px;color:' + INK + '">' + esc_(v.hello) + '</div></td></tr>' +
-      '<tr><td class="px" style="padding-top:18px;' + px + ';font-family:' + SANS + ';font-size:16px;line-height:26px;color:' + INK + '">' +
-        '<p style="' + P + ';font-family:' + SERIF + ';font-style:italic;font-size:17px;color:' + COPPER + '">' + esc_(v.seasonal) + '</p>' +
-        '<p style="' + P + '">' + esc_(v.p1) + '</p>' +
-        '<p style="' + P + '">' + esc_(v.p2a) + phoneLink + esc_(v.p2b) + '</p></td></tr>' +
-      '<tr><td class="px" style="padding-top:6px;padding-bottom:32px;' + px + '"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
+      '<tr><td class="px" style="padding-top:16px;' + px + ';font-family:' + SANS + ';font-size:16px;line-height:26px;color:' + INK + '">' +
+        '<p style="margin:0 0 16px;font-family:' + SERIF + ';font-style:italic;font-size:17px;color:' + COPPER + '">' + esc_(v.seasonal) + '</p>' +
+        '<p style="margin:0 0 16px">' + esc_(v.p1) + '</p>' +
+        '<p style="margin:0 0 16px">' + esc_(v.p2a) + phoneLink + '.</p></td></tr>' +
+      '<tr><td class="px" style="padding-top:4px;padding-bottom:30px;' + px + '"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
         '<td width="3" style="background:' + MID + ';font-size:0;line-height:0">&nbsp;</td>' +
         '<td style="padding:4px 0 4px 18px;font-family:' + SERIF + ';font-style:italic;font-size:18px;line-height:28px;color:' + COPPER + '">' + esc_(v.promise) + '</td></tr></table></td></tr>' +
-      // Referral program
-      '<tr><td style="background:' + STONE + '"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:' + SANS + ';color:' + INK + '">' +
-        '<tr><td class="px" style="padding-top:34px;' + px + ';font-family:' + BEBAS + ';font-size:15px;line-height:18px;letter-spacing:3px;color:' + COPPER + '">GOOD NEIGHBORS REFERRAL PROGRAM</td></tr>' +
-        '<tr><td class="px" style="padding-top:6px;' + px + ';font-family:' + SERIF + ';font-style:italic;font-size:24px;line-height:31px">Good neighbors. Good roofs. Local rewards.</td></tr>' +
-        '<tr><td class="px" style="padding-top:16px;' + px + ';font-size:16px;line-height:26px"><p style="' + P + '">' + esc_(v.ask) + '</p>' +
-          '<p style="margin:0">If you do, here’s how we’ll say thank you.</p></td></tr>' +
-        '<tr><td class="px" style="padding-top:22px;' + px + '"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:' + SANS + ';color:' + INK + '">' +
-          step(1, v.s1, false) + step(2, v.s2, true) + '</table></td></tr>' +
-        '<tr><td class="px" style="padding-top:14px;' + px + '"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;font-family:' + SANS + ';color:' + INK + '">' +
-          '<tr><td style="padding:12px 16px;font-family:' + BEBAS + ';font-size:13px;line-height:14px;letter-spacing:2px;color:' + COPPER + ';border-bottom:2px solid ' + MID + '">THEIR PROJECT</td>' +
-          '<td align="right" style="padding:12px 16px;font-family:' + BEBAS + ';font-size:13px;line-height:14px;letter-spacing:2px;color:' + COPPER + ';border-bottom:2px solid ' + MID + ';white-space:nowrap">YOU RECEIVE</td></tr>' +
-          rows + '</table>' +
-          '<div style="font-size:13px;line-height:19px;color:' + MUTED + ';padding-top:8px">Totals include the $15 coffee gift card.</div></td></tr>' +
-        '<tr><td class="px" align="center" style="padding-top:28px;' + px + '"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
-          '<td align="center" style="background:' + COPPER + ';border-radius:999px"><a href="' + esc_(mailto) + '" style="display:inline-block;padding:15px 30px;font-family:' + BEBAS +
-          ';font-size:17px;line-height:18px;letter-spacing:3px;color:#FFFFFF;text-decoration:none">INTRODUCE A NEIGHBOR</a></td></tr></table></td></tr>' +
-        '<tr><td class="px" align="center" style="padding-top:12px;' + px + ';font-size:14px;line-height:21px">' + esc_(v.how).replace(PHONE, phoneLink) + '</td></tr>' +
-        '<tr><td class="px" style="padding-top:24px;padding-bottom:34px;' + px + ';font-size:12px;line-height:18px;color:' + MUTED + '">' + esc_(v.fine) + '</td></tr>' +
-      '</table></td></tr>' +
+      // Good Neighbors card (ink, rose gold)
+      '<tr><td class="px" style="' + px + ';padding-bottom:32px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' + INK + ';border-radius:14px">' +
+        '<tr><td class="gn" style="padding:30px 28px">' +
+          '<div style="font-family:' + BEBAS + ';font-size:15px;line-height:18px;letter-spacing:3px;color:' + MID + '">GOOD NEIGHBORS REFERRAL PROGRAM</div>' +
+          '<div style="font-family:' + SERIF + ';font-style:italic;font-size:23px;line-height:30px;color:' + STONE + ';padding-top:8px">Good neighbors. Good roofs. Local rewards.</div>' +
+          '<div style="font-family:' + SANS + ';font-size:15px;line-height:24px;color:' + STONE + ';padding-top:12px">' + esc_(v.ask) + '</div>' +
+          '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px;border-top:1px solid #3A3532"><tr><td style="padding-top:18px">' +
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
+              stat('$15', 'Coffee on us for every neighbor you introduce') + stat('$265', 'Up to, when they hire us') +
+            '</tr></table></td></tr></table>' +
+          '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px"><tr>' +
+            '<td align="center" style="background:' + HI + ';border-radius:999px"><a href="' + esc_(PROGRAM_URL) + '" style="display:inline-block;padding:15px 28px;font-family:' + BEBAS +
+            ';font-size:17px;line-height:18px;letter-spacing:3px;color:' + INK + ';text-decoration:none">SEE HOW IT WORKS</a></td></tr></table>' +
+        '</td></tr></table></td></tr>' +
       // Sign-off
-      '<tr><td class="px" style="padding-top:32px;padding-bottom:30px;' + px + ';font-family:' + SANS + ';font-size:16px;line-height:26px;color:' + INK + '">' +
-        '<p style="margin:0 0 18px">Thank you again for trusting us with your home.</p>' +
+      '<tr><td class="px" style="padding-bottom:32px;' + px + ';font-family:' + SANS + ';font-size:16px;line-height:26px;color:' + INK + '">' +
+        '<p style="margin:0 0 6px">With gratitude,</p>' +
         '<div style="font-family:' + SERIF + ';font-style:italic;font-size:22px;line-height:28px">Orlando</div>' +
         '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #E3DCD1;margin-top:14px"><tr><td style="padding-top:14px;font-size:14px;line-height:22px">' +
           '<strong>Orlando Montanez</strong>, Owner<br>Agency Roofing Co.<br>' +
@@ -225,9 +201,8 @@ function html_(v) {
           '<a href="https://agencyroofingco.com" style="color:' + COPPER + ';text-decoration:none">agencyroofingco.com</a></td></tr></table></td></tr>' +
     '</table></td></tr>' +
     // Footer
-    '<tr><td align="center" style="padding:24px 18px 0">' +
-      '<div style="font-family:' + SERIF + ';font-style:italic;font-size:16px;line-height:22px;color:' + COPPER + '">Built with agency. Driven by obligation.</div>' +
-      '<div style="font-family:' + SANS + ';font-size:11px;line-height:17px;letter-spacing:1px;color:' + MUTED + ';padding-top:10px">Agency Roofing Co. LLC &middot; Albuquerque, New Mexico &middot; Flat Roof Specialists</div>' +
+    '<tr><td align="center" style="border-top:3px solid ' + COPPER + ';padding:22px 18px 0">' +
+      '<div style="font-family:' + SANS + ';font-size:11px;line-height:17px;letter-spacing:1px;color:' + MUTED + '">Agency Roofing Co. LLC &middot; Albuquerque, New Mexico &middot; Flat Roof Specialists</div>' +
       '<div style="font-family:' + SANS + ';font-size:11px;line-height:17px;color:' + MUTED + ';padding-top:8px">' + esc_(v.optout) + '</div></td></tr>' +
     '</table></td></tr></table></body></html>';
 }

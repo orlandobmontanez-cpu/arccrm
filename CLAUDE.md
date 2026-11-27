@@ -394,7 +394,13 @@ inspection or estimate; cash tiers by project size, total $15 / $65 / $115 / $16
 - Wording lives in `build_()`; Orlando approved the preview. Seasonal opening line by send date in `season_()` (Christmas, New Year,
   winter, spring winds, Fourth of July, monsoon, green chile, Balloon season, fall, Thanksgiving = 4th Thursday).
   **Always "Christmas", never "Happy Holidays"** (his rule). At most one exclamation mark, no dashes. Test: `node tests/six-month-thanks.test.js`.
-- Header uses the hosted shield (`apple-touch-icon.png`) + AGENCY / ROOFING CO., same lockup as `arcmail.js` emails.
+- Nov 27 2026 rework (his ask: "a lot of info for an email", "add the branding colors and logo"): the email is now short
+  (thanks, one question, the promise line, a dark Good Neighbors card with $15 / $265 and one **SEE HOW IT WORKS** button).
+  The full program (tiers, steps, fine print, call/email buttons) lives on `good-neighbors.html`, a standalone public page
+  (noindex, no CRM scripts, no localStorage). Keep the email under ~230 words.
+- Header = `email/agency-lockup.png` (master SVG lockup rendered on stone, shield set a bit closer to AGENCY) + ink band with the
+  tagline in Lora italic. Email clients can't show SVG, so keep the PNG. Brand: Stone #EAE4DA, Ink #1C1A18, Copper #974930,
+  Mid #C97E78, Highlight #F0C8C2.
 - CRM: **Six-month thank-you email** checkbox in the Relationship section (on by default). Off = `noThanksMail: true` (in `normalize`,
   `extOf`/`applyExt`, so it lives in `arc_ext` and syncs). He unticks it when a customer replies "no thanks". The line under it shows
   the date it goes out; the CRM doesn't know whether it already went (check Gmail Sent).

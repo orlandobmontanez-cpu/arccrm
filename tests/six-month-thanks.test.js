@@ -26,15 +26,17 @@ for (let t = d('2027-01-01'); t < d('2028-01-01'); t.setDate(t.getDate() + 1)) {
 
 const m = build_({ first: 'Pat', address: '123 Sample St NW', closed_at: '2026-06-01' }, d('2026-12-10'));
 assert.strictEqual(m.subject, 'Pat, thank you for trusting us');
-assert.match(m.text, /finished your roof at 123 Sample St NW in June\./);
-assert.match(m.text, /\$15,000 and up: \$265/);
-assert.match(m.html, /INTRODUCE A NEIGHBOR/);
+assert.match(m.text, /finished your roof at 123 Sample St NW\. Thank you/);
+assert.match(m.text, /See how it works: https:\/\/orlandobmontanez-cpu\.github\.io\/arccrm\/good-neighbors\.html/);
+assert.match(m.html, /SEE HOW IT WORKS/);
+assert.match(m.html, /email\/agency-lockup\.png/);
+assert.ok(m.text.split(/\s+/).length < 230, 'email got long again: ' + m.text.split(/\s+/).length + ' words');
 
 // No name, no address: still reads right
 const bare = build_({ first: '', address: '', closed_at: '2026-06-01' }, d('2026-12-10'));
 assert.strictEqual(bare.subject, 'Thank you for trusting us');
 assert.match(bare.text, /^Thank you\.\n/);
-assert.match(bare.text, /finished your roof in June\./);
+assert.match(bare.text, /finished your roof\. Thank you/);
 
 // Customer text is escaped in the HTML
 const x = build_({ first: '<b>Al</b>', address: '1 "A" & B St', closed_at: '2026-06-01' }, d('2027-03-01'));

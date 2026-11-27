@@ -404,6 +404,7 @@ inspection or estimate; cash tiers by project size, total $15 / $65 / $115 / $16
 - CRM: **Six-month thank-you email** checkbox in the Relationship section (on by default). Off = `noThanksMail: true` (in `normalize`,
   `extOf`/`applyExt`, so it lives in `arc_ext` and syncs). He unticks it when a customer replies "no thanks". The line under it shows
   the date it goes out; the CRM doesn't know whether it already went (check Gmail Sent).
+- `supabase/thanks.sql` was run in his Supabase on Nov 27 2026 (migration arc_six_month_thanks). The first customer email is due about May 6 2027.
 - Before public launch his program sheet says to confirm NM regulatory, insurance and tax reporting requirements.
 
 ## Privacy and security rules (Nov 16 2026)

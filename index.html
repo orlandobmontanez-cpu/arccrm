@@ -1915,6 +1915,8 @@
           <div class="form-section-title">Relationship</div>
           <label class="ty-row" for="f-thankyou"><input type="checkbox" id="f-thankyou"><span class="ty-box" aria-hidden="true"></span>
             <span class="ty-t">Thank-you letter sent<span class="ty-d" id="ty-date"></span></span></label>
+          <label class="ty-row" for="f-thanksmail"><input type="checkbox" id="f-thanksmail"><span class="ty-box" aria-hidden="true"></span>
+            <span class="ty-t">Six-month thank-you email<span class="ty-d" id="tm-date"></span></span></label>
           <div class="form-group">
             <label for="f-relnotes">Relationship builders</label>
             <textarea id="f-relnotes" autocapitalize="sentences" autocorrect="on" spellcheck="true" rows="4" placeholder="Pets, kids, what they care about, what you talked about last visit. e.g. Dog Max (lab), daughter starting at UNM, wants a patio cover next spring."></textarea>
@@ -2545,7 +2547,7 @@ function extOf(c) {
   const e = { state: c.state, jobType: c.jobType, items: c.items, completedAt: c.completedAt, nextInspection: c.nextInspection, lastInspected: c.lastInspected,
     taxRate: c.taxRate, taxAuto: c.taxAuto, followUp: c.followUp, followNote: c.followNote,
     closedAt: c.closedAt, lastCheckIn: c.lastCheckIn, relNotes: c.relNotes, checkIns: c.checkIns, thankYou: c.thankYou,
-    promises: c.promises, deposits: c.deposits };
+    promises: c.promises, deposits: c.deposits, noThanksMail: c.noThanksMail };
   // No "mirror": older versions then load repair jobs as replacement jobs at the same price
   const qs = {};
   c.quotes.forEach(q => { if (isRepair(q)) qs[q.id] = { type: q.type, items: [] }; });
@@ -2558,7 +2560,7 @@ function extOf(c) {
 function applyExt(r, e) {
   if (!e) return r;
   const c = Object.assign({}, r);
-  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto', 'followUp', 'followNote', 'closedAt', 'lastCheckIn', 'relNotes', 'checkIns', 'thankYou', 'promises', 'deposits'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
+  ['items', 'completedAt', 'nextInspection', 'lastInspected', 'taxRate', 'taxAuto', 'followUp', 'followNote', 'closedAt', 'lastCheckIn', 'relNotes', 'checkIns', 'thankYou', 'promises', 'deposits', 'noThanksMail'].forEach(k => { if (e[k] !== undefined && c[k] === undefined) c[k] = e[k]; });
   if (e.state && !/^[A-Za-z]{2}[\s,]/.test(String(r.zip || ''))) c.state = e.state;
   const mirrored = (o, x) => String(o.materials || '') === x.mirror && !o.labor && !o.other && String(o.margin) === '0';
   if (e.jobType === 'repair') {
@@ -2687,6 +2689,7 @@ function normalize(c) {
     lastCheckIn: /^\d{4}-\d{2}-\d{2}$/.test(c.lastCheckIn || '') ? c.lastCheckIn : '',
     relNotes: typeof c.relNotes === 'string' ? c.relNotes.slice(0, 4000) : '',
     thankYou: /^\d{4}-\d{2}-\d{2}$/.test(c.thankYou || '') ? c.thankYou : '',   // date the thank-you letter (+ stickers) went out
+    noThanksMail: c.noThanksMail === true,   // true = skip the automatic six-month thank-you email (apps-script/SixMonthThanks.gs)
     checkIns: Array.isArray(c.checkIns) ? c.checkIns.filter(x => x && x.d).slice(0, 60).map(x => ({ d: String(x.d).slice(0, 10), n: String(x.n || '').slice(0, 1000) })) : [],
     expenses: normExpenses(c.expenses),
     promises: typeof c.promises === 'string' ? c.promises.slice(0, 4000) : '',   // promises made at quote time (print on the payment invoice)
@@ -2772,6 +2775,22 @@ function tySet(d) {
 }
 document.getElementById('f-thankyou').addEventListener('change', function () { tySet(this.checked ? (this.dataset.d || localISODate()) : ''); });
 
+// Six-month thank-you email (sent by the Apps Script "ARC Six-Month Thanks" from Closed jobs). Checked = on (default).
+// Stored as noThanksMail = true when switched off (he unticks it when a customer replies "no thanks"). Saved with the form.
+function tmSet(c, on) {
+  document.getElementById('f-thanksmail').checked = on;
+  let t = 'Off for this customer';
+  if (on) {
+    if (!c || !String(c.email || '').trim()) t = 'Needs an email address';
+    else if (c.stage === 'Closed' && c.closedAt) {
+      const d = new Date(c.closedAt + 'T12:00:00'); d.setMonth(d.getMonth() + 6);
+      t = 'Goes out automatically on or after ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } else t = 'Goes out automatically 6 months after the job closes';
+  }
+  document.getElementById('tm-date').textContent = t;
+}
+document.getElementById('f-thanksmail').addEventListener('change', function () { tmSet(customers.find(x => x.id === currentId), this.checked); });
+
 // Follow-up badge on the customer list: due today or overdue
 function followTag(c) {
   if (!c.followUp || c.stage === 'Closed' || c.stage === 'Declined') return '';
@@ -2845,6 +2864,7 @@ function loadDetail() {
   document.getElementById('f-follownote').value = c.followNote || '';
   document.getElementById('f-relnotes').value = c.relNotes || '';
   tySet(c.thankYou || '');
+  tmSet(c, !c.noThanksMail);
   document.getElementById('f-paylink').value = c.payLink || '';
   document.getElementById('f-completed').value = c.completedAt || '';
   document.getElementById('f-nextinsp').value = c.nextInspection || '';
@@ -2998,6 +3018,9 @@ function saveCustomer(toast = true) {
   const prevTy = c.thankYou || '';
   c.thankYou = document.getElementById('f-thankyou').checked ? (document.getElementById('f-thankyou').dataset.d || localISODate()) : '';
   if (c.thankYou !== prevTy) logActivity(c.thankYou ? 'Thank-you letter sent' : 'Thank-you letter unchecked');
+  const prevTm = !!c.noThanksMail;
+  c.noThanksMail = !document.getElementById('f-thanksmail').checked;
+  if (c.noThanksMail !== prevTm) logActivity(c.noThanksMail ? 'Six-month thank-you email switched off' : 'Six-month thank-you email switched on');
   c.payLink = document.getElementById('f-paylink').value.trim();
   c.jobType = formJobType;
   c.items = normItems(formItems);

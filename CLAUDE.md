@@ -379,6 +379,27 @@ small note under the address on the customer file (`#wx-job`).
 - Relationship section (customer file, above Next Follow-Up): the notes box, the next call date, LOG CHECK-IN CALL (asks how it went;
   can append that to the notes; logs activity; resets the 6-month clock), and the call history.
 
+## Six-month thank-you email + Good Neighbors referral program (Nov 27 2026) — sends on its own
+
+Orlando's choice: fully automatic from the CRM, no tap. One email per **Closed** job, 6 months after `closedAt` (else `completedAt`),
+thanking them and introducing the **Good Neighbors Referral Program** ($15 local coffee gift card per referral who completes an
+inspection or estimate; cash tiers by project size, total $15 / $65 / $115 / $165 / $215 / $265; rules in the fine print).
+
+- `apps-script/SixMonthThanks.gs` = Apps Script project **ARC Six-Month Thanks** in orlando.montanez@agencyroofingco.com's Google
+  account. Daily ~9 AM Denver (`setup`), up to `MAX_PER_DAY` (10). `sendTest` emails only him a sample + who's due; `stop` turns it off.
+  Sends with `GmailApp` as him (lands in his Sent, replies come to him). Same ARC_KEY as Signed Alerts.
+- `supabase/thanks.sql`: table `arc_thanks` (one row per customer once sent or failed; RLS owner read) + `arc_thanks_due(key)` /
+  `arc_thanks_sent(...)`. Reads `arc_records` `c:` rows only, never writes them. Failed sends are recorded (no daily retry) and he
+  gets one email listing them; delete the `arc_thanks` row to retry.
+- Wording lives in `build_()`; Orlando approved the preview. Seasonal opening line by send date in `season_()` (Christmas, New Year,
+  winter, spring winds, Fourth of July, monsoon, green chile, Balloon season, fall, Thanksgiving = 4th Thursday).
+  **Always "Christmas", never "Happy Holidays"** (his rule). At most one exclamation mark, no dashes. Test: `node tests/six-month-thanks.test.js`.
+- Header uses the hosted shield (`apple-touch-icon.png`) + AGENCY / ROOFING CO., same lockup as `arcmail.js` emails.
+- CRM: **Six-month thank-you email** checkbox in the Relationship section (on by default). Off = `noThanksMail: true` (in `normalize`,
+  `extOf`/`applyExt`, so it lives in `arc_ext` and syncs). He unticks it when a customer replies "no thanks". The line under it shows
+  the date it goes out; the CRM doesn't know whether it already went (check Gmail Sent).
+- Before public launch his program sheet says to confirm NM regulatory, insurance and tax reporting requirements.
+
 ## Privacy and security rules (Nov 16 2026)
 
 - **This repository is public.** Never put a real customer's or client's name, address, phone, email, job number, price, or any
@@ -395,6 +416,7 @@ small note under the address on the customer file (`#wx-job`).
 - Online signing: `python3 tests/online-sign.test.py` (fake Supabase + Gmail; needs html2canvas/jsPDF and the brand fonts served locally
   when cdnjs/Google Fonts are blocked — see the top of the file).
 - Signed alerts (Apps Script with fake Gmail/Drive/Supabase): `node tests/signed-alerts.test.js`.
+- Six-month thank-you email wording + seasonal lines: `node tests/six-month-thanks.test.js`.
 - Run the flows you touched end to end, check there are zero JavaScript errors, and print-render each affected document to confirm it is still one page.
 - Tell Orlando in one line what changed and what to tap on his phone to check it.
 
@@ -405,8 +427,8 @@ small note under the address on the customer file (`#wx-job`).
 - Signed alerts are LIVE (set up Nov 12 2026): `supabase/sign.sql` run in Supabase; Apps Script project **ARC Signed Alerts** in
   orlando.montanez@agencyroofingco.com's Google account, every-minute trigger on `checkSigned`, ARC_KEY in its Script Properties.
   Tested end to end (email from noreply@agencyroofingco.com + Drive filing). If the code changes, paste the new file into that project.
-- Scheduled / automatic follow-up emails (no tap) would need server-side sending (Supabase Edge Function + stored Google
-  refresh token). Not built; current sending is tap → review → Send from the browser.
+- Scheduled / automatic follow-up emails (no tap) run in Apps Script (Orlando's Google account), not the browser. The only one built
+  is the six-month thank-you email below; everything else is still tap → review → Send.
 
 ## Customer forms sent through DocuSign
 

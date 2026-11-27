@@ -168,6 +168,8 @@ Owner and only user: **Orlando Montanez**. He runs it from **Safari on his iPhon
   (same pay form, amount editable for partials). No new fields. The **PAID** tab is the archive: newest payment first, grouped by month with
   totals, check #s on each row, and a search box (`#bl-search`, filters by company, invoice #, job, PO, amount, check #). Test: `python3 tests/mark-paid.test.py`.
 - Invoice and receipt documents use `docShell` + `BILL_DOC_CSS` (one Letter page; Pay Online QR for the balance).
+  Long ones (big hours log + Pay Online QR) first get `html.tight` billing spacing; if still too long, whole blocks move to page 2
+  (the paginator moves a block it can't split instead of leaving it cut off — fixed Nov 27 2026 after INV-1006's QR was clipped).
   Line items ARE shown on invoices (these are billed prices, not internal costs).
 - Email through the same `ARCMail.compose` panel via `openPreview({ ext })`: To = billing email, CC = company CC,
   **"Send a copy to me" (Bcc orlando.montanez@agencyroofingco.com) on by default**. PDF also filed in Drive:

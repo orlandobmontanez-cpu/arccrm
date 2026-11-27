@@ -3341,7 +3341,8 @@ const ARC_DOC_PAGINATE = `(function () {
       if (!last || last.hasAttribute('data-keep')) break;
       if (!last.classList.contains('body')) { f2.insertBefore(last, f2.firstChild); continue; }
       var lists = last.querySelectorAll('.body-main ul.b-list'), ul = lists[lists.length - 1];
-      if (!ul || !ul.children.length) break;
+      // Nothing left to split (e.g. an invoice's How to Pay + Amount Due): move the whole block over, never cut it off
+      if (!ul || !ul.children.length) { if (f1.children.length > 1) { f2.insertBefore(last, f2.firstChild); continue; } break; }
       var sec = ul.parentNode, key = sec.getAttribute('data-sec');
       var cont = f2.querySelector('[data-cont="' + key + '"]');
       if (!cont) {
@@ -5831,6 +5832,16 @@ var BILL_DOC_CSS = `<style>
   .rcv-sig { display: flex; align-items: flex-end; gap: 16px; }
   .rcv-sig img { height: 38px; }
   .rcv-sig .ln { border-top: 0.8px solid #1C1A18; padding-top: 3px; font-size: 9px; letter-spacing: 0.06em; color: #3A3734; min-width: 200px; }
+  /* Invoices/receipts that run long (big hours log + Pay Online QR): tighter spacing keeps them on one page */
+  html.tight .hero-title { font-size: 26px; line-height: 1.2; margin-bottom: 8px; }
+  html.tight .hero-sub { margin-bottom: 10px; }
+  html.tight .meta { margin-bottom: 12px; padding-bottom: 8px; }
+  html.tight .bt { margin-bottom: 10px; }
+  html.tight .bt .who { line-height: 1.45; }
+  html.tight .it td { padding: 5px 0; }
+  html.tight .hl, html.tight .body { margin-top: 10px; }
+  html.tight .hlt td { padding: 3px 10px 3px 0; }
+  html.tight .paybox { margin-top: 8px; }
 </style>`;
 function billWho(co) {
   return '<b>' + esc(co.name) + '</b>' + (co.contact ? '<br>Attn: ' + esc(co.contact) : '') + (co.address ? '<br>' + esc(co.address) : '') +
